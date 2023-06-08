@@ -63,7 +63,7 @@ namespace Framework.Song.Tracks.Instrument
 
         public virtual void ParseSysEx(ReadOnlySpan<byte> str, ref TrackType track) { }
 
-        public void ParseBRE(uint midiValue, ref TrackType track)
+        public void ParseBRE(uint midiValue)
         {
             notes_BRE[midiValue - 120] = currEvent.position;
             doBRE = notes_BRE[0] == notes_BRE[1] && notes_BRE[1] == notes_BRE[2] && notes_BRE[2] == notes_BRE[3];

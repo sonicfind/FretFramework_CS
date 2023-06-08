@@ -171,7 +171,7 @@ namespace Framework.Song.Tracks
             else if (!loader.AddPhrase(ref track.specialPhrases, note))
             {
                 if (120 <= note.value && note.value <= 124)
-                    loader.ParseBRE(note.value, ref track);
+                    loader.ParseBRE(note.value);
                 else
                     loader.ToggleExtraValues(note, ref track);
             }
