@@ -191,10 +191,11 @@ namespace Framework.FlatMaps
             if (_count == _capacity)
                 Grow();
 
-            ref Node node = ref At_index(_count);
+            ++_version;
+            int index = _count++;
+            ref Node node = ref At_index(index);
             node.key = key;
             node.obj = obj;
-            ++_count;
             return ref node.obj;
         }
 
@@ -206,10 +207,11 @@ namespace Framework.FlatMaps
             if (_count == _capacity)
                 Grow();
 
-            ref Node node = ref At_index(_count);
+            ++_version;
+            int index = _count++;
+            ref Node node = ref At_index(index);
             node.key = key;
             node.obj = obj;
-            ++_count;
             return ref node.obj;
         }
 
@@ -221,10 +223,11 @@ namespace Framework.FlatMaps
             if (_count == _capacity)
                 Grow();
 
-            ref Node node = ref At_index(_count);
+            ++_version;
+            int index = _count++;
+            ref Node node = ref At_index(index);
             node.key = key;
             node.obj = ISVALUETYPE ? BASE : new();
-            ++_count;
             return ref node.obj;
         }
 
@@ -236,10 +239,11 @@ namespace Framework.FlatMaps
             if (_count == _capacity)
                 Grow();
 
-            ref Node node = ref At_index(_count);
+            ++_version;
+            int index = _count++;
+            ref Node node = ref At_index(index);
             node.key = key;
             node.obj = ISVALUETYPE ? BASE : new();
-            ++_count;
         }
 
         public ref T Get_Or_Add_Back(Key key)
@@ -280,8 +284,8 @@ namespace Framework.FlatMaps
             if (_count == 0)
                 throw new Exception("Pop on emtpy map");
 
+            At_index(_count - 1) = default;
             --_count;
-            At_index(_count) = default;
             ++_version;
         }
 
@@ -297,6 +301,9 @@ namespace Framework.FlatMaps
 
         public ref Node At_index(int index)
         {
+            if (index >= Count)
+                throw new ArgumentOutOfRangeException("index");
+
             if (ISVALUETYPE)
                 return ref _buffer_valueType[index];
             return ref _buffer[index];
@@ -316,7 +323,8 @@ namespace Framework.FlatMaps
                 throw new IndexOutOfRangeException();
 
             At_index(index) = default;
-            if (index < --_count)
+            --_count;
+            if (index < _count)
             {
                 if (!ISVALUETYPE)
                     Array.Copy(_buffer, index + 1, _buffer, index, _count - index);
@@ -357,10 +365,10 @@ namespace Framework.FlatMaps
                         Copier.MemMove(_buffer_valueType + index + 1, _buffer_valueType + index, (nuint)((_count - index) * NODESIZE));
                 }
 
+                ++_count;
                 ref Node node = ref At_index(index);
                 node.key = key;
                 node.obj = BASE;
-                ++_count;
                 ++_version;
             }
             return index;
