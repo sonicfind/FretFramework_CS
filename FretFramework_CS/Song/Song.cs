@@ -179,25 +179,7 @@ namespace Framework.Song
             while (reader.IsStartOfTrack())
 	        {
                 if (reader.ValidateSyncTrack())
-                {
-                    while (reader.IsStillCurrentTrack())
-                    {
-                        var trackEvent = reader.ParseEvent();
-                        switch (trackEvent.Item2)
-                        {
-                            case ChartEvent.BPM:
-                                m_sync.tempoMarkers.Get_Or_Add_Back(trackEvent.Item1).Micros = reader.ExtractMicrosPerQuarter();
-                                break;
-                            case ChartEvent.ANCHOR:
-                                m_sync.tempoMarkers.Get_Or_Add_Back(trackEvent.Item1).Anchor = reader.ExtractAnchor();
-                                break;
-                            case ChartEvent.TIME_SIG:
-                                m_sync.timeSigs.Get_Or_Add_Back(trackEvent.Item1) = reader.ExtractTimeSig();
-                                break;
-                        }
-                        reader.NextEvent();
-                    }
-                }
+                    m_sync.AddFromDotChart(ref reader);
                 else if (reader.ValidateEventsTrack())
                 {
                     ulong phrase = ulong.MaxValue;

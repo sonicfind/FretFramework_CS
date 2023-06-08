@@ -31,5 +31,26 @@ namespace Framework.Song
                 }
             }
         }
+
+        public void AddFromDotChart(ref ChartFileReader reader)
+        {
+            while (reader.IsStillCurrentTrack())
+            {
+                var trackEvent = reader.ParseEvent();
+                switch (trackEvent.Item2)
+                {
+                    case ChartEvent.BPM:
+                        tempoMarkers.Get_Or_Add_Back(trackEvent.Item1).Micros = reader.ExtractMicrosPerQuarter();
+                        break;
+                    case ChartEvent.ANCHOR:
+                        tempoMarkers.Get_Or_Add_Back(trackEvent.Item1).Anchor = reader.ExtractAnchor();
+                        break;
+                    case ChartEvent.TIME_SIG:
+                        timeSigs.Get_Or_Add_Back(trackEvent.Item1) = reader.ExtractTimeSig();
+                        break;
+                }
+                reader.NextEvent();
+            }
+        }
     };
 }
