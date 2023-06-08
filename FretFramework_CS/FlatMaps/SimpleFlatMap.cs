@@ -130,10 +130,10 @@ namespace Framework.FlatMaps
 
                         if (!ISVALUETYPE)
                         {
-                            Node[] newItems = new Node[value];
                             if (_count > 0)
-                                Array.Copy(_buffer, 0, newItems, 0, _count);
-                            _buffer = newItems;
+                                Array.Resize(ref _buffer, value);
+                            else
+                                _buffer = new Node[value];
                         }
                         else
                         {
