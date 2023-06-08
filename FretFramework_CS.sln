@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.4.33205.214
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Framework", "FretFramework_CS\Framework.csproj", "{DAAEEE27-726D-403A-82A4-025182F25AFF}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{DAAEEE27-726D-403A-82A4-025182F25AFF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DAAEEE27-726D-403A-82A4-025182F25AFF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DAAEEE27-726D-403A-82A4-025182F25AFF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DAAEEE27-726D-403A-82A4-025182F25AFF}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {74276A8B-57CD-4BC2-B92C-2E93DEA1A374}
+	EndGlobalSection
+EndGlobal

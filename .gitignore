@@ -1,0 +1,50 @@
+# Prerequisites
+FretFramework_CS/bin/*
+FretFramework_CS/obj/*
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+*.cache
+*.editorconfig
+*.BuildWithSkipAnalyzers
+*.pdb
+*.config
+*.CopyComplete
+*.log
+*.vsidx
+*.v2
+*.lock
+*.2
+*.html
+*.notcs
+*.cache
+.vs/FretFramework_CS/v17/.suo
+FretFramework_CS/.vs/Framework/v17/.suo
