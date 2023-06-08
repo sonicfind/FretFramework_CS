@@ -1,4 +1,5 @@
 ﻿using Framework.Song.Tracks.Notes.Interfaces;
+using Framework.Types;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,12 +8,6 @@ using System.Threading.Tasks;
 
 namespace Framework.Song.Tracks.Notes.Drums
 {
-    public enum DrumType
-    {
-        UNKNOWN,
-        FOUR_PRO,
-        FIVE_LANE
-    }
     public unsafe struct Drum_Legacy : IDrumNote
     {
         private DrumPad_Pro snare;
