@@ -12,7 +12,7 @@ namespace Framework.Song.Tracks.Instrument.DrumTrack
     {
         public Midi_Instrument_Drum5(byte multiplierNote) : base(multiplierNote) { }
 
-        public override bool IsNote(uint value) { return 60 <= value && value <= 100; }
+        public override bool IsNote(uint value) { return 60 <= value && value <= 101; }
 
         public override void ParseLaneColor(MidiNote note, ref InstrumentTrack<Drum_5> track)
         {
