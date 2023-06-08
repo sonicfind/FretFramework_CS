@@ -20,8 +20,9 @@ namespace Framework
     {
         static void Main(string[] args)
         {
-            //Song.Song song = new();
-            //song.Load_Midi("E:\\Documents\\My Games\\Clone Hero\\CH Songs\\CrashTest5.5\\notes.mid", Encoding.UTF8);
+            Song.Song song = new();
+            song.Load_Midi("E:\\Documents\\My Games\\Clone Hero\\CH Songs\\CrashTest5.5\\notes.mid", Encoding.UTF8);
+            GC.Collect();
             //song = new();
             //song.Load_Chart("E:\\Documents\\My Games\\Clone Hero\\CH Songs\\CrashTest5.5\\notees.chart", true);
             BenchmarkRunner.Run<SongBenchmarks>();
@@ -50,6 +51,7 @@ namespace Framework
         public void Cleanup()
         {
             song = null;
+            GC.Collect();
         }
     }
 }
