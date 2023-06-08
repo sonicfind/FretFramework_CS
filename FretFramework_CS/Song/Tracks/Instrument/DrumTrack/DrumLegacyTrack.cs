@@ -16,13 +16,9 @@ namespace Framework.Song.Tracks.Instrument.DrumTrack
         public LegacyDrumTrackLoader(DrumType type = DrumType.UNKNOWN) { Type = type; }
         public LegacyDrumTrackLoader(ref MidiFileReader reader)
         {
-            Midi_Loader.Load(new Midi_Instrument_DrumLegacy(reader.GetMultiplierNote()), legacy, ref reader);
-            for (uint d = 0; d < 4; ++d)
-            {
-                CheckLegacyType(ref legacy[d]);
-                if (Type != DrumType.UNKNOWN)
-                    break;
-            }
+            Midi_Instrument_DrumLegacy loader = new(reader.GetMultiplierNote());
+            Midi_Loader.Load(loader, legacy, ref reader);
+            Type = loader.type;
         }
 
         public bool WasLoaded()
@@ -36,18 +32,13 @@ namespace Framework.Song.Tracks.Instrument.DrumTrack
             if (!DotChart_Loader.Load(ref diff, ref reader))
                 return false;
 
-            CheckLegacyType(ref diff);
-            return true;
-        }
-
-        private void CheckLegacyType(ref DifficultyTrack<Drum_Legacy> diff)
-        {
             foreach (var note in diff.notes)
             {
                 Type = note.obj.ParseDrumType();
                 if (Type != DrumType.UNKNOWN)
                     break;
             }
+            return true;
         }
 
         public void Transfer(InstrumentTrack<Drum_4Pro> to)
@@ -86,6 +77,7 @@ namespace Framework.Song.Tracks.Instrument.DrumTrack
     }
     public class Midi_Instrument_DrumLegacy : Midi_Drum_Loader_Base<Drum_Legacy>
     {
+        public DrumType type = DrumType.UNKNOWN;
         public Midi_Instrument_DrumLegacy(byte multiplierNote) : base(multiplierNote) { }
 
         public override bool IsNote(uint value) { return 60 <= value && value <= 101; }
@@ -114,6 +106,8 @@ namespace Framework.Song.Tracks.Instrument.DrumTrack
 
                     if (3 <= lane && lane <= 5)
                         pad.IsCymbal = !toms[lane - 3];
+                    else if (lane == 6)
+                        type = DrumType.FIVE_LANE;
                 }
             }
         }
@@ -147,7 +141,10 @@ namespace Framework.Song.Tracks.Instrument.DrumTrack
                 }
             }
             else if (110 <= note.value && note.value <= 112)
+            {
                 toms[note.value - 110] = true;
+                type = DrumType.FOUR_PRO;
+            }
         }
 
         public override void ToggleExtraValues_Off(MidiNote note, ref InstrumentTrack<Drum_Legacy> track)
