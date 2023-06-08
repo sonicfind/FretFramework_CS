@@ -44,20 +44,6 @@ namespace Framework.FlatMaps
         internal static readonly int DEFAULTCAPACITY = 16;
         internal static readonly bool ISVALUETYPE = !RuntimeHelpers.IsReferenceOrContainsReferences<T>();
 
-        internal static readonly int NODESIZE;
-
-        static SimpleFlatMap()
-        {
-            if (!ISVALUETYPE)
-                return;
-
-            var dm = new DynamicMethod("SizeOfType", typeof(int), new Type[] { });
-            ILGenerator il = dm.GetILGenerator();
-            il.Emit(OpCodes.Sizeof, typeof(Node));
-            il.Emit(OpCodes.Ret);
-            NODESIZE = (int)dm.Invoke(null, null);
-        }
-
         Node[] _buffer = Array.Empty<Node>();
         Node* _buffer_valueType = null;
         int _capacity;
@@ -151,11 +137,10 @@ namespace Framework.FlatMaps
                         }
                         else
                         {
-                            int newSize = value * NODESIZE;
-                            void* newItems = (void*)Marshal.AllocHGlobal(newSize);
+                            void* newItems = (void*)Marshal.AllocHGlobal(value * sizeof(Node));
 
                             if (_count > 0)
-                                Copier.MemCpy(newItems, _buffer_valueType, (uint)_count * (uint)NODESIZE);
+                                Copier.MemCpy(newItems, _buffer_valueType, (uint)_count * (uint)sizeof(Node));
 
                             Marshal.FreeHGlobal((IntPtr)_buffer_valueType);
                             _buffer_valueType = (Node*)newItems;
@@ -329,7 +314,7 @@ namespace Framework.FlatMaps
                 if (!ISVALUETYPE)
                     Array.Copy(_buffer, index + 1, _buffer, index, _count - index);
                 else
-                    Copier.MemMove(_buffer_valueType + index, _buffer_valueType + index + 1, (nuint)((_count - index) * NODESIZE));
+                    Copier.MemMove(_buffer_valueType + index, _buffer_valueType + index + 1, (nuint)((_count - index) * sizeof(Node)));
             }
             ++_version;
         }
@@ -362,7 +347,7 @@ namespace Framework.FlatMaps
                     if (!ISVALUETYPE)
                         Array.Copy(_buffer, index, _buffer, index + 1, _count - index);
                     else
-                        Copier.MemMove(_buffer_valueType + index + 1, _buffer_valueType + index, (nuint)((_count - index) * NODESIZE));
+                        Copier.MemMove(_buffer_valueType + index + 1, _buffer_valueType + index, (nuint)((_count - index) * sizeof(Node)));
                 }
 
                 ++_count;
