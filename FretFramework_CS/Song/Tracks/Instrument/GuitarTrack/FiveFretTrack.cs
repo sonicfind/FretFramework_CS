@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Framework.Song.Tracks.Instrument.GuitarTrack
 {
-    public class Midi_Instrument_FiveFret : Midi_Instrument<FiveFret>
+    public class Midi_FiveFret_Loader : Midi_Instrument_Loader<FiveFret>
     {
         internal static readonly byte[][] ENHANCED_STRINGS = new byte[][] { Encoding.ASCII.GetBytes("[ENHANCED_OPENS]"), Encoding.ASCII.GetBytes("ENHANCED_OPENS") };
         private struct FiveFret_MidiDiff
@@ -43,9 +43,9 @@ namespace Framework.Song.Tracks.Instrument.GuitarTrack
             13, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
         };
 
-        static Midi_Instrument_FiveFret() { }
+        static Midi_FiveFret_Loader() { }
 
-        public Midi_Instrument_FiveFret(byte multiplierNote) : base(
+        public Midi_FiveFret_Loader(byte multiplierNote) : base(
             new(new (byte[], Midi_Phrase)[] {
                 new(SOLO, new(SpecialPhraseType.Solo)),
                 new(new byte[]{ multiplierNote }, new(SpecialPhraseType.StarPower)),
@@ -199,25 +199,25 @@ namespace Framework.Song.Tracks.Instrument.GuitarTrack
                             }
                     }
                 }
-            }
-            else
-            {
-                byte diff = str[4];
-                switch (str[5])
+                else
                 {
-                    case 1:
-                        lanes[12 * diff + 1] = str[6] == 0 ? (uint)1 : 0;
-                        break;
-                    case 4:
-                        if (str[6] == 1)
-                        {
-                            difficulties[diff].SliderNotes = true;
-                            if (track[diff].notes.ValidateLastKey(currEvent.position))
-                                track[diff].notes.Last().IsTap = true;
-                        }
-                        else
-                            difficulties[diff].SliderNotes = false;
-                        break;
+                    byte diff = str[4];
+                    switch (str[5])
+                    {
+                        case 1:
+                            lanes[12 * diff + 1] = str[6] == 0 ? (uint)1 : 0;
+                            break;
+                        case 4:
+                            if (str[6] == 1)
+                            {
+                                difficulties[diff].SliderNotes = true;
+                                if (track[diff].notes.ValidateLastKey(currEvent.position))
+                                    track[diff].notes.Last().IsTap = true;
+                            }
+                            else
+                                difficulties[diff].SliderNotes = false;
+                            break;
+                    }
                 }
             }
         }

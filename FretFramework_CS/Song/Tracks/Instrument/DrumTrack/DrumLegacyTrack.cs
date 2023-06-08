@@ -8,12 +8,12 @@ using System.Threading.Tasks;
 
 namespace Framework.Song.Tracks.Instrument.DrumTrack
 {
-    public class LegacyDrumTrackHandler
+    public class LegacyDrumTrackLoader
     {
         private readonly InstrumentTrack<Drum_Legacy> legacy = new();
         public DrumType Type { get; set; }
-        public LegacyDrumTrackHandler(DrumType type = DrumType.UNKNOWN) { Type = type; }
-        public LegacyDrumTrackHandler(ref MidiFileReader reader)
+        public LegacyDrumTrackLoader(DrumType type = DrumType.UNKNOWN) { Type = type; }
+        public LegacyDrumTrackLoader(ref MidiFileReader reader)
         {
             Midi_Loader.Load(new Midi_Instrument_DrumLegacy(reader.GetMultiplierNote()), legacy, ref reader);
             for (uint d = 0; d < 4; ++d)
@@ -83,7 +83,7 @@ namespace Framework.Song.Tracks.Instrument.DrumTrack
             }
         }
     }
-    public class Midi_Instrument_DrumLegacy : Midi_Instrument_Drum<Drum_Legacy>
+    public class Midi_Instrument_DrumLegacy : Midi_Drum_Loader_Base<Drum_Legacy>
     {
         public Midi_Instrument_DrumLegacy(byte multiplierNote) : base(multiplierNote) { }
 

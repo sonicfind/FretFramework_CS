@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace Framework.Song.Tracks.Vocals
 {
-    public class Midi_Vocals
+    public class Midi_Vocal_Loader
     {
         internal static readonly byte[] LYRICLINE = { 105, 106 };
         internal static readonly byte[] HARMONYLINE = { 0xFF };
@@ -25,7 +25,7 @@ namespace Framework.Song.Tracks.Vocals
         private (ulong, byte[]) lyric = new(ulong.MaxValue, Array.Empty<byte>());
 
 
-        public Midi_Vocals(byte multiplierNote, uint numTracks)
+        public Midi_Vocal_Loader(byte multiplierNote, uint numTracks)
         {
             phrases = new(new (byte[], Midi_Phrase)[] {
                 new(LYRICLINE, new(SpecialPhraseType.LyricLine)),

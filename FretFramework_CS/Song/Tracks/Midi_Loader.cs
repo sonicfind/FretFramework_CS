@@ -131,7 +131,7 @@ namespace Framework.Song.Tracks
             return true;
         }
 
-        public static bool Load(Midi_Vocals loader, uint index, VocalTrack track, ref MidiFileReader reader)
+        public static bool Load(Midi_Vocal_Loader loader, uint index, VocalTrack track, ref MidiFileReader reader)
         {
             if (!track[index].IsEmpty())
                 return false;
@@ -195,7 +195,7 @@ namespace Framework.Song.Tracks
             }
         }
 
-        internal static void ParseVocal(uint index, MidiNote note, Encoding encoding, ref Midi_Vocals loader, ref VocalTrack track)
+        internal static void ParseVocal(uint index, MidiNote note, Encoding encoding, ref Midi_Vocal_Loader loader, ref VocalTrack track)
         {
             if (loader.IsNote(note.value))
                 loader.ParseVocal(index, note.value, encoding, ref track);
@@ -213,7 +213,7 @@ namespace Framework.Song.Tracks
             }
         }
 
-        internal static void ParseVocal_Off(uint index, MidiNote note, Encoding encoding, ref Midi_Vocals loader, ref VocalTrack track)
+        internal static void ParseVocal_Off(uint index, MidiNote note, Encoding encoding, ref Midi_Vocal_Loader loader, ref VocalTrack track)
         {
             if (loader.IsNote(note.value))
                 loader.ParseVocal(index, note.value, encoding, ref track);

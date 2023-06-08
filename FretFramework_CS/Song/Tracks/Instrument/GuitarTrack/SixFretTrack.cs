@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Framework.Song.Tracks.Instrument.GuitarTrack
 {
-    public class Midi_Instrument_SixFret : Midi_Instrument<SixFret>
+    public class Midi_SixFret_Loader : Midi_Instrument_Loader<SixFret>
     {
         private struct SixFret_MidiDiff
         {
@@ -28,7 +28,7 @@ namespace Framework.Song.Tracks.Instrument.GuitarTrack
             0, 4, 5, 6, 1, 2, 3, 7, 8, 9, 10, 11,
         };
 
-        public Midi_Instrument_SixFret(byte multiplierNote) : base(
+        public Midi_SixFret_Loader(byte multiplierNote) : base(
             new(new (byte[], Midi_Phrase)[] {
                 new(SOLO, new(SpecialPhraseType.Solo)),
                 new(new byte[]{ multiplierNote }, new(SpecialPhraseType.StarPower)),
@@ -37,7 +37,7 @@ namespace Framework.Song.Tracks.Instrument.GuitarTrack
             }))
         { }
 
-        static Midi_Instrument_SixFret() { }
+        static Midi_SixFret_Loader() { }
 
         public override bool IsNote(uint value) { return 58 <= value && value <= 103; }
 

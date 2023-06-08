@@ -83,7 +83,7 @@ namespace Framework.Song.Tracks.Instrument
         }
     }
 
-    public abstract class Midi_Instrument<T> : Midi_Loader_Base<InstrumentTrack<T>>
+    public abstract class Midi_Instrument_Loader<T> : Midi_Loader_Base<InstrumentTrack<T>>
         where T : struct, INote
     {
         internal static readonly byte[] SOLO = { 103 };
@@ -95,6 +95,6 @@ namespace Framework.Song.Tracks.Instrument
             2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
             3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3
         };
-        protected Midi_Instrument(Midi_PhraseList phrases) : base(phrases) { }
+        protected Midi_Instrument_Loader(Midi_PhraseList phrases) : base(phrases) { }
     }
 }

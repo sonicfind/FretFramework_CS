@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Framework.Song.Tracks.Instrument.DrumTrack
 {
-    public abstract class Midi_Instrument_Drum<T> : Midi_Instrument<T>
+    public abstract class Midi_Drum_Loader_Base<T> : Midi_Instrument_Loader<T>
         where T : struct, IDrumNote, INote
     {
         internal static readonly uint[] LANEVALUES = new uint[] {
@@ -31,7 +31,7 @@ namespace Framework.Song.Tracks.Instrument.DrumTrack
         protected readonly Drum4_MidiDiff[] difficulties = new Drum4_MidiDiff[4] { new(), new(), new(), new(), };
         protected bool enableDynamics = false;
         protected readonly bool[] toms = new bool[3];
-        protected Midi_Instrument_Drum(byte multiplierNote) : base(
+        protected Midi_Drum_Loader_Base(byte multiplierNote) : base(
             new(new (byte[], Midi_Phrase)[] {
                 new(SOLO, new(SpecialPhraseType.Solo)),
                 new(new byte[]{ multiplierNote }, new(SpecialPhraseType.StarPower)),

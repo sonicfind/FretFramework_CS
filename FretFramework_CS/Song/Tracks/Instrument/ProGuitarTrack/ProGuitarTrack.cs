@@ -57,7 +57,7 @@ namespace Framework.Song.Tracks.Instrument.ProGuitarTrack
         }
     }
 
-    public class Midi_Instrument_ProGuitar<FretType> : Midi_Loader_Base<ProGuitarTrack<FretType>>
+    public class Midi_ProGuitar_Loader<FretType> : Midi_Loader_Base<ProGuitarTrack<FretType>>
         where FretType : struct, IFretted
     {
         internal static readonly uint[] DIFFVALUES = {
@@ -89,7 +89,7 @@ namespace Framework.Song.Tracks.Instrument.ProGuitarTrack
 
         protected readonly ProGuitar_MidiDiff[] difficulties = { new(), new(), new(), new(), };
 
-        public Midi_Instrument_ProGuitar(byte multiplierNote) : base(
+        public Midi_ProGuitar_Loader(byte multiplierNote) : base(
             new(new (byte[], Midi_Phrase)[] {
                 new(SOLO, new(SpecialPhraseType.Solo)),
                 new(new byte[]{ multiplierNote }, new(SpecialPhraseType.StarPower)),
@@ -98,7 +98,7 @@ namespace Framework.Song.Tracks.Instrument.ProGuitarTrack
             }))
         { }
 
-        static Midi_Instrument_ProGuitar() { }
+        static Midi_ProGuitar_Loader() { }
 
         public override bool IsNote(uint value) { return 24 <= value && value <= 106; }
 

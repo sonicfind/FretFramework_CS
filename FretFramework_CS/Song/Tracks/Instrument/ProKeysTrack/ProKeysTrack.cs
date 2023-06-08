@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace Framework.Song.Tracks.Instrument.ProKeysTrack
 {
-    public class Midi_Instrument_ProKeys : Midi_Loader_Base<ProKeysDifficulty>
+    public class Midi_ProKeys_Loader : Midi_Loader_Base<ProKeysDifficulty>
     {
         internal static readonly byte[] SOLO = { 115 };
         internal static readonly byte[] BRE = { 120 };
@@ -27,7 +27,7 @@ namespace Framework.Song.Tracks.Instrument.ProKeysTrack
 		    ulong.MaxValue, ulong.MaxValue, ulong.MaxValue, ulong.MaxValue, ulong.MaxValue,
 	    };
 
-        public Midi_Instrument_ProKeys(byte multiplierNote) : base(
+        public Midi_ProKeys_Loader(byte multiplierNote) : base(
             new(new (byte[], Midi_Phrase)[] {
                 new(SOLO, new(SpecialPhraseType.Solo)),
                 new(new byte[]{ multiplierNote }, new(SpecialPhraseType.StarPower)),

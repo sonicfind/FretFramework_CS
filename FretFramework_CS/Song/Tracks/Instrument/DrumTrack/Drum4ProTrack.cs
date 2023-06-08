@@ -11,9 +11,9 @@ using System.Threading.Tasks;
 
 namespace Framework.Song.Tracks.Instrument.DrumTrack
 {
-    public class Midi_Instrument_Drum4Pro : Midi_Instrument_Drum<Drum_4Pro>
+    public class Midi_Drum4Pro_Loader : Midi_Drum_Loader_Base<Drum_4Pro>
     {
-        public Midi_Instrument_Drum4Pro(byte multiplierNote) : base(multiplierNote) { }
+        public Midi_Drum4Pro_Loader(byte multiplierNote) : base(multiplierNote) { }
 
         public override bool IsNote(uint value) { return 60 <= value && value <= 100; }
 

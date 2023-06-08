@@ -8,9 +8,9 @@ using System.Threading.Tasks;
 
 namespace Framework.Song.Tracks.Instrument.DrumTrack
 {
-    public class Midi_Instrument_Drum5 : Midi_Instrument_Drum<Drum_5>
+    public class Midi_Drum5_Loader : Midi_Drum_Loader_Base<Drum_5>
     {
-        public Midi_Instrument_Drum5(byte multiplierNote) : base(multiplierNote) { }
+        public Midi_Drum5_Loader(byte multiplierNote) : base(multiplierNote) { }
 
         public override bool IsNote(uint value) { return 60 <= value && value <= 101; }
 

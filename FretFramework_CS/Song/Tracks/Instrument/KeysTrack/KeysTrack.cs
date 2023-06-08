@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Framework.Song.Tracks.Instrument.KeysTrack
 {
-    public class Midi_Instrument_Keys : Midi_Instrument<Keys>
+    public class Midi_Keys_Loader : Midi_Instrument_Loader<Keys>
     {
         private readonly ulong[,] notes = new ulong[4, 5] {
             { ulong.MaxValue, ulong.MaxValue, ulong.MaxValue, ulong.MaxValue, ulong.MaxValue },
@@ -26,9 +26,9 @@ namespace Framework.Song.Tracks.Instrument.KeysTrack
             13, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
         };
 
-        static Midi_Instrument_Keys() { }
+        static Midi_Keys_Loader() { }
 
-        public Midi_Instrument_Keys(byte multiplierNote) : base(
+        public Midi_Keys_Loader(byte multiplierNote) : base(
             new(new (byte[], Midi_Phrase)[] {
                 new(SOLO, new(SpecialPhraseType.Solo)),
                 new(new byte[]{ multiplierNote }, new(SpecialPhraseType.StarPower)),
