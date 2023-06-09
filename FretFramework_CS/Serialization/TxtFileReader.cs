@@ -270,7 +270,7 @@ namespace Framework.Serialization
                 if (val >= value)
                 {
                     value = val;
-                    if (_position >= _next)
+                    if (_position == _next)
                         break;
 
                     b = file.ptr[_position];
@@ -395,7 +395,7 @@ namespace Framework.Serialization
                 if (val >= value)
                 {
                     value = val;
-                    if (_position >= _next)
+                    if (_position == _next)
                         break;
 
                     b = file.ptr[_position];
@@ -520,7 +520,7 @@ namespace Framework.Serialization
                 if (val >= value)
                 {
                     value = val;
-                    if (_position >= _next)
+                    if (_position == _next)
                         break;
 
                     b = file.ptr[_position];
@@ -564,7 +564,7 @@ namespace Framework.Serialization
                 if (val >= value)
                 {
                     value = val;
-                    if (_position >= _next)
+                    if (_position == _next)
                         break;
 
                     b = file.ptr[_position];
@@ -616,9 +616,9 @@ namespace Framework.Serialization
             {
                 while (true)
                 {
-                    _position++;
                     value += b - '0';
-                    if (_position >= _next)
+                    ++_position;
+                    if (_position == _next)
                         break;
 
                     b = file.ptr[_position];
@@ -643,7 +643,8 @@ namespace Framework.Serialization
                         while (true)
                         {
                             dec += b - '0';
-                            if (++_position == _next)
+                            ++_position;
+                            if (_position == _next)
                                 break;
 
                             b = file.ptr[_position];
@@ -700,9 +701,9 @@ namespace Framework.Serialization
             {
                 while (true)
                 {
-                    _position++;
+                    ++_position;
                     value += b - '0';
-                    if (_position >= _next)
+                    if (_position == _next)
                         break;
 
                     b = file.ptr[_position];
@@ -727,7 +728,8 @@ namespace Framework.Serialization
                         while (true)
                         {
                             dec += b - '0';
-                            if (++_position == _next)
+                            ++_position;
+                            if (_position == _next)
                                 break;
 
                             b = file.ptr[_position];
