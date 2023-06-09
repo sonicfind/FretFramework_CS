@@ -131,34 +131,6 @@ namespace Framework.Song.Tracks
             return true;
         }
 
-        public static bool Load(Midi_Vocal_Loader loader, uint index, VocalTrack track, ref MidiFileReader reader)
-        {
-            if (!track[index].IsEmpty())
-                return false;
-
-            while (reader.TryParseEvent())
-            {
-                MidiEvent ev = reader.GetEvent();
-                loader.position = ev.position;
-                if (ev.type == MidiEventType.Note_On)
-                {
-                    MidiNote note = reader.ExtractMidiNote();
-                    if (note.velocity > 0)
-                        ParseVocal(index, note, reader.GetEncoding(), ref loader, ref track);
-                    else
-                        ParseVocal_Off(index, note, reader.GetEncoding(), ref loader, ref track);
-
-                }
-                else if (ev.type == MidiEventType.Note_Off)
-                    ParseVocal_Off(index, reader.ExtractMidiNote(), reader.GetEncoding(), ref loader, ref track);
-                else if (ev.type <= MidiEventType.Text_EnumLimit)
-                    loader.ParseText(index, reader.ExtractTextOrSysEx(), reader.GetEncoding(), ref track);
-            }
-
-            track.TrimExcess();
-            return true;
-        }
-
         internal static void ParseNote<TrackType>(MidiNote note, ref Midi_Loader_Base<TrackType> loader, ref TrackType track)
             where TrackType : Track, new()
         {
@@ -192,44 +164,6 @@ namespace Framework.Song.Tracks
                     loader.ParseBRE_Off(note.value, ref track);
                 else
                     loader.ToggleExtraValues_Off(note, ref track);
-            }
-        }
-
-        internal static void ParseVocal(uint index, MidiNote note, Encoding encoding, ref Midi_Vocal_Loader loader, ref VocalTrack track)
-        {
-            if (loader.IsNote(note.value))
-                loader.ParseVocal(index, note.value, encoding, ref track);
-            else if (index == 0)
-            {
-                if (note.value == 96 || note.value == 97)
-                    loader.AddPercussion();
-                else
-                    loader.AddPhrase(ref track.specialPhrases, note);
-            }
-            else if (index == 1)
-            {
-                if (note.value == 105 || note.value == 106)
-                    loader.AddHarmonyLine(ref track.specialPhrases);
-            }
-        }
-
-        internal static void ParseVocal_Off(uint index, MidiNote note, Encoding encoding, ref Midi_Vocal_Loader loader, ref VocalTrack track)
-        {
-            if (loader.IsNote(note.value))
-                loader.ParseVocal_Off(index, note.value, encoding, ref track);
-            else if (index == 0)
-            {
-                if (note.value == 96)
-                    loader.AddPercussion_Off(true, ref track);
-                else if (note.value == 97)
-                    loader.AddPercussion_Off(false, ref track);
-                else
-                    loader.AddPhrase_Off(ref track.specialPhrases, note);
-            }
-            else if (index == 1)
-            {
-                if (note.value == 105 || note.value == 106)
-                    loader.AddHarmonyLine_Off(ref track.specialPhrases);
             }
         }
     }

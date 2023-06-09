@@ -14,7 +14,7 @@ namespace Framework.Song.Tracks.Vocals
     {
         public readonly TimedFlatMap<Vocal> vocals = new();
 
-        public override TimedFlatMap<Vocal> this[uint trackIndex]
+        public override TimedFlatMap<Vocal> this[int trackIndex]
         {
             get
             {

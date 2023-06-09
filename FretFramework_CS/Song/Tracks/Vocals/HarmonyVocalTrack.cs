@@ -14,7 +14,7 @@ namespace Framework.Song.Tracks.Vocals
     {
         public readonly TimedFlatMap<Vocal>[] vocals;
 
-        public override TimedFlatMap<Vocal> this[uint trackIndex]
+        public override TimedFlatMap<Vocal> this[int trackIndex]
         {
             get { return vocals[trackIndex]; }
         }
@@ -28,22 +28,25 @@ namespace Framework.Song.Tracks.Vocals
 
         public override bool IsOccupied()
         {
-            foreach (var track in vocals)
-                if (!track.IsEmpty())
+            for (int i = 0; i < vocals.Length; i++)
+                if (!vocals[i].IsEmpty())
                     return true;
             return base.IsOccupied();
         }
         public override void Clear()
         {
             base.Clear();
-            foreach (var track in vocals)
-                track.Clear();
+            for (int i = 0; i < vocals.Length; i++)
+                vocals[i].Clear();
         }
         public override void TrimExcess()
         {
-            foreach (var track in vocals)
+            for (int i = 0; i < vocals.Length; i++)
+            {
+                ref var track = ref vocals[i];
                 if ((track.Count < 100 || 2000 <= track.Count) && track.Count < track.Capacity)
                     track.TrimExcess();
+            }
         }
         private new string GetDebuggerDisplay()
         {

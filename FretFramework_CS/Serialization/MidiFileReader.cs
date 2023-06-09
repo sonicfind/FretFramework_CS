@@ -27,17 +27,13 @@ namespace Framework.Serialization
 
         private readonly byte m_multiplierNote = 116;
         private readonly BinaryFileReader m_reader;
-        private readonly Encoding encoding;
 
-        public Encoding GetEncoding() { return encoding; }
-
-        public MidiFileReader(byte[] data, Encoding encoding)
+        public MidiFileReader(byte[] data)
         {
             m_reader = new BinaryFileReader(data);
             ProcessHeaderChunk();
-            this.encoding = encoding;
         }
-        public MidiFileReader(string path, byte multiplierNote, Encoding encoding) : this(File.ReadAllBytes(path), encoding)
+        public MidiFileReader(string path, byte multiplierNote) : this(File.ReadAllBytes(path))
         {
             m_multiplierNote = multiplierNote;
         }
@@ -144,11 +140,6 @@ namespace Framework.Serialization
         public ReadOnlySpan<byte> ExtractTextOrSysEx()
         {
             return m_reader.ReadSpan(m_reader.Boundary - m_reader.Position);
-        }
-
-        public string ExtractString()
-        {
-            return encoding.GetString(ExtractTextOrSysEx());
         }
 
         public MidiNote ExtractMidiNote()

@@ -23,9 +23,10 @@ namespace Framework.Song.Tracks.Vocals
         private ulong vocal = ulong.MaxValue;
         private readonly Midi_PhraseList phrases;
         private (ulong, byte[]) lyric = new(ulong.MaxValue, Array.Empty<byte>());
+        private readonly int index;
+        private readonly Encoding encoding;
 
-
-        public Midi_Vocal_Loader(byte multiplierNote, uint numTracks)
+        public Midi_Vocal_Loader(byte multiplierNote, int index, Encoding encoding)
         {
             phrases = new(new (byte[], Midi_Phrase)[] {
                 new(LYRICLINE, new(SpecialPhraseType.LyricLine)),
@@ -34,11 +35,95 @@ namespace Framework.Song.Tracks.Vocals
                 new(LYRICSHIFT, new(SpecialPhraseType.LyricShift)),
                 new(HARMONYLINE, new(SpecialPhraseType.HarmonyLine)),
             });
+            this.index = index;
+            this.encoding = encoding;
         }
 
-        public void ParseVocal(uint index, uint pitch, Encoding encoding, ref VocalTrack track)
+        public bool Load(VocalTrack track, ref MidiFileReader reader)
         {
-            if (vocal != ulong.MaxValue)
+            if (!track[index].IsEmpty())
+                return false;
+
+            while (reader.TryParseEvent())
+            {
+                MidiEvent ev = reader.GetEvent();
+                position = ev.position;
+                if (ev.type == MidiEventType.Note_On)
+                {
+                    MidiNote note = reader.ExtractMidiNote();
+                    if (note.velocity > 0)
+                        ParseNote(note, ref track);
+                    else
+                        ParseNote_Off(note, ref track);
+
+                }
+                else if (ev.type == MidiEventType.Note_Off)
+                    ParseNote_Off(reader.ExtractMidiNote(), ref track);
+                else if (ev.type <= MidiEventType.Text_EnumLimit)
+                    ParseText(reader.ExtractTextOrSysEx(), ref track);
+            }
+
+            track.TrimExcess();
+            return true;
+        }
+
+        private void ParseNote(MidiNote note, ref VocalTrack track)
+        {
+            if (IsNote(note.value))
+                ParseVocal(note.value, ref track);
+            else if (index == 0)
+            {
+                if (note.value == 96 || note.value == 97)
+                    AddPercussion();
+                else
+                    AddPhrase(ref track.specialPhrases, note);
+            }
+            else if (index == 1)
+            {
+                if (note.value == 105 || note.value == 106)
+                    AddHarmonyLine(ref track.specialPhrases);
+            }
+        }
+
+        private void ParseNote_Off(MidiNote note, ref VocalTrack track)
+        {
+            if (IsNote(note.value))
+                ParseVocal_Off(note.value, ref track);
+            else if (index == 0)
+            {
+                if (note.value == 96)
+                    AddPercussion_Off(true, ref track);
+                else if (note.value == 97)
+                    AddPercussion_Off(false, ref track);
+                else
+                    AddPhrase_Off(ref track.specialPhrases, note);
+            }
+            else if (index == 1)
+            {
+                if (note.value == 105 || note.value == 106)
+                    AddHarmonyLine_Off(ref track.specialPhrases);
+            }
+        }
+
+        private void ParseText(ReadOnlySpan<byte> str, ref VocalTrack track)
+        {
+            if (str.Length == 0)
+                return;
+
+            if (str[0] != '[')
+            {
+                if (lyric.Item1 != ulong.MaxValue)
+                    AddVocal(lyric.Item1, ref track);
+                lyric.Item1 = vocal != ulong.MaxValue ? vocal : position;
+                lyric.Item2 = str.ToArray();
+            }
+            else if (index == 0)
+                track.events.Get_Or_Add_Back(position).Add(str.ToArray());
+        }
+
+        private void ParseVocal(uint pitch, ref VocalTrack track)
+        {
+            if (vocal != ulong.MaxValue && lyric.Item1 != ulong.MaxValue)
             {
                 ulong duration = position - vocal;
                 if (duration > 240)
@@ -46,7 +131,7 @@ namespace Framework.Song.Tracks.Vocals
                 else
                     duration /= 2;
 
-                ref Vocal note = ref AddVocal(index, vocal, encoding, ref track);
+                ref Vocal note = ref AddVocal(vocal, ref track);
                 note.pitch.Binary = pitch;
                 note.duration = duration;
                 lyric.Item1 = ulong.MaxValue;
@@ -58,11 +143,11 @@ namespace Framework.Song.Tracks.Vocals
                 lyric.Item1 = position;
         }
 
-        public void ParseVocal_Off(uint index, uint pitch, Encoding encoding, ref VocalTrack track)
+        private void ParseVocal_Off(uint pitch, ref VocalTrack track)
         {
-            if (vocal != ulong.MaxValue)
+            if (vocal != ulong.MaxValue && lyric.Item1 != ulong.MaxValue)
             {
-                ref Vocal note = ref AddVocal(index, vocal, encoding, ref track);
+                ref Vocal note = ref AddVocal(vocal, ref track);
                 note.pitch.Binary = pitch;
                 note.duration = position - vocal;
                 lyric.Item1 = ulong.MaxValue;
@@ -71,23 +156,7 @@ namespace Framework.Song.Tracks.Vocals
             vocal = ulong.MaxValue;
         }
 
-        public void ParseText(uint index, ReadOnlySpan<byte> str, Encoding encoding, ref VocalTrack track)
-        {
-            if (str.Length == 0)
-                return;
-
-            if (str[0] != '[')
-            {
-                if (lyric.Item1 != ulong.MaxValue)
-                    AddVocal(index, lyric.Item1, encoding, ref track);
-                lyric.Item1 = vocal != ulong.MaxValue ? vocal : position;
-                lyric.Item2 = str.ToArray();
-            }
-            else if (index == 0)
-                track.events.Get_Or_Add_Back(position).Add(str.ToArray());
-        }
-
-        private ref Vocal AddVocal(uint index, ulong vocalPos, Encoding encoding, ref VocalTrack track)
+        private ref Vocal AddVocal(ulong vocalPos, ref VocalTrack track)
         {
             var vocals = track[index];
             if (vocals.Capacity == 0)
@@ -101,7 +170,7 @@ namespace Framework.Song.Tracks.Vocals
             percussion = position;
         }
 
-        public void AddPercussion_Off(bool playable, ref VocalTrack track)
+        private void AddPercussion_Off(bool playable, ref VocalTrack track)
         {
             if (percussion != ulong.MaxValue)
             {
@@ -110,26 +179,26 @@ namespace Framework.Song.Tracks.Vocals
             }
         }
 
-        public void AddPhrase(ref TimedFlatMap<List<SpecialPhrase>> phrases, MidiNote note)
+        private void AddPhrase(ref TimedFlatMap<List<SpecialPhrase>> phrases, MidiNote note)
         {
             this.phrases.AddPhrase(ref phrases, position, note);
         }
 
-        public void AddPhrase_Off(ref TimedFlatMap<List<SpecialPhrase>> phrases, MidiNote note)
+        private void AddPhrase_Off(ref TimedFlatMap<List<SpecialPhrase>> phrases, MidiNote note)
         {
             this.phrases.AddPhrase_Off(ref phrases, position, note);
         }
 
-        public void AddHarmonyLine(ref TimedFlatMap<List<SpecialPhrase>> phrases)
+        private void AddHarmonyLine(ref TimedFlatMap<List<SpecialPhrase>> phrases)
         {
             this.phrases.AddPhrase(ref phrases, position, SpecialPhraseType.HarmonyLine, 100);
         }
 
-        public void AddHarmonyLine_Off(ref TimedFlatMap<List<SpecialPhrase>> phrases)
+        private void AddHarmonyLine_Off(ref TimedFlatMap<List<SpecialPhrase>> phrases)
         {
             this.phrases.AddPhrase_Off(ref phrases, position, SpecialPhraseType.HarmonyLine);
         }
 
-        public bool IsNote(uint value) { return 36 <= value && value <= 84; }
+        private static bool IsNote(uint value) { return 36 <= value && value <= 84; }
     }
 }
