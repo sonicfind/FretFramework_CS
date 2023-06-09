@@ -45,7 +45,7 @@ namespace Framework.Song.Tracks.Instrument.GuitarTrack
         {
             uint noteValue = note.value - 58;
             uint lane = lanes[noteValue];
-            uint diffIndex = DIFFVALUES[noteValue];
+            int diffIndex = DIFFVALUES[noteValue];
             
             if (lane < 7)
             {
@@ -84,7 +84,7 @@ namespace Framework.Song.Tracks.Instrument.GuitarTrack
         {
             uint noteValue = note.value - 58;
             uint lane = lanes[noteValue];
-            uint diffIndex = DIFFVALUES[noteValue];
+            int diffIndex = DIFFVALUES[noteValue];
             if (lane < 7)
             {
                 ulong colorPosition = difficulties[diffIndex].notes[lane];
@@ -113,7 +113,7 @@ namespace Framework.Song.Tracks.Instrument.GuitarTrack
                 {
                     if (str[4] == (char)0xFF)
                     {
-                        for (uint diff = 0; diff < 4; ++diff)
+                        for (int diff = 0; diff < 4; ++diff)
                         {
                             difficulties[diff].SliderNotes = str[6] == 1;
                             if (str[6] == 1 && track[diff].notes.ValidateLastKey(currEvent.position))

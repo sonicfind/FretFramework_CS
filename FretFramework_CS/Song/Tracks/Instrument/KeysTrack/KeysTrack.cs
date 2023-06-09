@@ -43,7 +43,7 @@ namespace Framework.Song.Tracks.Instrument.KeysTrack
             uint lane = lanes[noteValue];
             if (lane < 5)
             {
-                uint diffIndex = DIFFVALUES[noteValue];
+                int diffIndex = DIFFVALUES[noteValue];
                 notes[diffIndex, lane] = currEvent.position;
                 if (!track[diffIndex].notes.ValidateLastKey(currEvent.position))
                     track[diffIndex].notes.Add_Back_NoReturn(currEvent.position);
@@ -56,7 +56,7 @@ namespace Framework.Song.Tracks.Instrument.KeysTrack
             uint lane = lanes[noteValue];
             if (lane < 5)
             {
-                uint diffIndex = DIFFVALUES[noteValue];
+                int diffIndex = DIFFVALUES[noteValue];
                 ulong colorPosition = notes[diffIndex, lane];
                 if (colorPosition != ulong.MaxValue)
                 {

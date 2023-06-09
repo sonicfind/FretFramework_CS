@@ -112,7 +112,7 @@ namespace Framework.Song
             proKeys.events = proKeys[3].events;
             proKeys[3].specialPhrases = new();
             proKeys[3].events = new();
-            for (uint i = 0; i < 3; ++i)
+            for (int i = 0; i < 3; ++i)
             {
                 proKeys[i].specialPhrases.Clear();
                 proKeys[i].events.Clear();

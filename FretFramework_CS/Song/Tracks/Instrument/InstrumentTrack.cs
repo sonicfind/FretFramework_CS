@@ -31,7 +31,7 @@ namespace Framework.Song.Tracks.Instrument
             foreach (var difficulty in difficulties)
                 difficulty.TrimExcess();
         }
-        public ref Difficulty this[uint index] { get { return ref difficulties[index]; } }
+        public ref Difficulty this[int index] { get { return ref difficulties[index]; } }
 
         protected new string GetDebuggerDisplay()
         {

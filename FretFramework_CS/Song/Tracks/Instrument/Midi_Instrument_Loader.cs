@@ -89,7 +89,7 @@ namespace Framework.Song.Tracks.Instrument
         internal static readonly byte[] SOLO = { 103 };
         internal static readonly byte[] TREMOLO = { 126 };
         internal static readonly byte[] TRILL = { 127 };
-        internal static readonly uint[] DIFFVALUES = {
+        internal static readonly int[] DIFFVALUES = {
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
             2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,

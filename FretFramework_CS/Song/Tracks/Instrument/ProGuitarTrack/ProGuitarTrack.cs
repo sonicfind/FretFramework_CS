@@ -60,7 +60,7 @@ namespace Framework.Song.Tracks.Instrument.ProGuitarTrack
     public class Midi_ProGuitar_Loader<FretType> : Midi_Loader_Base<ProGuitarTrack<FretType>>
         where FretType : struct, IFretted
     {
-        internal static readonly uint[] DIFFVALUES = {
+        internal static readonly int[] DIFFVALUES = {
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 		    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 		    2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,	2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
@@ -105,7 +105,7 @@ namespace Framework.Song.Tracks.Instrument.ProGuitarTrack
         public override void ParseLaneColor(MidiNote note, ref ProGuitarTrack<FretType> track)
         {
             uint noteValue = note.value - 24;
-            uint diffIndex = DIFFVALUES[noteValue];
+            int diffIndex = DIFFVALUES[noteValue];
             uint lane = LANEVALUES[noteValue];
             ref var midiDiff = ref difficulties[diffIndex];
             ref var diffTrack = ref track[diffIndex];
@@ -172,7 +172,7 @@ namespace Framework.Song.Tracks.Instrument.ProGuitarTrack
         public override void ParseLaneColor_Off(MidiNote note, ref ProGuitarTrack<FretType> track)
         {
             uint noteValue = note.value - 24;
-            uint diffIndex = DIFFVALUES[noteValue];
+            int diffIndex = DIFFVALUES[noteValue];
             uint lane = LANEVALUES[noteValue];
             if (lane < 6)
             {

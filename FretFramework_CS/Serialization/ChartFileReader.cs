@@ -80,7 +80,7 @@ namespace Framework.Serialization
         private EventCombo[] eventSet = Array.Empty<EventCombo>();
         private ulong tickPosition = 0;
         public NoteTracks_Chart Instrument { get; private set; }
-        public uint Difficulty { get; private set; }
+        public int Difficulty { get; private set; }
 
         public ChartFileReader(FrameworkFile file) { reader = new TxtFileReader(file); }
         public ChartFileReader(byte[] data) : this(new FrameworkFile(data)) { }
@@ -124,8 +124,8 @@ namespace Framework.Serialization
 
         public bool ValidateDifficulty()
         {
-            for (uint diff = 4; diff > 0;)
-                if (DoesStringMatch(DIFFICULTIES[--diff]))
+            for (int diff = 3; diff >= 0; --diff)
+                if (DoesStringMatch(DIFFICULTIES[diff]))
                 {
                     Difficulty = diff;
                     eventSet = EVENTS_DIFF;

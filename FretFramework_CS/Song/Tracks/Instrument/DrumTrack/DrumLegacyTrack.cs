@@ -45,7 +45,7 @@ namespace Framework.Song.Tracks.Instrument.DrumTrack
         {
             to.specialPhrases = legacy.specialPhrases;
             to.events = legacy.events;
-            for (uint i = 0; i < 4; ++i)
+            for (int i = 0; i < 4; ++i)
             {
                 if (!to[i].IsOccupied() && legacy[i].IsOccupied())
                 {
@@ -62,7 +62,7 @@ namespace Framework.Song.Tracks.Instrument.DrumTrack
         {
             to.specialPhrases = legacy.specialPhrases;
             to.events = legacy.events;
-            for (uint i = 0; i < 4; ++i)
+            for (int i = 0; i < 4; ++i)
             {
                 if (!to[i].IsOccupied() && legacy[i].IsOccupied())
                 {
@@ -86,7 +86,7 @@ namespace Framework.Song.Tracks.Instrument.DrumTrack
         {
             uint noteValue = note.value - 60;
             uint lane = LANEVALUES[noteValue];
-            uint diffIndex = DIFFVALUES[noteValue];
+            int diffIndex = DIFFVALUES[noteValue];
             if (lane < 7)
             {
                 difficulties[diffIndex].notes[lane] = currEvent.position;
@@ -116,7 +116,7 @@ namespace Framework.Song.Tracks.Instrument.DrumTrack
         {
             uint noteValue = note.value - 60;
             uint lane = LANEVALUES[noteValue];
-            uint diffIndex = DIFFVALUES[noteValue];
+            int diffIndex = DIFFVALUES[noteValue];
 
             if (lane < 7)
             {
@@ -133,7 +133,7 @@ namespace Framework.Song.Tracks.Instrument.DrumTrack
         {
             if (note.value == 109)
             {
-                for (uint i = 0; i < 4; ++i)
+                for (int i = 0; i < 4; ++i)
                 {
                     difficulties[i].Flam = true;
                     if (track[i].notes.ValidateLastKey(currEvent.position))
