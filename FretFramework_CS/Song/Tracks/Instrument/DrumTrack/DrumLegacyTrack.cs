@@ -9,80 +9,98 @@ using System.Threading.Tasks;
 
 namespace Framework.Song.Tracks.Instrument.DrumTrack
 {
-    public class LegacyDrumTrackLoader
+    public class LegacyDrumTrack : InstrumentTrack<Drum_Legacy>
     {
-        private readonly InstrumentTrack<Drum_Legacy> legacy = new();
-        public DrumType Type { get; set; }
-        public LegacyDrumTrackLoader(DrumType type = DrumType.UNKNOWN) { Type = type; }
-        public LegacyDrumTrackLoader(ref MidiFileReader reader)
-        {
-            Midi_Instrument_DrumLegacy loader = new(reader.GetMultiplierNote());
-            Midi_Loader.Load(loader, legacy, ref reader);
-            Type = loader.type;
-        }
+        private DrumType _type;
+        public DrumType Type { get { return _type; } }
 
-        public bool WasLoaded()
+        public LegacyDrumTrack(DrumType type = DrumType.UNKNOWN) { _type = type; }
+
+        public DrumType LoadMidi(ref MidiFileReader reader)
         {
-            return legacy.IsOccupied();
+            Midi_DrumsLegacy_Loader loader = new(reader.GetMultiplierNote());
+            loader.Load(this, ref reader);
+            for (int i = 0; i < 4; ++i)
+            {
+                ParseDrumType(ref difficulties[i]);
+                if (_type != DrumType.UNKNOWN)
+                    break;
+            }
+            return _type;
         }
 
         public bool LoadDotChart(ref ChartFileReader reader)
         {
-            ref DifficultyTrack<Drum_Legacy> diff = ref legacy[reader.Difficulty];
+            ref DifficultyTrack<Drum_Legacy> diff = ref difficulties[reader.Difficulty];
             if (!DotChart_Loader.Load(ref diff, ref reader))
                 return false;
 
-            foreach (var note in diff.notes)
+            ParseDrumType(ref diff);
+            return true;
+        }
+
+        private void ParseDrumType(ref DifficultyTrack<Drum_Legacy> diff)
+        {
+            for (int i = 0; i < diff.notes.Count; ++i)
             {
-                Type = note.obj.ParseDrumType();
-                if (Type != DrumType.UNKNOWN)
+                _type = diff.notes.At_index(i).obj.ParseDrumType();
+                if (_type != DrumType.UNKNOWN)
                     break;
             }
-            return true;
         }
 
         public void Transfer(InstrumentTrack<Drum_4Pro> to)
         {
-            to.specialPhrases = legacy.specialPhrases;
-            to.events = legacy.events;
+            to.specialPhrases = specialPhrases;
+            to.events = events;
             for (int i = 0; i < 4; ++i)
             {
-                if (!to[i].IsOccupied() && legacy[i].IsOccupied())
+                ref var diff_leg = ref difficulties[i];
+                ref var diff_4pro = ref to[i];
+                if (!diff_4pro.IsOccupied() && diff_leg.IsOccupied())
                 {
-                    to[i].specialPhrases = legacy[i].specialPhrases;
-                    to[i].events = legacy[i].events;
-                    to[i].notes.Capacity = legacy[i].notes.Capacity;
-                    foreach (var note in legacy[i].notes)
-                        to[i].notes.Add_Back(note.key, new(note.obj));
+                    diff_4pro.specialPhrases = diff_leg.specialPhrases;
+                    diff_4pro.events = diff_leg.events;
+                    diff_4pro.notes.Capacity = diff_leg.notes.Capacity;
+                    for (int n = 0; n < diff_leg.notes.Count; ++n)
+                    {
+                        ref var note = ref diff_leg.notes.At_index(n);
+                        diff_4pro.notes.Add_Back(note.key, new(note.obj));
+                    }
                 }
             }
         }
 
         public void Transfer(InstrumentTrack<Drum_5> to)
         {
-            to.specialPhrases = legacy.specialPhrases;
-            to.events = legacy.events;
+            to.specialPhrases = specialPhrases;
+            to.events = events;
             for (int i = 0; i < 4; ++i)
             {
-                if (!to[i].IsOccupied() && legacy[i].IsOccupied())
+                ref var diff_leg = ref difficulties[i];
+                ref var diff_5 = ref to[i];
+                if (!diff_5.IsOccupied() && diff_leg.IsOccupied())
                 {
-                    to[i].specialPhrases = legacy[i].specialPhrases;
-                    to[i].events = legacy[i].events;
-                    to[i].notes.Capacity = legacy[i].notes.Capacity;
-                    foreach (var note in legacy[i].notes)
-                        to[i].notes.Add_Back(note.key, new(note.obj));
+                    diff_5.specialPhrases = diff_leg.specialPhrases;
+                    diff_5.events = diff_leg.events;
+                    diff_5.notes.Capacity = diff_leg.notes.Capacity;
+                    for (int n = 0; n < diff_leg.notes.Count; ++n)
+                    {
+                        ref var note = ref diff_leg.notes.At_index(n);
+                        diff_5.notes.Add_Back(note.key, new(note.obj));
+                    }
                 }
             }
         }
     }
-    public class Midi_Instrument_DrumLegacy : Midi_Drum_Loader_Base<Drum_Legacy>
+
+    public class Midi_DrumsLegacy_Loader : Midi_Drum_Loader_Base<Drum_Legacy>
     {
-        public DrumType type = DrumType.UNKNOWN;
-        public Midi_Instrument_DrumLegacy(byte multiplierNote) : base(multiplierNote) { }
+        public Midi_DrumsLegacy_Loader(byte multiplierNote) : base(multiplierNote) { }
 
-        public override bool IsNote(uint value) { return 60 <= value && value <= 101; }
+        protected override bool IsNote(uint value) { return 60 <= value && value <= 101; }
 
-        public override void ParseLaneColor(MidiNote note, ref InstrumentTrack<Drum_Legacy> track)
+        protected override void ParseLaneColor(MidiNote note, ref InstrumentTrack<Drum_Legacy> track)
         {
             uint noteValue = note.value - 60;
             uint lane = LANEVALUES[noteValue];
@@ -106,13 +124,11 @@ namespace Framework.Song.Tracks.Instrument.DrumTrack
 
                     if (3 <= lane && lane <= 5)
                         pad.IsCymbal = !toms[lane - 3];
-                    else if (lane == 6)
-                        type = DrumType.FIVE_LANE;
                 }
             }
         }
 
-        public override void ParseLaneColor_Off(MidiNote note, ref InstrumentTrack<Drum_Legacy> track)
+        protected override void ParseLaneColor_Off(MidiNote note, ref InstrumentTrack<Drum_Legacy> track)
         {
             uint noteValue = note.value - 60;
             uint lane = LANEVALUES[noteValue];
@@ -129,7 +145,7 @@ namespace Framework.Song.Tracks.Instrument.DrumTrack
             }
         }
 
-        public override void ToggleExtraValues(MidiNote note, ref InstrumentTrack<Drum_Legacy> track)
+        protected override void ToggleExtraValues(MidiNote note, ref InstrumentTrack<Drum_Legacy> track)
         {
             if (note.value == 109)
             {
@@ -141,13 +157,10 @@ namespace Framework.Song.Tracks.Instrument.DrumTrack
                 }
             }
             else if (110 <= note.value && note.value <= 112)
-            {
                 toms[note.value - 110] = true;
-                type = DrumType.FOUR_PRO;
-            }
         }
 
-        public override void ToggleExtraValues_Off(MidiNote note, ref InstrumentTrack<Drum_Legacy> track)
+        protected override void ToggleExtraValues_Off(MidiNote note, ref InstrumentTrack<Drum_Legacy> track)
         {
             if (note.value == 109)
             {

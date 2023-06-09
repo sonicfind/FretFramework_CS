@@ -77,7 +77,7 @@ namespace Framework.Song.Tracks.Instrument.ProGuitarTrack
         internal static readonly byte[] TREMOLO = { 126 };
         internal static readonly byte[] TRILL = { 127 };
 
-        protected struct ProGuitar_MidiDiff
+        private struct ProGuitar_MidiDiff
         {
             public bool Hopo { get; set; }
             public readonly ulong[] notes = new ulong[6] { ulong.MaxValue, ulong.MaxValue, ulong.MaxValue, ulong.MaxValue, ulong.MaxValue, ulong.MaxValue };
@@ -87,7 +87,7 @@ namespace Framework.Song.Tracks.Instrument.ProGuitarTrack
             public ProGuitar_MidiDiff() { }
         }
 
-        protected readonly ProGuitar_MidiDiff[] difficulties = { new(), new(), new(), new(), };
+        private readonly ProGuitar_MidiDiff[] difficulties = { new(), new(), new(), new(), };
 
         public Midi_ProGuitar_Loader(byte multiplierNote) : base(
             new(new (byte[], Midi_Phrase)[] {
@@ -100,9 +100,9 @@ namespace Framework.Song.Tracks.Instrument.ProGuitarTrack
 
         static Midi_ProGuitar_Loader() { }
 
-        public override bool IsNote(uint value) { return 24 <= value && value <= 106; }
+        protected override bool IsNote(uint value) { return 24 <= value && value <= 106; }
 
-        public override void ParseLaneColor(MidiNote note, ref ProGuitarTrack<FretType> track)
+        protected override void ParseLaneColor(MidiNote note, ref ProGuitarTrack<FretType> track)
         {
             uint noteValue = note.value - 24;
             int diffIndex = DIFFVALUES[noteValue];
@@ -169,7 +169,7 @@ namespace Framework.Song.Tracks.Instrument.ProGuitarTrack
             }
         }
 
-        public override void ParseLaneColor_Off(MidiNote note, ref ProGuitarTrack<FretType> track)
+        protected override void ParseLaneColor_Off(MidiNote note, ref ProGuitarTrack<FretType> track)
         {
             uint noteValue = note.value - 24;
             int diffIndex = DIFFVALUES[noteValue];
@@ -204,7 +204,7 @@ namespace Framework.Song.Tracks.Instrument.ProGuitarTrack
         }
 
         internal static readonly PitchName[] s_ROOTS = { PitchName.E, PitchName.F, PitchName.F_Sharp_Gb, PitchName.G, PitchName.G_Sharp_Ab, PitchName.A, PitchName.A_Sharp_Bb, PitchName.B, PitchName.C, PitchName.C_Sharp_Db, PitchName.D, PitchName.D_Sharp_Eb};
-        public override void ToggleExtraValues(MidiNote note, ref ProGuitarTrack<FretType> track)
+        protected override void ToggleExtraValues(MidiNote note, ref ProGuitarTrack<FretType> track)
         {
             if (4 <= note.value && note.value <= 15)
             {

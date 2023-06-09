@@ -23,7 +23,54 @@ namespace Framework.Song.Tracks.Instrument
         private bool doBRE = false;
         protected readonly Midi_PhraseList phrases;
         protected Midi_Loader_Base(Midi_PhraseList phrases) { this.phrases = phrases; }
-        public void NormalizeNoteOnPosition()
+
+        public bool Load(TrackType track, ref MidiFileReader reader)
+        {
+            if (track.IsOccupied())
+                return false;
+
+            while (reader.TryParseEvent())
+            {
+                MidiEvent ev = currEvent = reader.GetEvent();
+                if (ev.type == MidiEventType.Note_On)
+                {
+                    MidiNote note = reader.ExtractMidiNote();
+                    if (note.velocity > 0)
+                        ParseNote(note, ref track);
+                    else
+                        ParseNote_Off(note, ref track);
+
+                }
+                else if (ev.type == MidiEventType.Note_Off)
+                    ParseNote_Off(reader.ExtractMidiNote(), ref track);
+                else if (ev.type == MidiEventType.SysEx || ev.type == MidiEventType.SysEx_End)
+                    ParseSysEx(reader.ExtractTextOrSysEx(), ref track);
+                else if (ev.type <= MidiEventType.Text_EnumLimit)
+                    ParseText(reader.ExtractTextOrSysEx(), ref track);
+            }
+
+            track.TrimExcess();
+            return true;
+        }
+
+        private void ParseNote(MidiNote note, ref TrackType track)
+        {
+            NormalizeNoteOnPosition();
+            if (ProcessSpecialNote(note, ref track))
+                return;
+
+            if (IsNote(note.value))
+                ParseLaneColor(note, ref track);
+            else if (!AddPhrase(ref track.specialPhrases, note))
+            {
+                if (120 <= note.value && note.value <= 124)
+                    ParseBRE(note.value);
+                else
+                    ToggleExtraValues(note, ref track);
+            }
+        }
+
+        protected void NormalizeNoteOnPosition()
         {
             if (currEvent.position < lastOn + 16)
                 currEvent.position = lastOn;
@@ -31,45 +78,60 @@ namespace Framework.Song.Tracks.Instrument
                 lastOn = currEvent.position;
         }
 
-        public abstract void ParseLaneColor(MidiNote note, ref TrackType track);
+        private void ParseNote_Off(MidiNote note, ref TrackType track)
+        {
+            if (ProcessSpecialNote_Off(note, ref track))
+                return;
 
-        public abstract void ParseLaneColor_Off(MidiNote note, ref TrackType track);
+            if (IsNote(note.value))
+                ParseLaneColor_Off(note, ref track);
+            else if (!AddPhrase_Off(ref track.specialPhrases, note))
+            {
+                if (120 <= note.value && note.value <= 124)
+                    ParseBRE_Off(note.value, ref track);
+                else
+                    ToggleExtraValues_Off(note, ref track);
+            }
+        }
 
-        public virtual void ParseText(ReadOnlySpan<byte> str, ref TrackType track)
+        protected abstract void ParseLaneColor(MidiNote note, ref TrackType track);
+
+        protected abstract void ParseLaneColor_Off(MidiNote note, ref TrackType track);
+
+        protected virtual void ParseText(ReadOnlySpan<byte> str, ref TrackType track)
         {
             track.events.Get_Or_Add_Back(currEvent.position).Add(str.ToArray());
         }
 
-        public bool AddPhrase(ref TimedFlatMap<List<SpecialPhrase>> phrases, MidiNote note)
+        protected virtual bool IsNote(uint value) { return 60 <= value && value <= 100; }
+
+        protected virtual bool ProcessSpecialNote(MidiNote note, ref TrackType track) { return false; }
+
+        protected virtual void ToggleExtraValues(MidiNote note, ref TrackType track) {}
+
+        protected virtual bool ProcessSpecialNote_Off(MidiNote note, ref TrackType track) { return false; }
+
+        protected virtual void ToggleExtraValues_Off(MidiNote note, ref TrackType track) { }
+
+        protected virtual void ParseSysEx(ReadOnlySpan<byte> str, ref TrackType track) { }
+
+        private bool AddPhrase(ref TimedFlatMap<List<SpecialPhrase>> phrases, MidiNote note)
         {
             return this.phrases.AddPhrase(ref phrases, currEvent.position, note);
         }
 
-        public bool AddPhrase_Off(ref TimedFlatMap<List<SpecialPhrase>> phrases, MidiNote note)
+        private bool AddPhrase_Off(ref TimedFlatMap<List<SpecialPhrase>> phrases, MidiNote note)
         {
             return this.phrases.AddPhrase_Off(ref phrases, currEvent.position, note);
         }
 
-        public virtual bool IsNote(uint value) { return 60 <= value && value <= 100; }
-
-        public virtual bool ProcessSpecialNote(MidiNote note, ref TrackType track) { return false; }
-        
-        public virtual void ToggleExtraValues(MidiNote note, ref TrackType track) {}
-
-        public virtual bool ProcessSpecialNote_Off(MidiNote note, ref TrackType track) { return false; }
-
-        public virtual void ToggleExtraValues_Off(MidiNote note, ref TrackType track) { }
-
-
-        public virtual void ParseSysEx(ReadOnlySpan<byte> str, ref TrackType track) { }
-
-        public void ParseBRE(uint midiValue)
+        private void ParseBRE(uint midiValue)
         {
             notes_BRE[midiValue - 120] = currEvent.position;
             doBRE = notes_BRE[0] == notes_BRE[1] && notes_BRE[1] == notes_BRE[2] && notes_BRE[2] == notes_BRE[3];
         }
 
-        public void ParseBRE_Off(uint midiValue, ref TrackType track)
+        private void ParseBRE_Off(uint midiValue, ref TrackType track)
         {
             if (doBRE)
             {

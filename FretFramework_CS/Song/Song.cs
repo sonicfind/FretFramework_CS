@@ -75,7 +75,7 @@ namespace Framework.Song
             // Add [Song] parsing later
             reader.SkipTrack();
 
-            LegacyDrumTrackLoader legacy = new();
+            LegacyDrumTrack legacy = new();
             while (reader.IsStartOfTrack())
 	        {
                 if (reader.ValidateSyncTrack())
@@ -115,7 +115,7 @@ namespace Framework.Song
                     reader.SkipTrack();
             }
 
-            if (legacy.WasLoaded())
+            if (legacy.IsOccupied())
             {
                 if (legacy.Type == DrumType.FIVE_LANE)
                     legacy.Transfer(m_tracks.drums5);

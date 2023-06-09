@@ -54,9 +54,9 @@ namespace Framework.Song.Tracks.Instrument.GuitarTrack
             }))
         { }
 
-        public override bool IsNote(uint value) { return 59 <= value && value <= 107; }
+        protected override bool IsNote(uint value) { return 59 <= value && value <= 107; }
 
-        public override void ParseLaneColor(MidiNote note, ref InstrumentTrack<FiveFret> track)
+        protected override void ParseLaneColor(MidiNote note, ref InstrumentTrack<FiveFret> track)
         {
             uint noteValue = note.value - 59;
             uint lane = lanes[noteValue];
@@ -138,7 +138,7 @@ namespace Framework.Song.Tracks.Instrument.GuitarTrack
                 difficulties[diffIndex].phrases.AddPhrase(ref track[diffIndex].specialPhrases, currEvent.position, SpecialPhraseType.StarPower_Diff, 100);
         }
 
-        public override void ParseLaneColor_Off(MidiNote note, ref InstrumentTrack<FiveFret> track)
+        protected override void ParseLaneColor_Off(MidiNote note, ref InstrumentTrack<FiveFret> track)
         {
             uint noteValue = note.value - 59;
             uint lane = lanes[noteValue];
@@ -169,7 +169,7 @@ namespace Framework.Song.Tracks.Instrument.GuitarTrack
                 difficulties[diffIndex].phrases.AddPhrase_Off(ref track[diffIndex].specialPhrases, currEvent.position, SpecialPhraseType.StarPower_Diff);
         }
 
-        public override void ParseSysEx(ReadOnlySpan<byte> str, ref InstrumentTrack<FiveFret> track)
+        protected override void ParseSysEx(ReadOnlySpan<byte> str, ref InstrumentTrack<FiveFret> track)
         {
             if (str.StartsWith(SYSEXTAG))
             {
@@ -222,7 +222,7 @@ namespace Framework.Song.Tracks.Instrument.GuitarTrack
             }
         }
 
-        public override void ParseText(ReadOnlySpan<byte> str, ref InstrumentTrack<FiveFret> track)
+        protected override void ParseText(ReadOnlySpan<byte> str, ref InstrumentTrack<FiveFret> track)
         {
             if (lanes[0] == 13 && (str.SequenceEqual(ENHANCED_STRINGS[0]) || str.SequenceEqual(ENHANCED_STRINGS[1])))
             {

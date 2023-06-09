@@ -40,7 +40,7 @@ namespace Framework.Song.Tracks.Instrument.DrumTrack
             }))
         { }
 
-        public override bool ProcessSpecialNote(MidiNote note, ref InstrumentTrack<T> track)
+        protected override bool ProcessSpecialNote(MidiNote note, ref InstrumentTrack<T> track)
         {
             if (note.value != 95)
                 return false;
@@ -51,7 +51,7 @@ namespace Framework.Song.Tracks.Instrument.DrumTrack
             return true;
         }
 
-        public override bool ProcessSpecialNote_Off(MidiNote note, ref InstrumentTrack<T> track)
+        protected override bool ProcessSpecialNote_Off(MidiNote note, ref InstrumentTrack<T> track)
         {
             if (note.value != 95)
                 return false;
@@ -65,7 +65,7 @@ namespace Framework.Song.Tracks.Instrument.DrumTrack
             return true;
         }
 
-        public override void ParseText(ReadOnlySpan<byte> str, ref InstrumentTrack<T> track)
+        protected override void ParseText(ReadOnlySpan<byte> str, ref InstrumentTrack<T> track)
         {
             if (!enableDynamics && str.SequenceEqual(DYNAMICS_STRING))
                 enableDynamics = true;

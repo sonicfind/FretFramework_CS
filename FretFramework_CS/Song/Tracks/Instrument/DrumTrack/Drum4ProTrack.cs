@@ -15,9 +15,9 @@ namespace Framework.Song.Tracks.Instrument.DrumTrack
     {
         public Midi_Drum4Pro_Loader(byte multiplierNote) : base(multiplierNote) { }
 
-        public override bool IsNote(uint value) { return 60 <= value && value <= 100; }
+        protected override bool IsNote(uint value) { return 60 <= value && value <= 100; }
 
-        public override void ParseLaneColor(MidiNote note, ref InstrumentTrack<Drum_4Pro> track)
+        protected override void ParseLaneColor(MidiNote note, ref InstrumentTrack<Drum_4Pro> track)
         {
             uint noteValue = note.value - 60;
             uint lane = LANEVALUES[noteValue];
@@ -45,7 +45,7 @@ namespace Framework.Song.Tracks.Instrument.DrumTrack
             }
         }
 
-        public override void ParseLaneColor_Off(MidiNote note, ref InstrumentTrack<Drum_4Pro> track)
+        protected override void ParseLaneColor_Off(MidiNote note, ref InstrumentTrack<Drum_4Pro> track)
         {
             uint noteValue = note.value - 60;
             uint lane = LANEVALUES[noteValue];
@@ -62,7 +62,7 @@ namespace Framework.Song.Tracks.Instrument.DrumTrack
             }
         }
 
-        public override void ToggleExtraValues(MidiNote note, ref InstrumentTrack<Drum_4Pro> track)
+        protected override void ToggleExtraValues(MidiNote note, ref InstrumentTrack<Drum_4Pro> track)
         {
             if (note.value == 109)
             {
@@ -77,7 +77,7 @@ namespace Framework.Song.Tracks.Instrument.DrumTrack
                 toms[note.value - 110] = true;
         }
 
-        public override void ToggleExtraValues_Off(MidiNote note, ref InstrumentTrack<Drum_4Pro> track)
+        protected override void ToggleExtraValues_Off(MidiNote note, ref InstrumentTrack<Drum_4Pro> track)
         {
             if (note.value == 109)
             {

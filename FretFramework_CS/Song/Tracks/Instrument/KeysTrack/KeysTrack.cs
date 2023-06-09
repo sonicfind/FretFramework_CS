@@ -37,7 +37,7 @@ namespace Framework.Song.Tracks.Instrument.KeysTrack
             }))
         { }
 
-        public override void ParseLaneColor(MidiNote note, ref InstrumentTrack<Keys> track)
+        protected override void ParseLaneColor(MidiNote note, ref InstrumentTrack<Keys> track)
         {
             uint noteValue = note.value - 60;
             uint lane = lanes[noteValue];
@@ -50,7 +50,7 @@ namespace Framework.Song.Tracks.Instrument.KeysTrack
             }
         }
 
-        public override void ParseLaneColor_Off(MidiNote note, ref InstrumentTrack<Keys> track)
+        protected override void ParseLaneColor_Off(MidiNote note, ref InstrumentTrack<Keys> track)
         {
             uint noteValue = note.value - 60;
             uint lane = lanes[noteValue];

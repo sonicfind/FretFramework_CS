@@ -15,21 +15,22 @@ namespace Framework.Song.Tracks.Instrument
         protected readonly Difficulty[] difficulties = new Difficulty[4] { new(), new(), new(), new(), };
         public override bool IsOccupied()
         {
-            foreach (var difficulty in difficulties)
-                if (difficulty.IsOccupied())
+            for (int i = 0; i < 4; ++i)
+                if (difficulties[i].IsOccupied())
                     return true;
+               
             return base.IsOccupied();
         }
         public override void Clear()
         {
             base.Clear();
-            foreach (var difficulty in difficulties)
-                difficulty.Clear();
+            for (int i = 0; i < 4; ++i)
+                difficulties[i].Clear();
         }
         public override void TrimExcess()
         {
-            foreach (var difficulty in difficulties)
-                difficulty.TrimExcess();
+            for (int i = 0; i < 4; ++i)
+                difficulties[i].TrimExcess();
         }
         public ref Difficulty this[int index] { get { return ref difficulties[index]; } }
 

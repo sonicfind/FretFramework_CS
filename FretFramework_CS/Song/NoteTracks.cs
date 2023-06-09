@@ -43,42 +43,41 @@ namespace Framework.Song
 
         public bool LoadFromMidi(MidiTrackType trackType, Encoding encoding, ref MidiFileReader reader)
         {
-            byte multiplierNote = reader.GetMultiplierNote();
             switch (trackType)
             {
-                case MidiTrackType.Guitar_5: return Midi_Loader.Load(new Midi_FiveFret_Loader(multiplierNote), lead_5, ref reader);
-                case MidiTrackType.Bass_5:   return Midi_Loader.Load(new Midi_FiveFret_Loader(multiplierNote), bass_5, ref reader);
-                case MidiTrackType.Keys:     return Midi_Loader.Load(new Midi_Keys_Loader(multiplierNote), keys, ref reader);
+                case MidiTrackType.Guitar_5: return new Midi_FiveFret_Loader(reader.GetMultiplierNote()).Load(lead_5, ref reader);
+                case MidiTrackType.Bass_5:   return new Midi_FiveFret_Loader(reader.GetMultiplierNote()).Load(bass_5, ref reader);
+                case MidiTrackType.Keys:     return new Midi_Keys_Loader(reader.GetMultiplierNote()).Load(keys, ref reader);
                 case MidiTrackType.Drums:
                     {
-                        LegacyDrumTrackLoader legacy = new(ref reader);
-                        if (legacy.Type == DrumType.FIVE_LANE)
+                        LegacyDrumTrack legacy = new();
+                        if (legacy.LoadMidi(ref reader) == DrumType.FIVE_LANE)
                             legacy.Transfer(drums5);
                         else
                             legacy.Transfer(drums_4pro);
                         return true;
                     }
-                case MidiTrackType.Rhythm:         return Midi_Loader.Load(new Midi_FiveFret_Loader(multiplierNote), rhythm, ref reader);
-                case MidiTrackType.Coop:           return Midi_Loader.Load(new Midi_FiveFret_Loader(multiplierNote), coop, ref reader);
-                case MidiTrackType.Real_Guitar:    return Midi_Loader.Load(new Midi_ProGuitar_Loader<Fret_17>(multiplierNote), proguitar_17, ref reader);
-                case MidiTrackType.Real_Guitar_22: return Midi_Loader.Load(new Midi_ProGuitar_Loader<Fret_22>(multiplierNote), proguitar_22, ref reader);
-                case MidiTrackType.Real_Bass:      return Midi_Loader.Load(new Midi_ProGuitar_Loader<Fret_17>(multiplierNote), probass_17, ref reader);
-                case MidiTrackType.Real_Bass_22:   return Midi_Loader.Load(new Midi_ProGuitar_Loader<Fret_22>(multiplierNote), probass_22, ref reader);
-                case MidiTrackType.Real_Keys_X:    return Midi_Loader.Load(new Midi_ProKeys_Loader(multiplierNote), proKeys[3], ref reader);
-                case MidiTrackType.Real_Keys_H:    return Midi_Loader.Load(new Midi_ProKeys_Loader(multiplierNote), proKeys[2], ref reader);
-                case MidiTrackType.Real_Keys_M:    return Midi_Loader.Load(new Midi_ProKeys_Loader(multiplierNote), proKeys[1], ref reader);
-                case MidiTrackType.Real_Keys_E:    return Midi_Loader.Load(new Midi_ProKeys_Loader(multiplierNote), proKeys[0], ref reader);
-                case MidiTrackType.Guitar_6:       return Midi_Loader.Load(new Midi_SixFret_Loader(multiplierNote), lead_6, ref reader);
-                case MidiTrackType.Bass_6:         return Midi_Loader.Load(new Midi_SixFret_Loader(multiplierNote), bass_6, ref reader);
-                case MidiTrackType.Vocals:         return new Midi_Vocal_Loader(multiplierNote, 0, encoding).Load(leadVocals, ref reader);
-                case MidiTrackType.Harm1:          return new Midi_Vocal_Loader(multiplierNote, 0, encoding).Load(harmonyVocals, ref reader);
-                case MidiTrackType.Harm2:          return new Midi_Vocal_Loader(multiplierNote, 1, encoding).Load(harmonyVocals, ref reader);
-                case MidiTrackType.Harm3:          return new Midi_Vocal_Loader(multiplierNote, 2, encoding).Load(harmonyVocals, ref reader);
+                case MidiTrackType.Vocals:         return new Midi_Vocal_Loader(reader.GetMultiplierNote(), 0, encoding).Load(leadVocals, ref reader);
+                case MidiTrackType.Harm1:          return new Midi_Vocal_Loader(reader.GetMultiplierNote(), 0, encoding).Load(harmonyVocals, ref reader);
+                case MidiTrackType.Harm2:          return new Midi_Vocal_Loader(reader.GetMultiplierNote(), 1, encoding).Load(harmonyVocals, ref reader);
+                case MidiTrackType.Harm3:          return new Midi_Vocal_Loader(reader.GetMultiplierNote(), 2, encoding).Load(harmonyVocals, ref reader);
+                case MidiTrackType.Rhythm:         return new Midi_FiveFret_Loader(reader.GetMultiplierNote()).Load(rhythm, ref reader);
+                case MidiTrackType.Coop:           return new Midi_FiveFret_Loader(reader.GetMultiplierNote()).Load(coop, ref reader);
+                case MidiTrackType.Real_Guitar:    return new Midi_ProGuitar_Loader<Fret_17>(reader.GetMultiplierNote()).Load(proguitar_17, ref reader);
+                case MidiTrackType.Real_Guitar_22: return new Midi_ProGuitar_Loader<Fret_22>(reader.GetMultiplierNote()).Load(proguitar_22, ref reader);
+                case MidiTrackType.Real_Bass:      return new Midi_ProGuitar_Loader<Fret_17>(reader.GetMultiplierNote()).Load(probass_17, ref reader);
+                case MidiTrackType.Real_Bass_22:   return new Midi_ProGuitar_Loader<Fret_22>(reader.GetMultiplierNote()).Load(probass_22, ref reader);
+                case MidiTrackType.Real_Keys_X:    return new Midi_ProKeys_Loader(reader.GetMultiplierNote()).Load(proKeys[3], ref reader);
+                case MidiTrackType.Real_Keys_H:    return new Midi_ProKeys_Loader(reader.GetMultiplierNote()).Load(proKeys[2], ref reader);
+                case MidiTrackType.Real_Keys_M:    return new Midi_ProKeys_Loader(reader.GetMultiplierNote()).Load(proKeys[1], ref reader);
+                case MidiTrackType.Real_Keys_E:    return new Midi_ProKeys_Loader(reader.GetMultiplierNote()).Load(proKeys[0], ref reader);
+                case MidiTrackType.Guitar_6:       return new Midi_SixFret_Loader(reader.GetMultiplierNote()).Load(lead_6, ref reader);
+                case MidiTrackType.Bass_6:         return new Midi_SixFret_Loader(reader.GetMultiplierNote()).Load(bass_6, ref reader);
             }
             return true;
         }
 
-        public bool LoadFromDotChart(ref LegacyDrumTrackLoader legacy, ref ChartFileReader reader)
+        public bool LoadFromDotChart(ref LegacyDrumTrack legacy, ref ChartFileReader reader)
         {
             switch (reader.Instrument)
             {
