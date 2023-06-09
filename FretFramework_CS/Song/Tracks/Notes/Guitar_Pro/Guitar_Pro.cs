@@ -39,7 +39,7 @@ namespace Framework.Song.Tracks.Notes.Guitar_Pro
             get { return _value; }
             set
             {
-                if (_value > MAX)
+                if (_value < 0 || _value > MAX)
                     throw new ArgumentOutOfRangeException("Value");
                 _value = value;
             }
@@ -58,7 +58,7 @@ namespace Framework.Song.Tracks.Notes.Guitar_Pro
             get { return _value; }
             set
             {
-                if (_value > MAX)
+                if (_value < 0 || _value > MAX)
                     throw new ArgumentOutOfRangeException("Value");
                 _value = value;
             }
