@@ -12,6 +12,7 @@ namespace Framework.Serialization
 {
     public class MidiFileReader
     {
+        static MidiFileReader() { }
         internal static readonly byte[][] TRACKTAGS = { Encoding.ASCII.GetBytes("MThd"), Encoding.ASCII.GetBytes("MTrk") };
         private struct MidiHeader
         {
@@ -208,13 +209,14 @@ namespace Framework.Serialization
             new (Encoding.ASCII.GetBytes("BEATS"), MidiTrackType.Beats),
         };
 
-        static MidiFileReader(){}
-
         public static MidiTrackType GetTrackType(ReadOnlySpan<byte> name)
         {
-            foreach (var item in TRACKNAMES)
+            for (int i = 0; i <  TRACKNAMES.Length; ++i)
+            {
+                ref var item = ref TRACKNAMES[i];
                 if (name.SequenceEqual(item.Item1))
                     return item.Item2;
+            }
             return MidiTrackType.Unknown;
         }
     };
