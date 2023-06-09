@@ -92,9 +92,9 @@ namespace Framework.Serialization
             _position += amount;
         }
 
-        public ref byte PeekByte()
+        public byte PeekByte()
         {
-            return ref file.ptr[_position];
+            return file.ptr[_position];
         }
 
         public bool ReadByte(ref byte value)
