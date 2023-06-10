@@ -143,9 +143,18 @@ namespace Framework.Serialization
             return m_reader.ReadSpan(m_reader.Boundary - m_reader.Position);
         }
 
+        public void ExtractMidiNote(ref MidiNote note)
+        {
+            ReadOnlySpan<byte> span = m_reader.ReadSpan(2);
+            note.value = span[0];
+            note.velocity = span[1];
+        }
+
         public MidiNote ExtractMidiNote()
         {
-            return new(m_reader.ReadSpan(2));
+            MidiNote note = new();
+            ExtractMidiNote(ref note);
+            return note;
         }
         public ControlChange ExtractControlChange()
         {

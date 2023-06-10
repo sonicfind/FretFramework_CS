@@ -39,9 +39,9 @@ namespace Framework.Song.Tracks.Instrument.GuitarTrack
 
         static Midi_SixFret_Loader() { }
 
-        protected override bool IsNote(uint value) { return 58 <= value && value <= 103; }
+        protected override bool IsNote() { return 58 <= note.value && note.value <= 103; }
 
-        protected override void ParseLaneColor(MidiNote note, ref InstrumentTrack<SixFret> track)
+        protected override void ParseLaneColor(ref InstrumentTrack<SixFret> track)
         {
             uint noteValue = note.value - 58;
             uint lane = lanes[noteValue];
@@ -80,7 +80,7 @@ namespace Framework.Song.Tracks.Instrument.GuitarTrack
                 difficulties[diffIndex].SliderNotes = true;
         }
 
-        protected override void ParseLaneColor_Off(MidiNote note, ref InstrumentTrack<SixFret> track)
+        protected override void ParseLaneColor_Off(ref InstrumentTrack<SixFret> track)
         {
             uint noteValue = note.value - 58;
             uint lane = lanes[noteValue];

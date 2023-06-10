@@ -100,9 +100,9 @@ namespace Framework.Song.Tracks.Instrument.ProGuitarTrack
 
         static Midi_ProGuitar_Loader() { }
 
-        protected override bool IsNote(uint value) { return 24 <= value && value <= 106; }
+        protected override bool IsNote() { return 24 <= note.value && note.value <= 106; }
 
-        protected override void ParseLaneColor(MidiNote note, ref ProGuitarTrack<FretType> track)
+        protected override void ParseLaneColor(ref ProGuitarTrack<FretType> track)
         {
             uint noteValue = note.value - 24;
             int diffIndex = DIFFVALUES[noteValue];
@@ -169,7 +169,7 @@ namespace Framework.Song.Tracks.Instrument.ProGuitarTrack
             }
         }
 
-        protected override void ParseLaneColor_Off(MidiNote note, ref ProGuitarTrack<FretType> track)
+        protected override void ParseLaneColor_Off(ref ProGuitarTrack<FretType> track)
         {
             uint noteValue = note.value - 24;
             int diffIndex = DIFFVALUES[noteValue];
@@ -204,7 +204,7 @@ namespace Framework.Song.Tracks.Instrument.ProGuitarTrack
         }
 
         internal static readonly PitchName[] s_ROOTS = { PitchName.E, PitchName.F, PitchName.F_Sharp_Gb, PitchName.G, PitchName.G_Sharp_Ab, PitchName.A, PitchName.A_Sharp_Bb, PitchName.B, PitchName.C, PitchName.C_Sharp_Db, PitchName.D, PitchName.D_Sharp_Eb};
-        protected override void ToggleExtraValues(MidiNote note, ref ProGuitarTrack<FretType> track)
+        protected override void ToggleExtraValues(ref ProGuitarTrack<FretType> track)
         {
             if (4 <= note.value && note.value <= 15)
             {

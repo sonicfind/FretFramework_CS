@@ -40,7 +40,7 @@ namespace Framework.Song.Tracks.Instrument.DrumTrack
             }))
         { }
 
-        protected override bool ProcessSpecialNote(MidiNote note, ref InstrumentTrack<T> track)
+        protected override bool ProcessSpecialNote(ref InstrumentTrack<T> track)
         {
             if (note.value != 95)
                 return false;
@@ -51,7 +51,7 @@ namespace Framework.Song.Tracks.Instrument.DrumTrack
             return true;
         }
 
-        protected override bool ProcessSpecialNote_Off(MidiNote note, ref InstrumentTrack<T> track)
+        protected override bool ProcessSpecialNote_Off(ref InstrumentTrack<T> track)
         {
             if (note.value != 95)
                 return false;

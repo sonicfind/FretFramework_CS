@@ -55,11 +55,6 @@ namespace Framework.Serialization
     {
         public uint value;
         public uint velocity;
-        public MidiNote(ReadOnlySpan<byte> span)
-        {
-            value = span[0];
-            velocity = span[1];
-        }
     };
 
     public struct ControlChange

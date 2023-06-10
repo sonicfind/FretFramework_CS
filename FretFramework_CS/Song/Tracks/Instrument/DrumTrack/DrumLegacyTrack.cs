@@ -98,9 +98,9 @@ namespace Framework.Song.Tracks.Instrument.DrumTrack
     {
         public Midi_DrumsLegacy_Loader(byte multiplierNote) : base(multiplierNote) { }
 
-        protected override bool IsNote(uint value) { return 60 <= value && value <= 101; }
+        protected override bool IsNote() { return 60 <= note.value && note.value <= 101; }
 
-        protected override void ParseLaneColor(MidiNote note, ref InstrumentTrack<Drum_Legacy> track)
+        protected override void ParseLaneColor(ref InstrumentTrack<Drum_Legacy> track)
         {
             uint noteValue = note.value - 60;
             uint lane = LANEVALUES[noteValue];
@@ -128,7 +128,7 @@ namespace Framework.Song.Tracks.Instrument.DrumTrack
             }
         }
 
-        protected override void ParseLaneColor_Off(MidiNote note, ref InstrumentTrack<Drum_Legacy> track)
+        protected override void ParseLaneColor_Off(ref InstrumentTrack<Drum_Legacy> track)
         {
             uint noteValue = note.value - 60;
             uint lane = LANEVALUES[noteValue];
@@ -145,7 +145,7 @@ namespace Framework.Song.Tracks.Instrument.DrumTrack
             }
         }
 
-        protected override void ToggleExtraValues(MidiNote note, ref InstrumentTrack<Drum_Legacy> track)
+        protected override void ToggleExtraValues(ref InstrumentTrack<Drum_Legacy> track)
         {
             if (note.value == 109)
             {
@@ -160,7 +160,7 @@ namespace Framework.Song.Tracks.Instrument.DrumTrack
                 toms[note.value - 110] = true;
         }
 
-        protected override void ToggleExtraValues_Off(MidiNote note, ref InstrumentTrack<Drum_Legacy> track)
+        protected override void ToggleExtraValues_Off(ref InstrumentTrack<Drum_Legacy> track)
         {
             if (note.value == 109)
             {

@@ -21,6 +21,7 @@ namespace Framework.Song.Tracks.Instrument
         private ulong lastOn = 0;
         private readonly ulong[] notes_BRE = { ulong.MaxValue, ulong.MaxValue, ulong.MaxValue, ulong.MaxValue, ulong.MaxValue };
         private bool doBRE = false;
+        protected MidiNote note;
         protected readonly Midi_PhraseList phrases;
         protected Midi_Loader_Base(Midi_PhraseList phrases) { this.phrases = phrases; }
 
@@ -34,15 +35,18 @@ namespace Framework.Song.Tracks.Instrument
                 MidiEvent ev = currEvent = reader.GetEvent();
                 if (ev.type == MidiEventType.Note_On)
                 {
-                    MidiNote note = reader.ExtractMidiNote();
+                    reader.ExtractMidiNote(ref note);
                     if (note.velocity > 0)
-                        ParseNote(note, ref track);
+                        ParseNote(ref track);
                     else
-                        ParseNote_Off(note, ref track);
+                        ParseNote_Off(ref track);
 
                 }
                 else if (ev.type == MidiEventType.Note_Off)
-                    ParseNote_Off(reader.ExtractMidiNote(), ref track);
+                {
+                    reader.ExtractMidiNote(ref note);
+                    ParseNote_Off(ref track);
+                }
                 else if (ev.type == MidiEventType.SysEx || ev.type == MidiEventType.SysEx_End)
                     ParseSysEx(reader.ExtractTextOrSysEx(), ref track);
                 else if (ev.type <= MidiEventType.Text_EnumLimit)
@@ -53,20 +57,20 @@ namespace Framework.Song.Tracks.Instrument
             return true;
         }
 
-        private void ParseNote(MidiNote note, ref TrackType track)
+        private void ParseNote(ref TrackType track)
         {
             NormalizeNoteOnPosition();
-            if (ProcessSpecialNote(note, ref track))
+            if (ProcessSpecialNote(ref track))
                 return;
 
-            if (IsNote(note.value))
-                ParseLaneColor(note, ref track);
+            if (IsNote())
+                ParseLaneColor(ref track);
             else if (!AddPhrase(ref track.specialPhrases, note))
             {
                 if (120 <= note.value && note.value <= 124)
                     ParseBRE(note.value);
                 else
-                    ToggleExtraValues(note, ref track);
+                    ToggleExtraValues(ref track);
             }
         }
 
@@ -78,40 +82,40 @@ namespace Framework.Song.Tracks.Instrument
                 lastOn = currEvent.position;
         }
 
-        private void ParseNote_Off(MidiNote note, ref TrackType track)
+        private void ParseNote_Off(ref TrackType track)
         {
-            if (ProcessSpecialNote_Off(note, ref track))
+            if (ProcessSpecialNote_Off(ref track))
                 return;
 
-            if (IsNote(note.value))
-                ParseLaneColor_Off(note, ref track);
+            if (IsNote())
+                ParseLaneColor_Off(ref track);
             else if (!AddPhrase_Off(ref track.specialPhrases, note))
             {
                 if (120 <= note.value && note.value <= 124)
                     ParseBRE_Off(note.value, ref track);
                 else
-                    ToggleExtraValues_Off(note, ref track);
+                    ToggleExtraValues_Off(ref track);
             }
         }
 
-        protected abstract void ParseLaneColor(MidiNote note, ref TrackType track);
+        protected abstract void ParseLaneColor(ref TrackType track);
 
-        protected abstract void ParseLaneColor_Off(MidiNote note, ref TrackType track);
+        protected abstract void ParseLaneColor_Off(ref TrackType track);
 
         protected virtual void ParseText(ReadOnlySpan<byte> str, ref TrackType track)
         {
             track.events.Get_Or_Add_Back(currEvent.position).Add(str.ToArray());
         }
 
-        protected virtual bool IsNote(uint value) { return 60 <= value && value <= 100; }
+        protected virtual bool IsNote() { return 60 <= note.value && note.value <= 100; }
 
-        protected virtual bool ProcessSpecialNote(MidiNote note, ref TrackType track) { return false; }
+        protected virtual bool ProcessSpecialNote(ref TrackType track) { return false; }
 
-        protected virtual void ToggleExtraValues(MidiNote note, ref TrackType track) {}
+        protected virtual void ToggleExtraValues(ref TrackType track) {}
 
-        protected virtual bool ProcessSpecialNote_Off(MidiNote note, ref TrackType track) { return false; }
+        protected virtual bool ProcessSpecialNote_Off(ref TrackType track) { return false; }
 
-        protected virtual void ToggleExtraValues_Off(MidiNote note, ref TrackType track) { }
+        protected virtual void ToggleExtraValues_Off(ref TrackType track) { }
 
         protected virtual void ParseSysEx(ReadOnlySpan<byte> str, ref TrackType track) { }
 

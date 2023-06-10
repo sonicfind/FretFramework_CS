@@ -54,9 +54,9 @@ namespace Framework.Song.Tracks.Instrument.GuitarTrack
             }))
         { }
 
-        protected override bool IsNote(uint value) { return 59 <= value && value <= 107; }
+        protected override bool IsNote() { return 59 <= note.value && note.value <= 107; }
 
-        protected override void ParseLaneColor(MidiNote note, ref InstrumentTrack<FiveFret> track)
+        protected override void ParseLaneColor(ref InstrumentTrack<FiveFret> track)
         {
             uint noteValue = note.value - 59;
             uint lane = lanes[noteValue];
@@ -138,7 +138,7 @@ namespace Framework.Song.Tracks.Instrument.GuitarTrack
                 difficulties[diffIndex].phrases.AddPhrase(ref track[diffIndex].specialPhrases, currEvent.position, SpecialPhraseType.StarPower_Diff, 100);
         }
 
-        protected override void ParseLaneColor_Off(MidiNote note, ref InstrumentTrack<FiveFret> track)
+        protected override void ParseLaneColor_Off(ref InstrumentTrack<FiveFret> track)
         {
             uint noteValue = note.value - 59;
             uint lane = lanes[noteValue];

@@ -37,16 +37,16 @@ namespace Framework.Song.Tracks.Instrument.ProKeysTrack
             }))
         { }
 
-        protected override bool IsNote(uint value) { return 48 <= value && value <= 72; }
+        protected override bool IsNote() { return 48 <= note.value && note.value <= 72; }
 
-        protected override void ParseLaneColor(MidiNote note, ref ProKeysDifficulty track)
+        protected override void ParseLaneColor(ref ProKeysDifficulty track)
         {
             if (!track.notes.ValidateLastKey(currEvent.position))
                 track.notes.Add_Back_NoReturn(currEvent.position);
             lanes[note.value - 48] = currEvent.position;
         }
 
-        protected override void ParseLaneColor_Off(MidiNote note, ref ProKeysDifficulty track)
+        protected override void ParseLaneColor_Off(ref ProKeysDifficulty track)
         {
             ulong colorPosition = lanes[note.value - 48];
             if (colorPosition != ulong.MaxValue)
@@ -56,7 +56,7 @@ namespace Framework.Song.Tracks.Instrument.ProKeysTrack
             }
         }
 
-        protected override void ToggleExtraValues(MidiNote note, ref ProKeysDifficulty track)
+        protected override void ToggleExtraValues(ref ProKeysDifficulty track)
         {
             switch(note.value)
             {
