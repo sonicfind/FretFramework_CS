@@ -201,10 +201,10 @@ namespace Framework.Serialization
         }
         public byte ReadByte()
         {
-            byte value = default;
-            if (!ReadByte(ref value))
+            if (_position >= currentBoundary)
                 throw new Exception("Failed to parse data");
-            return value;
+
+            return file.ptr[_position++];
         }
 
         public ref byte ReadByte_Ref()
@@ -216,10 +216,10 @@ namespace Framework.Serialization
 
         public sbyte ReadSByte()
         {
-            sbyte value = default;
-            if (!ReadSByte(ref value))
+            if (_position >= currentBoundary)
                 throw new Exception("Failed to parse data");
-            return value;
+
+            return (sbyte)file.ptr[_position++];
         }
         public short ReadInt16(Endianness endianness = Endianness.LittleEndian)
         {
