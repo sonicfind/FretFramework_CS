@@ -18,6 +18,7 @@ namespace Framework.Serialization
         private readonly FrameworkFile file;
         private int boundaryIndex = 0;
         private readonly int* boundaries;
+        private int currentBoundary;
 
         private int _position;
 
@@ -31,13 +32,13 @@ namespace Framework.Serialization
                 _position = value;
             }
         }
-        public int Boundary { get { return boundaries[boundaryIndex]; } }
+        public int Boundary { get { return currentBoundary; } }
 
         public BinaryFileReader(FrameworkFile file)
         {
             this.file = file;
             boundaries = (int*)Marshal.AllocHGlobal(sizeof(int) * 8);
-            boundaries[0] = file.Length;
+            currentBoundary = boundaries[0] = file.Length;
         }
         public BinaryFileReader(byte[] data) : this(new FrameworkFile(data)) {}
         public BinaryFileReader(string path) : this(File.ReadAllBytes(path)) {}
@@ -49,10 +50,10 @@ namespace Framework.Serialization
 
         public void ExitSection()
         {
-            _position = boundaries[boundaryIndex];
+            _position = currentBoundary;
             if (boundaryIndex == 0)
                 throw new Exception("ayo wtf bro");
-            --boundaryIndex;
+            currentBoundary = boundaries[--boundaryIndex];
         }
 
         public void EnterSection(int length)
@@ -62,7 +63,7 @@ namespace Framework.Serialization
                 throw new Exception("Invalid length for section");
             if (boundaryIndex == 7)
                 throw new Exception("Nested Buffer limit reached");
-            boundaries[++boundaryIndex] = boundary;
+            currentBoundary = boundaries[++boundaryIndex] = boundary;
         }
 
         public bool CompareTag(byte[] tag)
@@ -80,7 +81,7 @@ namespace Framework.Serialization
 
         public bool Move(int amount)
         {
-            if (_position + amount > boundaries[boundaryIndex])
+            if (_position + amount > currentBoundary)
                 return false;
 
             _position += amount;
@@ -99,7 +100,7 @@ namespace Framework.Serialization
 
         public bool ReadByte(ref byte value)
         {
-            if (_position >= boundaries[boundaryIndex])
+            if (_position >= currentBoundary)
                 return false;
 
             value = file.ptr[_position++];
@@ -108,7 +109,7 @@ namespace Framework.Serialization
 
         public bool ReadSByte(ref sbyte value)
         {
-            if (_position >= boundaries[boundaryIndex])
+            if (_position >= currentBoundary)
                 return false;
 
             value = (sbyte)file.ptr[_position++];
@@ -117,7 +118,7 @@ namespace Framework.Serialization
         
         public bool ReadInt16(ref short value, Endianness endianness = Endianness.LittleEndian)
         {
-            if (_position + 2 > boundaries[boundaryIndex])
+            if (_position + 2 > currentBoundary)
                 return false;
 
             Span<byte> span = new(file.ptr + _position, 2);
@@ -131,7 +132,7 @@ namespace Framework.Serialization
         
         public bool ReadUInt16(ref ushort value, Endianness endianness = Endianness.LittleEndian)
         {
-            if (_position + 2 > boundaries[boundaryIndex])
+            if (_position + 2 > currentBoundary)
                 return false;
 
             Span<byte> span = new(file.ptr + _position, 2);
@@ -145,7 +146,7 @@ namespace Framework.Serialization
         
         public bool ReadInt32(ref int value, Endianness endianness = Endianness.LittleEndian)
         {
-            if (_position + 4 > boundaries[boundaryIndex])
+            if (_position + 4 > currentBoundary)
                 return false;
 
             Span<byte> span = new(file.ptr + _position, 4);
@@ -159,7 +160,7 @@ namespace Framework.Serialization
         
         public bool ReadUInt32(ref uint value, Endianness endianness = Endianness.LittleEndian)
         {
-            if (_position + 4 > boundaries[boundaryIndex])
+            if (_position + 4 > currentBoundary)
                 return false;
 
             Span<byte> span = new(file.ptr + _position, 4);
@@ -173,7 +174,7 @@ namespace Framework.Serialization
         
         public bool ReadInt64(ref long value, Endianness endianness = Endianness.LittleEndian)
         {
-            if (_position + 8 > boundaries[boundaryIndex])
+            if (_position + 8 > currentBoundary)
                 return false;
 
             Span<byte> span = new(file.ptr + _position, 8);
@@ -187,7 +188,7 @@ namespace Framework.Serialization
         
         public bool ReadUInt64(ref ulong value, Endianness endianness = Endianness.LittleEndian)
         {
-            if (_position + 8 > boundaries[boundaryIndex])
+            if (_position + 8 > currentBoundary)
                 return false;
 
             Span<byte> span = new(file.ptr + _position, 8);
@@ -208,7 +209,7 @@ namespace Framework.Serialization
 
         public ref byte ReadByte_Ref()
         {
-            if (_position >= boundaries[boundaryIndex])
+            if (_position >= currentBoundary)
                 throw new Exception("Failed to parse data");
             return ref file.ptr[_position++];
         }
@@ -264,7 +265,7 @@ namespace Framework.Serialization
         }
         public bool ReadBytes(byte[] bytes)
         {
-            if (_position + bytes.Length > boundaries[boundaryIndex])
+            if (_position + bytes.Length > currentBoundary)
                 return false;
 
             Marshal.Copy((IntPtr)(file.ptr + _position), bytes, 0, bytes.Length);
@@ -282,12 +283,11 @@ namespace Framework.Serialization
 
         public uint ReadVLQ()
         {
-            int boundary = boundaries[boundaryIndex];
             uint value = 0;
             uint i = 0;
             while (true)
             {
-                if (_position >= boundary)
+                if (_position >= currentBoundary)
                     throw new Exception("Failed to parse data");
 
                 byte b = file.ptr[_position++];
@@ -305,7 +305,7 @@ namespace Framework.Serialization
 
         public ReadOnlySpan<byte> ReadSpan(int length)
         {
-            if (_position + length > boundaries[boundaryIndex])
+            if (_position + length > currentBoundary)
                 throw new Exception("Failed to parse data");
             ReadOnlySpan<byte> span = new(file.ptr + _position, length);
             _position += length;
