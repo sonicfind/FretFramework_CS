@@ -1,0 +1,199 @@
+﻿using Framework.Serialization;
+using Framework.SongEntry.DotChartValues.Drums;
+using Framework.SongEntry.DotChartValues.Guitar;
+using Framework.SongEntry.DotChartValues.Keys;
+using Framework.SongEntry.TrackScan;
+using Framework.SongEntry.TrackScan.Instrument;
+using Framework.SongEntry.TrackScan.Instrument.Drums;
+using Framework.SongEntry.TrackScan.Instrument.Guitar;
+using Framework.SongEntry.TrackScan.Instrument.Keys;
+using Framework.SongEntry.TrackScan.Instrument.ProGuitar;
+using Framework.SongEntry.TrackScan.Instrument.ProKeys;
+using Framework.SongEntry.TrackScan.Vocals;
+using Framework.Types;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Framework.SongEntry
+{
+    public struct TrackScans
+    {
+        public ScanValues lead_5 = new();
+        public ScanValues lead_6 = new();
+        public ScanValues bass_5 = new();
+        public ScanValues bass_6 = new();
+        public ScanValues rhythm = new();
+        public ScanValues coop = new();
+        public ScanValues keys = new();
+        public ScanValues drums_4pro = new();
+        public ScanValues drums5 = new();
+        public ScanValues proguitar_17 = new();
+        public ScanValues proguitar_22 = new();
+        public ScanValues probass_17 = new();
+        public ScanValues probass_22 = new();
+        public ScanValues proKeys = new();
+
+        public ScanValues leadVocals = new();
+        public ScanValues harmonyVocals = new();
+        public TrackScans() { }
+
+        public void ScanFromMidi(MidiTrackType trackType, ref MidiFileReader reader)
+        {
+            switch (trackType)
+            {
+                case MidiTrackType.Guitar_5:
+                    {
+                        if (lead_5.subTracks == 0)
+                            lead_5 = new Midi_FiveFret_Scanner().Scan(ref reader);
+                        break;
+                    }
+                case MidiTrackType.Bass_5:
+                    {
+                        if (bass_5.subTracks == 0)
+                            bass_5 = new Midi_FiveFret_Scanner().Scan(ref reader);
+                        break;
+                    }
+                case MidiTrackType.Keys:
+                    {
+                        if (keys.subTracks == 0)
+                            keys = new Midi_Keys_Scanner().Scan(ref reader);
+                        break;
+                    }
+                case MidiTrackType.Drums:
+                    {
+                        LegacyDrumScan legacy = new();
+                        if (legacy.ScanMidi(ref reader) == DrumType.FIVE_LANE)
+                            drums5 |= legacy.Values;
+                        else
+                            drums_4pro |= legacy.Values;
+                        break;
+                    }
+                case MidiTrackType.Vocals:
+                    {
+                        if (!leadVocals[0] && new Midi_Vocal_Scanner(0).Scan(ref reader))
+                            leadVocals.Set(0);
+                        break;
+                    }
+                case MidiTrackType.Harm1:
+                    {
+                        if (!harmonyVocals[0] && new Midi_Vocal_Scanner(0).Scan(ref reader))
+                            harmonyVocals.Set(0);
+                        break;
+                    }
+                case MidiTrackType.Harm2:
+                    {
+                        if (!harmonyVocals[1] && new Midi_Vocal_Scanner(0).Scan(ref reader))
+                            harmonyVocals.Set(1);
+                        break;
+                    }
+                case MidiTrackType.Harm3:
+                    {
+                        if (!harmonyVocals[2] && new Midi_Vocal_Scanner(0).Scan(ref reader))
+                            harmonyVocals.Set(2);
+                        break;
+                    }
+                case MidiTrackType.Rhythm:
+                    {
+                        if (rhythm.subTracks == 0)
+                            rhythm = new Midi_FiveFret_Scanner().Scan(ref reader);
+                        break;
+                    }
+                case MidiTrackType.Coop:
+                    {
+                        if (coop.subTracks == 0)
+                            coop = new Midi_FiveFret_Scanner().Scan(ref reader);
+                        break;
+                    }
+                case MidiTrackType.Real_Guitar:
+                    {
+                        if (proguitar_17.subTracks == 0)
+                            proguitar_17 = new Midi_ProGuitar17_Scanner().Scan(ref reader);
+                        break;
+                    }
+                case MidiTrackType.Real_Guitar_22:
+                    {
+                        if (proguitar_22.subTracks == 0)
+                            proguitar_22 = new Midi_ProGuitar22_Scanner().Scan(ref reader);
+                        break;
+                    }
+                case MidiTrackType.Real_Bass:
+                    {
+                        if (probass_17.subTracks == 0)
+                            probass_17 = new Midi_ProGuitar17_Scanner().Scan(ref reader);
+                        break;
+                    }
+                case MidiTrackType.Real_Bass_22:
+                    {
+                        if (probass_22.subTracks == 0)
+                            probass_22 = new Midi_ProGuitar22_Scanner().Scan(ref reader);
+                        break;
+                    }
+                case MidiTrackType.Real_Keys_X:
+                    {
+                        if (!proKeys[3])
+                            proKeys |= new Midi_ProKeys_Scanner(3).Scan(ref reader);
+                        break;
+                    }
+                case MidiTrackType.Real_Keys_H:
+                    {
+                        if (!proKeys[2])
+                            proKeys |= new Midi_ProKeys_Scanner(2).Scan(ref reader);
+                        break;
+                    }
+                case MidiTrackType.Real_Keys_M:
+                    {
+                        if (!proKeys[1])
+                            proKeys |= new Midi_ProKeys_Scanner(1).Scan(ref reader);
+                        break;
+                    }
+                case MidiTrackType.Real_Keys_E:
+                    {
+                        if (!proKeys[0])
+                            proKeys |= new Midi_ProKeys_Scanner(0).Scan(ref reader);
+                        break;
+                    }
+                case MidiTrackType.Guitar_6:
+                    {
+                        if (lead_6.subTracks == 0)
+                            lead_6 = new Midi_SixFret_Scanner().Scan(ref reader);
+                        break;
+                    }
+                case MidiTrackType.Bass_6:
+                    {
+                        if (bass_6.subTracks == 0)
+                            bass_6 = new Midi_SixFret_Scanner().Scan(ref reader);
+                        break;
+                    }
+            }
+        }
+
+        public bool ScanFromDotChart(ref LegacyDrumScan legacy, ref ChartFileReader reader)
+        {
+            switch (reader.Instrument)
+            {
+                case NoteTracks_Chart.Single:       return DotChart_Scanner.Scan<FiveFretOutline>(ref lead_5, ref reader);
+                case NoteTracks_Chart.DoubleGuitar: return DotChart_Scanner.Scan<FiveFretOutline>(ref coop, ref reader);
+                case NoteTracks_Chart.DoubleBass:   return DotChart_Scanner.Scan<FiveFretOutline>(ref bass_5, ref reader);
+                case NoteTracks_Chart.DoubleRhythm: return DotChart_Scanner.Scan<FiveFretOutline>(ref rhythm, ref reader);
+                case NoteTracks_Chart.Drums:
+                    {
+                        switch (legacy.Type)
+                        {
+                            case DrumType.FOUR_PRO:  return DotChart_Scanner.Scan<Drums4_ProOutline>(ref drums_4pro, ref reader);
+                            case DrumType.FIVE_LANE: return DotChart_Scanner.Scan<Drums5Outline>(ref drums5, ref reader);
+                            case DrumType.UNKNOWN:   return legacy.ScanDotChart(ref reader);
+                        }
+                        break;
+                    }
+                case NoteTracks_Chart.Keys:      return DotChart_Scanner.Scan<KeysOutline>(ref keys, ref reader);
+                case NoteTracks_Chart.GHLGuitar: return DotChart_Scanner.Scan<SixFretOutline>(ref lead_6, ref reader);
+                case NoteTracks_Chart.GHLBass:   return DotChart_Scanner.Scan<SixFretOutline>(ref bass_6, ref reader);
+            }
+            return true;
+        }
+    }
+}

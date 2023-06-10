@@ -20,11 +20,10 @@ namespace Framework
     {
         static void Main(string[] args)
         {
-            Song.Song song = new();
-            song.Load_Midi("E:\\Documents\\My Games\\Clone Hero\\CH Songs\\CrashTest5.5\\notes.mid", Encoding.UTF8);
-            GC.Collect();
-            //song = new();
-            //song.Load_Chart("E:\\Documents\\My Games\\Clone Hero\\CH Songs\\CrashTest5.5\\notees.chart", true);
+            SongEntry.SongEntry entry = new();
+            entry.Scan_Midi("E:\\Documents\\My Games\\Clone Hero\\CH Songs\\Charter Application [Sonicfind]\\Mutsuhiko Izumi - L.A.RIDER (Long Version) [Sonicfind]\\notes.mid");
+            entry = new();
+            entry.Scan_Chart("E:\\Documents\\My Games\\Clone Hero\\CH Songs\\Charter Application [Sonicfind]\\Mutsuhiko Izumi - L.A.RIDER (Long Version) [Sonicfind]\\notes.chart");
             BenchmarkRunner.Run<SongBenchmarks>();
         }
     }
@@ -32,26 +31,42 @@ namespace Framework
     [MemoryDiagnoser]
     public class SongBenchmarks
     {
-        private Song.Song? song;
+        private Song.Song? song = null;
+        private SongEntry.SongEntry? entry = null;
+
         [Benchmark]
         public void Load_Midi()
         {
             song = new();
-            song.Load_Midi("E:\\Documents\\My Games\\Clone Hero\\CH Songs\\CrashTest5.5\\notes.mid", Encoding.UTF8);
+            song.Load_Midi("E:\\Documents\\My Games\\Clone Hero\\CH Songs\\Charter Application [Sonicfind]\\Mutsuhiko Izumi - L.A.RIDER (Long Version) [Sonicfind]\\notes.mid", Encoding.UTF8);
         }
 
         [Benchmark]
         public void Load_Chart()
         {
             song = new();
-            song.Load_Chart("E:\\Documents\\My Games\\Clone Hero\\CH Songs\\CrashTest5.5\\notees.chart", true);
+            song.Load_Chart("E:\\Documents\\My Games\\Clone Hero\\CH Songs\\Charter Application [Sonicfind]\\Mutsuhiko Izumi - L.A.RIDER (Long Version) [Sonicfind]\\notes.chart", true);
+        }
+
+        [Benchmark]
+        public void Scan_Midi()
+        {
+            entry = new();
+            entry.Scan_Midi("E:\\Documents\\My Games\\Clone Hero\\CH Songs\\Charter Application [Sonicfind]\\Mutsuhiko Izumi - L.A.RIDER (Long Version) [Sonicfind]\\notes.mid");
+        }
+
+        [Benchmark]
+        public void Scan_Chart()
+        {
+            entry = new();
+            entry.Scan_Chart("E:\\Documents\\My Games\\Clone Hero\\CH Songs\\Charter Application [Sonicfind]\\Mutsuhiko Izumi - L.A.RIDER (Long Version) [Sonicfind]\\notes.chart");
         }
 
         [IterationCleanup]
-        public void Cleanup()
+        public void IterationCleanup()
         {
             song = null;
-            GC.Collect();
+            entry = null;
         }
     }
 }
