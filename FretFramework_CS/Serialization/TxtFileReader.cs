@@ -169,7 +169,7 @@ namespace Framework.Serialization
             if (_position >= _next)
                 return false;
 
-            byte b = file.ptr[_position];
+            short b = file.ptr[_position];
             if (b != '-')
             {
                 if (b == '+')
@@ -251,7 +251,7 @@ namespace Framework.Serialization
             if (_position >= _next)
                 return false;
 
-            byte b = file.ptr[_position];
+            ushort b = file.ptr[_position];
             if (b == '+')
             {
                 ++_position;
@@ -295,7 +295,7 @@ namespace Framework.Serialization
             if (_position >= _next)
                 return false;
 
-            byte b = file.ptr[_position];
+            int b = file.ptr[_position];
             if (b != '-')
             {
                 if (b == '+')
@@ -376,7 +376,7 @@ namespace Framework.Serialization
             if (_position >= _next)
                 return false;
 
-            byte b = file.ptr[_position];
+            uint b = file.ptr[_position];
             if (b == '+')
             {
                 ++_position;
@@ -420,7 +420,7 @@ namespace Framework.Serialization
             if (_position >= _next)
                 return false;
 
-            byte b = file.ptr[_position];
+            long b = file.ptr[_position];
             if (b != '-')
             {
                 if (b == '+')
@@ -501,7 +501,7 @@ namespace Framework.Serialization
             if (_position >= _next)
                 return false;
 
-            byte b = file.ptr[_position];
+            ulong b = file.ptr[_position];
             if (b == '+')
             {
                 ++_position;
@@ -545,7 +545,7 @@ namespace Framework.Serialization
             if (_position >= _next)
                 return false;
 
-            byte b = file.ptr[_position];
+            nuint b = file.ptr[_position];
             if (b == '+')
             {
                 ++_position;
