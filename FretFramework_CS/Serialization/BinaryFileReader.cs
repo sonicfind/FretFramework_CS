@@ -290,8 +290,8 @@ namespace Framework.Serialization
                 if (_position >= currentBoundary)
                     throw new Exception("Failed to parse data");
 
-                byte b = file.ptr[_position++];
-                value |= (uint)b & 127;
+                uint b = file.ptr[_position++];
+                value |= b & 127;
                 if (b < 128)
                     return value;
 
