@@ -19,6 +19,8 @@ namespace Framework.Types
                 sortStr = value;
             }
         }
+
+        public int Length { get { return _str.Length; } }
         
         public readonly string SortStr { get { return sortStr; } }
         public SortString()
