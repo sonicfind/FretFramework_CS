@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace Framework.Song.Tracks.Vocals
 {
-    public class Midi_Vocal_Loader
+    public class Midi_Vocal_Loader : Midi_Loader
     {
         internal static readonly byte[] LYRICLINE = { 105, 106 };
         internal static readonly byte[] HARMONYLINE = { 0xFF };
@@ -24,9 +24,8 @@ namespace Framework.Song.Tracks.Vocals
         private readonly Midi_PhraseList phrases;
         private (ulong, byte[]) lyric = new(ulong.MaxValue, Array.Empty<byte>());
         private readonly int index;
-        private readonly Encoding encoding;
 
-        public Midi_Vocal_Loader(byte multiplierNote, int index, Encoding encoding)
+        public Midi_Vocal_Loader(byte multiplierNote, int index)
         {
             phrases = new(new (byte[], Midi_Phrase)[] {
                 new(LYRICLINE, new(SpecialPhraseType.LyricLine)),
@@ -36,7 +35,6 @@ namespace Framework.Song.Tracks.Vocals
                 new(HARMONYLINE, new(SpecialPhraseType.HarmonyLine)),
             });
             this.index = index;
-            this.encoding = encoding;
         }
 
         public bool Load(VocalTrack track, ref MidiFileReader reader)
@@ -118,7 +116,7 @@ namespace Framework.Song.Tracks.Vocals
                 lyric.Item2 = str.ToArray();
             }
             else if (index == 0)
-                track.events.Get_Or_Add_Back(position).Add(str.ToArray());
+                track.events.Get_Or_Add_Back(position).Add(encoding.GetString(str));
         }
 
         private void ParseVocal(uint pitch, ref VocalTrack track)

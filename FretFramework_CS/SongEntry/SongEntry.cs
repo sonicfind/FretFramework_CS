@@ -23,9 +23,8 @@ namespace Framework.SongEntry
             {
                 if (reader.GetTrackNumber() > 1 && reader.GetEvent().type == MidiEventType.Text_TrackName)
                 {
-                    ReadOnlySpan<byte> name = reader.ExtractTextOrSysEx();
-                    MidiTrackType type = MidiFileReader.GetTrackType(name);
-                    if (type != MidiTrackType.Events)
+                    string name = Encoding.ASCII.GetString(reader.ExtractTextOrSysEx());
+                    if (MidiFileReader.TRACKNAMES.TryGetValue(name, out MidiTrackType type) && type != MidiTrackType.Events)
                         m_tracks.ScanFromMidi(type, ref reader);
                 }
             }

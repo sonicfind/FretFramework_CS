@@ -12,8 +12,39 @@ namespace Framework.Serialization
 {
     public class MidiFileReader
     {
-        static MidiFileReader() { }
+        public static readonly Dictionary<string, MidiTrackType> TRACKNAMES = new();
+        
+        static MidiFileReader() {
+            TRACKNAMES.Add("EVENTS", MidiTrackType.Events);
+            TRACKNAMES.Add("PART GUITAR", MidiTrackType.Guitar_5);
+            TRACKNAMES.Add("T1 GEMS", MidiTrackType.Guitar_5);
+            TRACKNAMES.Add("PART GUITAR GHL", MidiTrackType.Guitar_6);
+            TRACKNAMES.Add("PART BASS", MidiTrackType.Bass_5);
+            TRACKNAMES.Add("PART BASS GHL", MidiTrackType.Bass_6);
+            TRACKNAMES.Add("PART RHYTHM", MidiTrackType.Rhythm);
+            TRACKNAMES.Add("PART GUITAR COOP", MidiTrackType.Coop);
+            TRACKNAMES.Add("PART KEYS", MidiTrackType.Keys);
+            TRACKNAMES.Add("PART DRUMS", MidiTrackType.Drums);
+            TRACKNAMES.Add("PART VOCALS", MidiTrackType.Vocals);
+            TRACKNAMES.Add("PART HARM1", MidiTrackType.Harm1);
+            TRACKNAMES.Add("PART HARM2", MidiTrackType.Harm2);
+            TRACKNAMES.Add("PART HARM3", MidiTrackType.Harm3);
+            TRACKNAMES.Add("HARM1", MidiTrackType.Harm1);
+            TRACKNAMES.Add("HARM2", MidiTrackType.Harm2);
+            TRACKNAMES.Add("HARM3", MidiTrackType.Harm3);
+            TRACKNAMES.Add("PART REAL_GUITAR", MidiTrackType.Real_Guitar);
+            TRACKNAMES.Add("PART REAL_GUITAR_22", MidiTrackType.Real_Guitar_22);
+            TRACKNAMES.Add("PART REAL_BASS", MidiTrackType.Real_Bass);
+            TRACKNAMES.Add("PART REAL_BASS_22", MidiTrackType.Real_Bass_22);
+            TRACKNAMES.Add("PART REAL_KEYS_X", MidiTrackType.Real_Keys_X);
+            TRACKNAMES.Add("PART REAL_KEYS_H", MidiTrackType.Real_Keys_H);
+            TRACKNAMES.Add("PART REAL_KEYS_M", MidiTrackType.Real_Keys_M);
+            TRACKNAMES.Add("PART REAL_KEYS_E", MidiTrackType.Real_Keys_E);
+            TRACKNAMES.Add("BEATS", MidiTrackType.Beats);
+        }
+
         internal static readonly byte[][] TRACKTAGS = { Encoding.ASCII.GetBytes("MThd"), Encoding.ASCII.GetBytes("MTrk") };
+
         private struct MidiHeader
         {
             public ushort format;
@@ -186,47 +217,6 @@ namespace Framework.Serialization
             m_header.numTracks = m_reader.ReadUInt16(Endianness.BigEndian);
             m_header.tickRate = m_reader.ReadUInt16(Endianness.BigEndian);
             m_event.type = MidiEventType.Reset_Or_Meta;
-        }
-
-        internal readonly static Tuple<byte[], MidiTrackType>[] TRACKNAMES =
-        {
-            new (Encoding.ASCII.GetBytes("EVENTS"), MidiTrackType.Events),
-            new (Encoding.ASCII.GetBytes("PART GUITAR"), MidiTrackType.Guitar_5),
-            new (Encoding.ASCII.GetBytes("T1 GEMS"), MidiTrackType.Guitar_5),
-            new (Encoding.ASCII.GetBytes("PART GUITAR GHL"), MidiTrackType.Guitar_6),
-            new (Encoding.ASCII.GetBytes("PART BASS"), MidiTrackType.Bass_5),
-            new (Encoding.ASCII.GetBytes("PART BASS GHL"), MidiTrackType.Bass_6),
-            new (Encoding.ASCII.GetBytes("PART RHYTHM"), MidiTrackType.Rhythm),
-            new (Encoding.ASCII.GetBytes("PART GUITAR COOP"), MidiTrackType.Coop),
-            new (Encoding.ASCII.GetBytes("PART KEYS"), MidiTrackType.Keys),
-            new (Encoding.ASCII.GetBytes("PART DRUMS"), MidiTrackType.Drums),
-            new (Encoding.ASCII.GetBytes("PART VOCALS"), MidiTrackType.Vocals),
-            new (Encoding.ASCII.GetBytes("PART HARM1"), MidiTrackType.Harm1),
-            new (Encoding.ASCII.GetBytes("PART HARM2"), MidiTrackType.Harm2),
-            new (Encoding.ASCII.GetBytes("PART HARM3"), MidiTrackType.Harm3),
-            new (Encoding.ASCII.GetBytes("HARM1"), MidiTrackType.Harm1),
-            new (Encoding.ASCII.GetBytes("HARM2"), MidiTrackType.Harm2),
-            new (Encoding.ASCII.GetBytes("HARM3"), MidiTrackType.Harm3),
-            new (Encoding.ASCII.GetBytes("PART REAL_GUITAR"), MidiTrackType.Real_Guitar),
-            new (Encoding.ASCII.GetBytes("PART REAL_GUITAR_22"), MidiTrackType.Real_Guitar_22),
-            new (Encoding.ASCII.GetBytes("PART REAL_BASS"), MidiTrackType.Real_Bass),
-            new (Encoding.ASCII.GetBytes("PART REAL_BASS_22"), MidiTrackType.Real_Bass_22),
-            new (Encoding.ASCII.GetBytes("PART REAL_KEYS_X"), MidiTrackType.Real_Keys_X),
-            new (Encoding.ASCII.GetBytes("PART REAL_KEYS_H"), MidiTrackType.Real_Keys_H),
-            new (Encoding.ASCII.GetBytes("PART REAL_KEYS_M"), MidiTrackType.Real_Keys_M),
-            new (Encoding.ASCII.GetBytes("PART REAL_KEYS_E"), MidiTrackType.Real_Keys_E),
-            new (Encoding.ASCII.GetBytes("BEATS"), MidiTrackType.Beats),
-        };
-
-        public static MidiTrackType GetTrackType(ReadOnlySpan<byte> name)
-        {
-            for (int i = 0; i <  TRACKNAMES.Length; ++i)
-            {
-                ref var item = ref TRACKNAMES[i];
-                if (name.SequenceEqual(item.Item1))
-                    return item.Item2;
-            }
-            return MidiTrackType.Unknown;
         }
     };
 }

@@ -14,7 +14,7 @@ namespace Framework.Song.Tracks
     public abstract class Track
     {
         public TimedFlatMap<List<SpecialPhrase>> specialPhrases = new();
-        public TimedFlatMap<List<byte[]>> events = new();
+        public TimedFlatMap<List<string>> events = new();
         public virtual bool IsOccupied() { return !specialPhrases.IsEmpty() || !events.IsEmpty(); }
 
         public virtual void Clear()

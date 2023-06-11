@@ -35,6 +35,7 @@ namespace Framework.Song
 
         public void Load_Midi(string path, Encoding encoding)
         {
+            Midi_Loader.encoding = encoding;
             MidiFileReader reader = new(path, 116);
             Tickrate = reader.GetTickRate();
 
@@ -48,15 +49,17 @@ namespace Framework.Song
                 }
                 else if (reader.GetEvent().type == MidiEventType.Text_TrackName)
                 {
-                    ReadOnlySpan<byte> name = reader.ExtractTextOrSysEx();
-                    MidiTrackType type = MidiFileReader.GetTrackType(name);
-                    if (type == MidiTrackType.Events)
+                    string name = Encoding.ASCII.GetString(reader.ExtractTextOrSysEx());
+                    if (MidiFileReader.TRACKNAMES.TryGetValue(name, out MidiTrackType type))
                     {
-                        if (!m_events.AddFromMidi(ref reader, encoding))
-                            Console.WriteLine($"EVENTS track appeared previously");
+                        if (type == MidiTrackType.Events)
+                        {
+                            if (!m_events.AddFromMidi(ref reader, encoding))
+                                Console.WriteLine($"EVENTS track appeared previously");
+                        }
+                        else if (!m_tracks.LoadFromMidi(type, ref reader))
+                            Console.WriteLine($"Track '{name}' failed to load or was already loaded previously");
                     }
-                    else if (!m_tracks.LoadFromMidi(type, encoding, ref reader))
-                        Console.WriteLine($"Track '{Encoding.ASCII.GetString(name)}' failed to load or was already loaded previously");
                 }
             }
             m_tracks.FinalizeProKeys();

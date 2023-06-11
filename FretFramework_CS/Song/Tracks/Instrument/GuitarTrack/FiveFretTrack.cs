@@ -230,7 +230,7 @@ namespace Framework.Song.Tracks.Instrument.GuitarTrack
                     lanes[12 * diff] = 0;
             }
             else
-                track.events.Get_Or_Add_Back(currEvent.position).Add(str.ToArray());
+                track.events.Get_Or_Add_Back(currEvent.position).Add(encoding.GetString(str));
         }
     }
 }

@@ -98,4 +98,9 @@ namespace Framework.Song.Tracks
             return false;
         }
     }
+
+    public class Midi_Loader
+    {
+        public static Encoding encoding = Encoding.UTF8;
+    }
 }

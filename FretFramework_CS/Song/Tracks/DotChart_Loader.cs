@@ -58,7 +58,7 @@ namespace Framework.Song.Tracks
 					else if (str.StartsWith(SOLO))
 						solo = trackEvent.Item1;
 					else
-						diff.events.Get_Or_Add_Back(trackEvent.Item1).Add(str.ToArray());
+						diff.events.Get_Or_Add_Back(trackEvent.Item1).Add(Encoding.UTF8.GetString(str));
 					break;
 				}
 				}

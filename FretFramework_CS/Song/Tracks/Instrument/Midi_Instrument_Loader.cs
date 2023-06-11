@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace Framework.Song.Tracks.Instrument
 {
-    public abstract class Midi_Loader_Base<TrackType>
+    public abstract class Midi_Loader_Base<TrackType> : Midi_Loader
         where TrackType : Track, new()
     {
         internal static readonly byte[] SYSEXTAG = Encoding.ASCII.GetBytes("PS");
@@ -104,7 +104,7 @@ namespace Framework.Song.Tracks.Instrument
 
         protected virtual void ParseText(ReadOnlySpan<byte> str, ref TrackType track)
         {
-            track.events.Get_Or_Add_Back(currEvent.position).Add(str.ToArray());
+            track.events.Get_Or_Add_Back(currEvent.position).Add(encoding.GetString(str));
         }
 
         protected virtual bool IsNote() { return 60 <= note.value && note.value <= 100; }
