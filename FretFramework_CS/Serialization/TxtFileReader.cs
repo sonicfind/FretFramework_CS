@@ -10,34 +10,7 @@ using System.Threading.Tasks;
 
 namespace Framework.Serialization
 {
-    public enum ModifierNodeType
-    {
-        STRING,
-        STRING_NOCASE,
-        STRING_CHART,
-        STRING_CHART_NOCASE,
-        UINT64,
-        INT64,
-        UINT32,
-        INT32,
-        UINT16,
-        INT16,
-        BOOL,
-        FLOAT,
-        FLOATARRAY
-    }
 
-    public class ModifierNode
-    {
-        public readonly ReadOnlyMemory<byte> name;
-        public readonly ModifierNodeType type;
-
-        public ModifierNode(ReadOnlyMemory<byte> name, ModifierNodeType type)
-        {
-            this.name = name;
-            this.type = type;
-        }
-	};
 
     public unsafe class TxtFileReader
     {
@@ -912,75 +885,5 @@ namespace Framework.Serialization
             SkipWhiteSpace();
             return Encoding.UTF8.GetString(name);
         }
-
-        public ModifierNode? FindNode(ReadOnlySpan<byte> name, (byte[], ModifierNode)[] list)
-        {
-            int lo = 0;
-            int hi = list.Length - 1;
-            unsafe
-            {
-                fixed((byte[], ModifierNode)* nodes = list)
-                {
-                    while (lo <= hi)
-                    {
-                        int curr = lo + ((hi - lo) >> 1);
-                        int order = new ReadOnlySpan<byte>(nodes[curr].Item1).SequenceCompareTo(name);
-                        if (order == 0)
-                            return nodes[curr].Item2;
-
-                        if (order < 0)
-                            lo = curr + 1;
-                        else
-                            hi = curr - 1;
-                    }
-                }
-                
-            }
-
-            return null;
-        }
-
-        //Modifiers::Modifier CreateModifier(ModifierNode node)
-        //{
-	       // try
-	       // {
-		      //  switch (node.type)
-		      //  {
-		      //  case ModifierNodeType.STRING:              return { node.name, UnicodeString(extractText(false)) };
-		      //  case ModifierNodeType.STRING_CHART:        return { node.name, UnicodeString(extractText()) };
-		      //  case ModifierNodeType.STRING_NOCASE:       return { node.name, UnicodeString::strToU32(extractText(false)) };
-		      //  case ModifierNodeType.STRING_CHART_NOCASE: return { node.name, UnicodeString::strToU32(extractText()) };
-		      //  case ModifierNodeType.UINT64:              return { node.name, extract<uint64_t>() };
-		      //  case ModifierNodeType.INT64:               return { node.name, extract<int64_t>() };
-		      //  case ModifierNodeType.UINT32:              return { node.name, extract<uint32_t>() };
-		      //  case ModifierNodeType.INT32:               return { node.name, extract<int32_t>() };
-		      //  case ModifierNodeType.UINT16:              return { node.name, extract<uint16_t>() };
-		      //  case ModifierNodeType.INT16:               return { node.name, extract<int16_t>() };
-		      //  case ModifierNodeType.BOOL:                return { node.name, extract<bool>() };
-		      //  case ModifierNodeType.FLOAT:               return { node.name, extract<float>() };
-		      //  case ModifierNodeType.FLOATARRAY:
-		      //  {
-			     //   float flt1 = ReadFloat();
-			     //   float flt2 = ReadFloat();
-			     //   return { node.name, flt1, flt2 };
-		      //  }
-		      //  }
-	       // }
-	       // catch (...)
-	       // {
-		      //  switch (node.type)
-		      //  {
-		      //  case ModifierNodeType.UINT64:     return { node.name, uint64_t(0) };
-		      //  case ModifierNodeType.INT64:      return { node.name, int64_t(0) };
-		      //  case ModifierNodeType.UINT32:     return { node.name, uint32_t(0) };
-		      //  case ModifierNodeType.INT32:      return { node.name, int32_t(0) };
-		      //  case ModifierNodeType.UINT16:     return { node.name, uint16_t(0) };
-		      //  case ModifierNodeType.BOOL:       return { node.name, false };
-		      //  case ModifierNodeType.FLOAT:      return { node.name, .0f };
-		      //  case ModifierNodeType.FLOATARRAY: return { node.name, 0, 0 };
-		      //  }
-	       // }
-	       // throw std::runtime_error("How in the fu-");
-        //}
     }
 }
