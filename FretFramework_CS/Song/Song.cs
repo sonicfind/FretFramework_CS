@@ -179,7 +179,7 @@ namespace Framework.Song
                             if (!m_events.AddFromMidi(ref reader, encoding))
                                 Console.WriteLine($"EVENTS track appeared previously");
                         }
-                        else if (!m_tracks.LoadFromMidi(type, ref reader))
+                        else if (!m_tracks.LoadFromMidi(type, m_baseDrumType, ref reader))
                             Console.WriteLine($"Track '{name}' failed to load or was already loaded previously");
                     }
                 }
@@ -200,7 +200,7 @@ namespace Framework.Song
             // Add [Song] parsing later
             reader.SkipTrack();
 
-            LegacyDrumTrack legacy = new();
+            LegacyDrumTrack legacy = new(m_baseDrumType);
             while (reader.IsStartOfTrack())
 	        {
                 if (reader.ValidateSyncTrack())

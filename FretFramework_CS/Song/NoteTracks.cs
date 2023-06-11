@@ -41,7 +41,7 @@ namespace Framework.Song
         public readonly HarmonyVocalTrack harmonyVocals = new(3);
         public NoteTracks() { }
 
-        public bool LoadFromMidi(MidiTrackType trackType, ref MidiFileReader reader)
+        public bool LoadFromMidi(MidiTrackType trackType, DrumType drumType, ref MidiFileReader reader)
         {
             switch (trackType)
             {
@@ -50,6 +50,12 @@ namespace Framework.Song
                 case MidiTrackType.Keys:     return new Midi_Keys_Loader(reader.GetMultiplierNote()).Load(keys, ref reader);
                 case MidiTrackType.Drums:
                     {
+                        if (drumType == DrumType.FOUR_PRO)
+                            return new Midi_Drum4Pro_Loader(reader.GetMultiplierNote()).Load(drums_4pro, ref reader);
+
+                        if (drumType == DrumType.FIVE_LANE)
+                            return new Midi_Drum5_Loader(reader.GetMultiplierNote()).Load(drums5, ref reader);
+
                         LegacyDrumTrack legacy = new();
                         if (legacy.LoadMidi(ref reader) == DrumType.FIVE_LANE)
                             legacy.Transfer(drums5);
