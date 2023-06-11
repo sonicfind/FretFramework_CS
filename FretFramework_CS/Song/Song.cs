@@ -216,13 +216,13 @@ namespace Framework.Song
                             var str = reader.ExtractText();
                             if (str.StartsWith(SECTION))    m_events.sections.Get_Or_Add_Back(trackEvent.Item1) = Encoding.UTF8.GetString(str[8..]);
                             else if (str.StartsWith(LYRIC)) m_tracks.leadVocals[0][trackEvent.Item1].lyric = Encoding.UTF8.GetString(str[6..]);
-                            else if (str.StartsWith(PHRASE_START))
+                            else if (str.SequenceEqual(PHRASE_START))
                             {
                                 if (phrase < ulong.MaxValue)
                                     m_tracks.leadVocals.specialPhrases[phrase].Add(new(SpecialPhraseType.LyricLine, trackEvent.Item1 - phrase));
                                 phrase = trackEvent.Item1;
                             }
-                            else if (str.StartsWith(PHRASE_END))
+                            else if (str.SequenceEqual(PHRASE_END))
                             {
                                 if (phrase < ulong.MaxValue)
                                 {
