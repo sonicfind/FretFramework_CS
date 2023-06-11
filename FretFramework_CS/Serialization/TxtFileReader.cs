@@ -64,6 +64,13 @@ namespace Framework.Serialization
         private int _next;
         public int Next { get { return _next; } }
 
+        public byte PeekByte()
+        {
+            return file.ptr[_position];
+        }
+
+        public byte* CurrentPtr { get { return file.ptr + _position; } }
+
         internal static readonly byte[] BOM = { 0xEF, 0xBB, 0xBF };
         public TxtFileReader(FrameworkFile file)
         {
@@ -79,6 +86,11 @@ namespace Framework.Serialization
         }
         public TxtFileReader(byte[] data) : this(new FrameworkFile(data)) { }
         public TxtFileReader(string path) : this(File.ReadAllBytes(path)) { }
+
+        public bool IsEndOfFile()
+        {
+            return _position == file.Length;
+        }
 
         public void SkipWhiteSpace()
         {
@@ -122,11 +134,6 @@ namespace Framework.Serialization
             _next = _position;
             while (_next < length && file.ptr[_next] != '\n')
                 ++_next;
-        }
-
-        public byte PeekByte()
-        {
-            return file.ptr[_position];
         }
 
         public bool ReadBoolean(ref bool value)
@@ -241,7 +248,7 @@ namespace Framework.Serialization
                         value = short.MinValue;
                 }
             }
-            
+
             SkipWhiteSpace();
             return true;
         }
@@ -850,6 +857,11 @@ namespace Framework.Serialization
             return value;
         }
 
+        public ReadOnlySpan<byte> ExtractBasicSpan(int length)
+        {
+            return new ReadOnlySpan<byte>(file.ptr + _position, length);
+        }
+
         public ReadOnlySpan<byte> ExtractTextSpan(bool checkForQuotes = true)
         {
             (int, int) boundaries = new(_position, _next);
@@ -860,7 +872,7 @@ namespace Framework.Serialization
             {
                 int end = boundaries.Item2 - 1;
                 while (_position + 1 < end && file.ptr[end] <= 32)
-				    --end;
+                    --end;
 
                 if (_position < end && file.ptr[end] == '\"' && file.ptr[end - 1] != '\\')
                 {
@@ -870,29 +882,35 @@ namespace Framework.Serialization
             }
 
             if (boundaries.Item2 < boundaries.Item1)
-                return new ();
+                return new();
 
             while (boundaries.Item2 > boundaries.Item1 && file.ptr[boundaries.Item2 - 1] <= 32)
-		        --boundaries.Item2;
+                --boundaries.Item2;
 
             _position = _next;
             return new(file.ptr + boundaries.Item1, boundaries.Item2 - boundaries.Item1);
         }
 
-        public ReadOnlySpan<byte> ExtractModifierName()
+        public string ExtractUTF8String(bool checkForQuotes = true)
         {
-	        int start = _position;
+            return Encoding.UTF8.GetString(ExtractTextSpan(checkForQuotes));
+        }
+
+        public string ExtractModifierName()
+        {
+            int curr = _position;
             while (true)
             {
-                byte b = file.ptr[_position];
+                byte b = file.ptr[curr];
                 if (b <= 32 || b == '=')
                     break;
-                ++_position;
+                ++curr;
             }
 
-            ReadOnlySpan<byte> name = new(file.ptr + start, _position - start);
-	        SkipWhiteSpace();
-	        return name;
+            ReadOnlySpan<byte> name = new(file.ptr + _position, curr - _position);
+            _position = curr;
+            SkipWhiteSpace();
+            return Encoding.UTF8.GetString(name);
         }
 
         public ModifierNode? FindNode(ReadOnlySpan<byte> name, (byte[], ModifierNode)[] list)

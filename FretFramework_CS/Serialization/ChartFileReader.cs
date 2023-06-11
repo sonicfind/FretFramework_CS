@@ -10,25 +10,25 @@ namespace Framework.Serialization
 {
     public enum ChartEvent
     {
-	    BPM,
-	    TIME_SIG,
-	    ANCHOR,
-	    EVENT,
-	    SECTION,
-	    NOTE,
-	    MULTI_NOTE,
-	    MODIFIER,
-	    SPECIAL,
-	    LYRIC,
-	    VOCAL,
-	    VOCAL_PERCUSSION,
-	    NOTE_PRO,
-	    MUTLI_NOTE_PRO,
-	    ROOT,
-	    LEFT_HAND,
-	    PITCH,
-	    RANGE_SHIFT,
-	    UNKNOWN = 255,
+        BPM,
+        TIME_SIG,
+        ANCHOR,
+        EVENT,
+        SECTION,
+        NOTE,
+        MULTI_NOTE,
+        MODIFIER,
+        SPECIAL,
+        LYRIC,
+        VOCAL,
+        VOCAL_PERCUSSION,
+        NOTE_PRO,
+        MUTLI_NOTE_PRO,
+        ROOT,
+        LEFT_HAND,
+        PITCH,
+        RANGE_SHIFT,
+        UNKNOWN = 255,
     }
 
     public enum NoteTracks_Chart
@@ -88,7 +88,7 @@ namespace Framework.Serialization
 
         public bool IsStartOfTrack()
         {
-	        return reader.PeekByte() == '[';
+            return !reader.IsEndOfFile() && reader.PeekByte() == '[';
         }
 
         public bool ValidateHeaderTrack()
@@ -138,14 +138,14 @@ namespace Framework.Serialization
         internal static readonly (byte[], NoteTracks_Chart)[] NOTETRACKS =
         {
             new(Encoding.ASCII.GetBytes("Single]"),       NoteTracks_Chart.Single ),
-		    new(Encoding.ASCII.GetBytes("DoubleGuitar]"), NoteTracks_Chart.DoubleGuitar ),
-		    new(Encoding.ASCII.GetBytes("DoubleBass]"),   NoteTracks_Chart.DoubleBass ),
-		    new(Encoding.ASCII.GetBytes("DoubleRhythm]"), NoteTracks_Chart.DoubleRhythm ),
-		    new(Encoding.ASCII.GetBytes("Drums]"),        NoteTracks_Chart.Drums ),
-		    new(Encoding.ASCII.GetBytes("Keys]"),         NoteTracks_Chart.Keys ),
-		    new(Encoding.ASCII.GetBytes("GHLGuitar]"),    NoteTracks_Chart.GHLGuitar ),
+            new(Encoding.ASCII.GetBytes("DoubleGuitar]"), NoteTracks_Chart.DoubleGuitar ),
+            new(Encoding.ASCII.GetBytes("DoubleBass]"),   NoteTracks_Chart.DoubleBass ),
+            new(Encoding.ASCII.GetBytes("DoubleRhythm]"), NoteTracks_Chart.DoubleRhythm ),
+            new(Encoding.ASCII.GetBytes("Drums]"),        NoteTracks_Chart.Drums ),
+            new(Encoding.ASCII.GetBytes("Keys]"),         NoteTracks_Chart.Keys ),
+            new(Encoding.ASCII.GetBytes("GHLGuitar]"),    NoteTracks_Chart.GHLGuitar ),
             new(Encoding.ASCII.GetBytes("GHLBass]"),      NoteTracks_Chart.GHLBass ),
-	    };
+        };
 
         public bool ValidateInstrument()
         {
@@ -174,13 +174,12 @@ namespace Framework.Serialization
         {
             if (reader.Next - reader.Position < str.Length)
                 return false;
-	        return new ReadOnlySpan<byte>(reader.Ptr + reader.Position, str.Length).SequenceEqual(str);
+            return reader.ExtractBasicSpan(str.Length).SequenceEqual(str);
         }
 
         public bool IsStillCurrentTrack()
         {
-            int position = reader.Position;
-            if (position == reader.Length)
+            if (reader.IsEndOfFile())
                 return false;
 
             if (reader.PeekByte() == '}')
@@ -200,16 +199,15 @@ namespace Framework.Serialization
 
             tickPosition = position;
 
-            byte* ptr = reader.Ptr;
-            int curr = reader.Position;
-            int start = curr;
-            while (('A' <= ptr[curr] && ptr[curr] <= 'Z') || ('a' <= ptr[curr] && ptr[curr] <= 'z'))
-                ++curr;
+            byte* ptr = reader.CurrentPtr;
+            byte* start = ptr;
+            while (('A' <= *ptr && *ptr <= 'Z') || ('a' <= *ptr && *ptr <= 'z'))
+                ++ptr;
 
-            reader.Position = curr;
-            ReadOnlySpan<byte> type = new(ptr + start, curr - start);
+            ReadOnlySpan<byte> type = reader.ExtractBasicSpan((int)(ptr - start));
+            reader.Position = (int)(ptr - reader.Ptr);
             foreach (EventCombo combo in eventSet)
-		        if (type.SequenceEqual(combo.descriptor))
+                if (type.SequenceEqual(combo.descriptor))
                 {
                     reader.SkipWhiteSpace();
                     return new(position, combo.eventType);
@@ -275,7 +273,7 @@ namespace Framework.Serialization
             while (reader.Position + length != reader.Length)
             {
                 int index = length - 1;
-                byte* ptr = reader.Ptr + reader.Position;
+                byte* ptr = reader.CurrentPtr;
                 byte point = ptr[index];
                 while (index > 0 && point <= 32 && point != '\n')
                     point = ptr[--index];
@@ -308,9 +306,8 @@ namespace Framework.Serialization
 
         private int GetDistanceToTrackCharacter()
         {
-            int position = reader.Position;
-            int distanceToEnd = reader.Length - position;
-            byte* ptr = reader.Ptr + position;
+            int distanceToEnd = reader.Length - reader.Position;
+            byte* ptr = reader.CurrentPtr;
             int i = 0;
             while (i < distanceToEnd)
             {
