@@ -20,10 +20,8 @@ namespace Framework
     {
         static void Main(string[] args)
         {
-            SongEntry.SongEntry entry = new();
-            entry.Scan_Midi("E:\\Documents\\My Games\\Clone Hero\\CH Songs\\Charter Application [Sonicfind]\\Mutsuhiko Izumi - L.A.RIDER (Long Version) [Sonicfind]\\notes.mid");
-            entry = new();
-            entry.Scan_Chart("E:\\Documents\\My Games\\Clone Hero\\CH Songs\\Charter Application [Sonicfind]\\Mutsuhiko Izumi - L.A.RIDER (Long Version) [Sonicfind]\\notes.chart");
+            Song.Song song = new("E:\\Documents\\My Games\\Clone Hero\\CH Songs\\Charter Application [Sonicfind]\\Mutsuhiko Izumi - L.A.RIDER (Long Version) [Sonicfind]");
+            song.Load_Ini();
             BenchmarkRunner.Run<SongBenchmarks>();
         }
     }

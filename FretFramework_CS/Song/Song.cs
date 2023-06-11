@@ -21,17 +21,139 @@ using Framework.Song.Tracks.Notes.Keys_Pro;
 using Framework.Song.Tracks.Vocals;
 using CommandLine;
 using Framework.Types;
+using Framework.Modifiers;
+using System.IO;
+using Framework.Ini;
 
 namespace Framework.Song
 {
     public class Song
     {
+        private string m_directory = string.Empty;
+        private string m_name = string.Empty;
+        private string m_artist = string.Empty;
+        private string m_album = string.Empty;
+        private string m_genre = string.Empty;
+        private string m_year = string.Empty;
+        private string m_charter = string.Empty;
+        private string m_playlist = string.Empty;
+
+        private ulong m_hopo_frequency = 0;
+        private ulong m_sustain_cutoff_threshold = 0;
+        private ushort m_hopofreq_old = ushort.MaxValue;
+        private bool m_eighthnote_hopo = false;
+        private byte m_multiplier_note = 116;
+        private DrumType m_baseDrumType = DrumType.UNKNOWN;
+
+        private List<Modifier> m_modifiers = new();
+
         public ushort Tickrate { get; private set; }
-        public string midiSequenceName = string.Empty;
+        public string m_midiSequenceName = string.Empty;
 
         public readonly SyncTrack  m_sync = new();
         public readonly SongEvents m_events = new();
         public readonly NoteTracks m_tracks = new();
+
+        public Song() { }
+        public Song(string directory)
+        {
+            m_directory = Path.GetFullPath(directory);
+        }
+
+        public void Load_Ini()
+        {
+            string iniFile = Path.Combine(m_directory, "song.ini");
+            if (!File.Exists(iniFile))
+                return;
+
+            bool five_lane_drumsSet = false;
+            bool hopo_frequencySet = false;
+            bool multiplier_noteSet = false;
+            bool eighthnote_hopoSet = false;
+            bool sustain_thresholdSet = false;
+            bool hopofreqSet = false;
+            var modifiers = IniHandler.ReadSongIniFile(iniFile);
+            if (modifiers == null)
+                return;
+
+            for (int i = 0; i < modifiers.Count; ++i)
+            {
+                Modifier mod = modifiers[i];
+                if (mod.Name == "name")
+                {
+                    if (m_name.Length == 0 || m_name == "Unknown Title")
+				        m_name = mod.SORTSTR.Str;
+                }
+                else if (mod.Name == "artist")
+                {
+                    if (m_artist.Length == 0 || m_artist == "Unknown Artist")
+				        m_artist = mod.SORTSTR.Str;
+                }
+                else if (mod.Name == "album")
+                {
+                    if (m_album.Length == 0 || m_album == "Unknown Album")
+				        m_album = mod.SORTSTR.Str;
+                }
+                else if (mod.Name == "genre")
+                {
+                    if (m_genre.Length == 0 || m_genre == "Unknown Genre")
+				        m_genre = mod.SORTSTR.Str;
+                }
+                else if (mod.Name == "year")
+                {
+                    if (m_year.Length == 0 || m_year == "Unknown Year")
+				        m_year = mod.SORTSTR.Str;
+                }
+                else if (mod.Name == "charter")
+                {
+                    if (m_charter.Length == 0 || m_charter == "Unknown Charter")
+				        m_charter = mod.SORTSTR.Str;
+                }
+                else if (mod.Name == "playlist")
+                {
+                    if (m_playlist.Length == 0 || m_playlist == Path.GetDirectoryName(m_directory))
+                        m_playlist = mod.SORTSTR.Str;
+                }
+                else if (mod.Name == "five_lane_drums")
+                {
+                    if (!five_lane_drumsSet && m_baseDrumType == DrumType.UNKNOWN)
+                        m_baseDrumType = mod.BOOL ? DrumType.FIVE_LANE : DrumType.FOUR_PRO;
+                    five_lane_drumsSet = true;
+                }
+                else if (mod.Name == "hopo_frequency")
+                {
+                    if (!hopo_frequencySet)
+                        m_hopo_frequency = mod.UINT64;
+                    hopo_frequencySet = true;
+                }
+                else if (mod.Name == "multiplier_note")
+                {
+                    if (!multiplier_noteSet && mod.UINT16 == 103)
+                        m_multiplier_note = 103;
+                    multiplier_noteSet = true;
+                }
+                else if (mod.Name == "eighthnote_hopo")
+                {
+                    if (!eighthnote_hopoSet)
+                        m_eighthnote_hopo = mod.BOOL;
+                    eighthnote_hopoSet = true;
+                }
+                else if (mod.Name == "sustain_cutoff_threshold")
+                {
+                    if (!sustain_thresholdSet)
+                        m_sustain_cutoff_threshold = mod.UINT64;
+                    sustain_thresholdSet = true;
+                }
+                else if (mod.Name == "hopofreq")
+                {
+                    if (!hopofreqSet)
+                        m_hopofreq_old = mod.UINT16;
+                    hopofreqSet = true;
+                }
+                else if (GetModifier(mod.Name) == null)
+                    m_modifiers.Add(mod);
+            }
+        }
 
         public void Load_Midi(string path, Encoding encoding)
         {
@@ -44,7 +166,7 @@ namespace Framework.Song
                 if (reader.GetTrackNumber() == 1)
                 {
                     if (reader.GetEvent().type == MidiEventType.Text_TrackName)
-                        midiSequenceName = encoding.GetString(reader.ExtractTextOrSysEx());
+                        m_midiSequenceName = encoding.GetString(reader.ExtractTextOrSysEx());
                     m_sync.AddFromMidi(ref reader);
                 }
                 else if (reader.GetEvent().type == MidiEventType.Text_TrackName)
@@ -125,6 +247,14 @@ namespace Framework.Song
                 else
                     legacy.Transfer(m_tracks.drums_4pro);
             }
+        }
+
+        private Modifier? GetModifier(string name)
+        {
+            foreach (var modifier in m_modifiers)
+                if (modifier.Name == name)
+                    return modifier;
+            return null;
         }
     }
 }
