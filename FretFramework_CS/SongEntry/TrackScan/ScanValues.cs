@@ -10,7 +10,7 @@ namespace Framework.SongEntry.TrackScan
     {
         internal static byte[] shifts = { 1, 2, 4, 8, 16 };
         public byte subTracks = 0;
-        public byte intensity = 0xFF;
+        public sbyte intensity = -1;
         public ScanValues() { }
 
         public void Set(int subTrack)
