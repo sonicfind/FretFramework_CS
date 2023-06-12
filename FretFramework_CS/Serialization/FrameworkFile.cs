@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -23,5 +24,8 @@ namespace Framework.Serialization
         public FrameworkFile(string path) : this(File.ReadAllBytes(path)) { }
         ~FrameworkFile() { handle.Free(); }
         public int Length { get { return buffer.Length; } }
+
+        public byte[] HASH_SHA1 { get { return SHA1.HashData(buffer); } }
+        public byte[] HASH_MD5 { get { return MD5.HashData(buffer); } }
     }
 }

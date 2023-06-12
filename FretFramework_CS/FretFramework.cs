@@ -27,6 +27,8 @@ namespace Framework
             entry.Load_Ini(path, File.GetLastWriteTime(path));
             if (entry.Scan(out FrameworkFile? file))
             {
+                byte[] hash = file!.HASH_MD5;
+                Console.WriteLine(BitConverter.ToString(hash));
                 entry.FinishScan();
             }
             BenchmarkRunner.Run<SongBenchmarks>();
@@ -73,6 +75,8 @@ namespace Framework
             entry.Load_Ini(ini, iniLastWrite);
             if (entry.Scan(out FrameworkFile? file))
             {
+                byte[] hash = file!.HASH_SHA1;
+                string h = BitConverter.ToString(hash);
                 entry.FinishScan();
             }
         }
@@ -85,6 +89,8 @@ namespace Framework
             entry.Load_Ini(ini, iniLastWrite);
             if (entry.Scan(out FrameworkFile? file))
             {
+                byte[] hash = file!.HASH_SHA1;
+                string h = BitConverter.ToString(hash);
                 entry.FinishScan();
             }
         }
