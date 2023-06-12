@@ -60,11 +60,13 @@ namespace Framework.Serialization
         private readonly byte m_multiplierNote = 116;
         private readonly BinaryFileReader m_reader;
 
-        public MidiFileReader(byte[] data)
+        public MidiFileReader(FrameworkFile file)
         {
-            m_reader = new BinaryFileReader(data);
+            m_reader = new BinaryFileReader(file);
             ProcessHeaderChunk();
         }
+
+        public MidiFileReader(byte[] data) : this(new FrameworkFile(data)) {}
         public MidiFileReader(string path, byte multiplierNote) : this(File.ReadAllBytes(path))
         {
             m_multiplierNote = multiplierNote;
