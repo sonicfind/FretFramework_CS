@@ -80,6 +80,31 @@ namespace Framework.SongEntry
             m_directory_playlist.Str = Path.GetDirectoryName(Directory)!;
         }
 
+        public ScanValues GetValues(NoteTrackType track)
+        {
+            switch (track)
+            {
+                case NoteTrackType.Lead:         return m_scans.lead_5;
+                case NoteTrackType.Lead_6:       return m_scans.lead_6;
+                case NoteTrackType.Bass:         return m_scans.lead_5;
+                case NoteTrackType.Bass_6:       return m_scans.lead_6;
+                case NoteTrackType.Rhythm:       return m_scans.rhythm;
+                case NoteTrackType.Coop:         return m_scans.coop;
+                case NoteTrackType.Keys:         return m_scans.keys;
+                case NoteTrackType.Drums_4:      return m_scans.drums_4;
+                case NoteTrackType.Drums_4Pro:   return m_scans.drums_4pro;
+                case NoteTrackType.Drums_5:      return m_scans.drums_5;
+                case NoteTrackType.Vocals:       return m_scans.leadVocals;
+                case NoteTrackType.Harmonies:    return m_scans.harmonyVocals;
+                case NoteTrackType.ProGuitar_17: return m_scans.proguitar_17;
+                case NoteTrackType.ProGuitar_22: return m_scans.proguitar_22;
+                case NoteTrackType.ProBass_17:   return m_scans.probass_17;
+                case NoteTrackType.ProBass_22:   return m_scans.probass_22;
+                default:
+                    throw new ArgumentException("track value is not of a valid type");
+            }
+        }
+
         public void Load_Ini(string iniPath, DateTime iniLastWrite)
         {
             m_modifiers = IniHandler.ReadSongIniFile(iniPath);
