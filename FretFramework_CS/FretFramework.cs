@@ -2,6 +2,7 @@
 using BenchmarkDotNet.Jobs;
 using BenchmarkDotNet.Running;
 using CommandLine;
+using Framework.Serialization;
 using System;
 using System.Buffers.Binary;
 using System.Diagnostics;
@@ -20,8 +21,14 @@ namespace Framework
     {
         static void Main(string[] args)
         {
-            Song.Song song = new("E:\\Documents\\My Games\\Clone Hero\\CH Songs\\Charter Application [Sonicfind]\\Mutsuhiko Izumi - L.A.RIDER (Long Version) [Sonicfind]");
-            song.Load_Ini();
+            string path = "E:\\Documents\\My Games\\Clone Hero\\CH Songs\\Charter Application [Sonicfind]\\Mutsuhiko Izumi - L.A.RIDER (Long Version) [Sonicfind]\\notes.mid";
+            SongEntry.SongEntry entry = new(new(path, Types.ChartType.MID), File.GetLastWriteTime(path));
+            path = Path.Combine(Path.GetDirectoryName(path)!, "song.ini");
+            entry.Load_Ini(path, File.GetLastWriteTime(path));
+            if (entry.Scan(out FrameworkFile? file))
+            {
+                entry.FinishScan();
+            }
             BenchmarkRunner.Run<SongBenchmarks>();
         }
     }
@@ -31,33 +38,55 @@ namespace Framework
     {
         private Song.Song? song = null;
         private SongEntry.SongEntry? entry = null;
+        private string dir = "E:\\Documents\\My Games\\Clone Hero\\CH Songs\\Charter Application [Sonicfind]\\Mutsuhiko Izumi - L.A.RIDER (Long Version) [Sonicfind]";
+        private string ini = string.Empty;
+        private DateTime iniLastWrite;
+
+        [GlobalSetup]
+        public void Setup()
+        {
+            ini = Path.Combine(dir, "song.ini");
+            iniLastWrite = File.GetLastWriteTime(ini);
+        }
 
         [Benchmark]
         public void Load_Midi()
         {
-            song = new();
-            song.Load_Midi("E:\\Documents\\My Games\\Clone Hero\\CH Songs\\Charter Application [Sonicfind]\\Mutsuhiko Izumi - L.A.RIDER (Long Version) [Sonicfind]\\notes.mid", Encoding.UTF8);
+            song = new(dir);
+            song.Load_Ini();
+            song.Load_Midi(Path.Combine(dir, "notes.mid"), Encoding.UTF8);
         }
 
         [Benchmark]
         public void Load_Chart()
         {
-            song = new();
-            song.Load_Chart("E:\\Documents\\My Games\\Clone Hero\\CH Songs\\Charter Application [Sonicfind]\\Mutsuhiko Izumi - L.A.RIDER (Long Version) [Sonicfind]\\notes.chart", true);
+            song = new(dir);
+            song.Load_Ini();
+            song.Load_Chart(Path.Combine(dir, "notes.chart"), true);
         }
 
         [Benchmark]
         public void Scan_Midi()
         {
-            entry = new();
-            entry.Scan_Midi("E:\\Documents\\My Games\\Clone Hero\\CH Songs\\Charter Application [Sonicfind]\\Mutsuhiko Izumi - L.A.RIDER (Long Version) [Sonicfind]\\notes.mid");
+            string chart = Path.Combine(dir, "notes.mid");
+            entry = new(new(chart, Types.ChartType.MID), File.GetLastWriteTime(chart));
+            entry.Load_Ini(ini, iniLastWrite);
+            if (entry.Scan(out FrameworkFile? file))
+            {
+                entry.FinishScan();
+            }
         }
 
         [Benchmark]
         public void Scan_Chart()
         {
-            entry = new();
-            entry.Scan_Chart("E:\\Documents\\My Games\\Clone Hero\\CH Songs\\Charter Application [Sonicfind]\\Mutsuhiko Izumi - L.A.RIDER (Long Version) [Sonicfind]\\notes.chart");
+            string chart = Path.Combine(dir, "notes.chart");
+            entry = new(new(chart, Types.ChartType.CHART), File.GetLastWriteTime(chart));
+            entry.Load_Ini(ini, iniLastWrite);
+            if (entry.Scan(out FrameworkFile? file))
+            {
+                entry.FinishScan();
+            }
         }
 
         [IterationCleanup]

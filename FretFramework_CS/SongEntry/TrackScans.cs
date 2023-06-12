@@ -29,8 +29,9 @@ namespace Framework.SongEntry
         public ScanValues rhythm = new();
         public ScanValues coop = new();
         public ScanValues keys = new();
+        public ScanValues drums_4 = new();
         public ScanValues drums_4pro = new();
-        public ScanValues drums5 = new();
+        public ScanValues drums_5 = new();
         public ScanValues proguitar_17 = new();
         public ScanValues proguitar_22 = new();
         public ScanValues probass_17 = new();
@@ -41,7 +42,15 @@ namespace Framework.SongEntry
         public ScanValues harmonyVocals = new();
         public TrackScans() { }
 
-        public void ScanFromMidi(MidiTrackType trackType, ref MidiFileReader reader)
+        public bool CheckForValidScans()
+        {
+            return lead_5.subTracks > 0     || bass_5.subTracks > 0        || keys.subTracks > 0         || drums_4pro.subTracks > 0 ||
+                   leadVocals.subTracks > 0 || harmonyVocals.subTracks > 0 || proguitar_17.subTracks > 0 || proguitar_22.subTracks > 0 ||
+                   probass_17.subTracks > 0 || probass_22.subTracks > 0    || proKeys.subTracks > 0      || rhythm.subTracks > 0 ||
+                   coop.subTracks > 0       || drums_5.subTracks > 0       || lead_6.subTracks > 0       || bass_6.subTracks > 0;
+        }
+
+        public void ScanFromMidi(MidiTrackType trackType, DrumType drumType, ref MidiFileReader reader)
         {
             switch (trackType)
             {
@@ -65,11 +74,27 @@ namespace Framework.SongEntry
                     }
                 case MidiTrackType.Drums:
                     {
-                        LegacyDrumScan legacy = new();
-                        if (legacy.ScanMidi(ref reader) == DrumType.FIVE_LANE)
-                            drums5 |= legacy.Values;
+                        if (drumType == DrumType.FOUR_PRO)
+                        {
+                            if (drums_4pro.subTracks == 0)
+                                drums_4pro = new Midi_Drum4Pro_Scanner().Scan(ref reader);
+                        }
+                        else if (drumType == DrumType.FIVE_LANE)
+                        {
+                            if (drums_5.subTracks == 0)
+                                drums_5 = new Midi_Drum5_Scanner().Scan(ref reader);
+                        }
                         else
-                            drums_4pro |= legacy.Values;
+                        {
+                            LegacyDrumScan legacy = new();
+                            if (legacy.ScanMidi(ref reader) == DrumType.FIVE_LANE)
+                            {
+                                if (drums_5.subTracks == 0)
+                                    drums_5 = legacy.Values;
+                            }
+                            else if (drums_4pro.subTracks == 0)
+                                drums_4pro = legacy.Values;
+                        }
                         break;
                     }
                 case MidiTrackType.Vocals:
@@ -184,7 +209,7 @@ namespace Framework.SongEntry
                         switch (legacy.Type)
                         {
                             case DrumType.FOUR_PRO:  return DotChart_Scanner.Scan<Drums4_ProOutline>(ref drums_4pro, ref reader);
-                            case DrumType.FIVE_LANE: return DotChart_Scanner.Scan<Drums5Outline>(ref drums5, ref reader);
+                            case DrumType.FIVE_LANE: return DotChart_Scanner.Scan<Drums5Outline>(ref drums_5, ref reader);
                             case DrumType.UNKNOWN:   return legacy.ScanDotChart(ref reader);
                         }
                         break;
