@@ -43,39 +43,39 @@ namespace Framework.Modifiers
             {
                 switch (type)
                 {
-                    case ModifierNodeType.SORTSTRING:       return new(outputName, new SortString(reader.ExtractUTF8String(false)));
-                    case ModifierNodeType.SORTSTRING_CHART: return new(outputName, new SortString(reader.ExtractUTF8String(true)));
-                    case ModifierNodeType.STRING:           return new(outputName, reader.ExtractUTF8String(false));
-                    case ModifierNodeType.STRING_CHART:     return new(outputName, reader.ExtractUTF8String(true));
-                    case ModifierNodeType.UINT64:           return new(outputName, reader.ReadUInt64());
-                    case ModifierNodeType.INT64:            return new(outputName, reader.ReadInt64());
-                    case ModifierNodeType.UINT32:           return new(outputName, reader.ReadUInt32());
-                    case ModifierNodeType.INT32:            return new(outputName, reader.ReadInt32());
-                    case ModifierNodeType.UINT16:           return new(outputName, reader.ReadUInt16());
-                    case ModifierNodeType.INT16:            return new(outputName, reader.ReadInt16());
-                    case ModifierNodeType.BOOL:             return new(outputName, reader.ReadBoolean());
-                    case ModifierNodeType.FLOAT:            return new(outputName, reader.ReadFloat());
+                    case ModifierNodeType.SORTSTRING:       return new(new SortString(reader.ExtractUTF8String(false)));
+                    case ModifierNodeType.SORTSTRING_CHART: return new(new SortString(reader.ExtractUTF8String(true)));
+                    case ModifierNodeType.STRING:           return new(reader.ExtractUTF8String(false));
+                    case ModifierNodeType.STRING_CHART:     return new(reader.ExtractUTF8String(true));
+                    case ModifierNodeType.UINT64:           return new(reader.ReadUInt64());
+                    case ModifierNodeType.INT64:            return new(reader.ReadInt64());
+                    case ModifierNodeType.UINT32:           return new(reader.ReadUInt32());
+                    case ModifierNodeType.INT32:            return new(reader.ReadInt32());
+                    case ModifierNodeType.UINT16:           return new(reader.ReadUInt16());
+                    case ModifierNodeType.INT16:            return new(reader.ReadInt16());
+                    case ModifierNodeType.BOOL:             return new(reader.ReadBoolean());
+                    case ModifierNodeType.FLOAT:            return new(reader.ReadFloat());
                     case ModifierNodeType.FLOATARRAY:
                         {
                             float flt1 = reader.ReadFloat();
                             float flt2 = reader.ReadFloat();
-                            return new(outputName, flt1, flt2);
+                            return new(flt1, flt2);
                         }
                 }
             }
-            catch (Exception _)
+            catch (Exception)
 	        {
                 switch (type)
                 {
-                    case ModifierNodeType.UINT64:     return new(outputName, (ulong)0);
-                    case ModifierNodeType.INT64:      return new(outputName, (long)0);
-                    case ModifierNodeType.UINT32:     return new(outputName, (uint)0);
-                    case ModifierNodeType.INT32:      return new(outputName, (int)0);
-                    case ModifierNodeType.UINT16:     return new(outputName, (ushort)0);
-                    case ModifierNodeType.INT16:      return new(outputName, (short)0);
-                    case ModifierNodeType.BOOL:       return new(outputName, false);
-                    case ModifierNodeType.FLOAT:      return new(outputName, .0f);
-                    case ModifierNodeType.FLOATARRAY: return new(outputName, 0, 0);
+                    case ModifierNodeType.UINT64:     return new((ulong)0);
+                    case ModifierNodeType.INT64:      return new((long)0);
+                    case ModifierNodeType.UINT32:     return new((uint)0);
+                    case ModifierNodeType.INT32:      return new((int)0);
+                    case ModifierNodeType.UINT16:     return new((ushort)0);
+                    case ModifierNodeType.INT16:      return new((short)0);
+                    case ModifierNodeType.BOOL:       return new(false);
+                    case ModifierNodeType.FLOAT:      return new(.0f);
+                    case ModifierNodeType.FLOATARRAY: return new(0, 0);
                 }
             }
             throw new Exception("How in the fu-");

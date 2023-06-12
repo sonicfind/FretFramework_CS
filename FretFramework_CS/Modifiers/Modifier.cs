@@ -42,66 +42,63 @@ namespace Framework.Modifiers
             [FieldOffset(0)] public fixed float flArr[2];
         }
 
-        private readonly string _name;
-        public string Name { get { return _name; } }
 		private readonly ModifierType type;
 
         SortString _sortStr;
 		string _str = string.Empty;
         ModifierUnion union;
 
-        private Modifier(string name) { _name = name; }
-        public Modifier(string name, SortString str) : this(name)
+        public Modifier(SortString str)
         {
             type = ModifierType.SORTSTRING;
             _sortStr = str;
         }
-        public Modifier(string name, string str) : this(name)
+        public Modifier(string str)
         {
             type = ModifierType.STRING;
             _str = str;
         }
-        public Modifier(string name, ulong value) : this(name)
+        public Modifier(ulong value)
         {
             type = ModifierType.UINT64;
             union.ul = value;
         }
-        public Modifier(string name, long value) : this(name)
+        public Modifier(long value)
         {
             type = ModifierType.INT64;
             union.l = value;
         }
-        public Modifier(string name, uint value) : this(name)
+        public Modifier(uint value)
         {
             type = ModifierType.UINT32;
             union.ui = value;
         }
-        public Modifier(string name, int value) : this(name)
+        public Modifier(int value)
         {
             type = ModifierType.INT32;
             union.i = value;
         }
-        public Modifier(string name, ushort value) : this(name)
+        public Modifier(ushort value)
         {
             type = ModifierType.UINT16;
             union.us = value;
         }
-        public Modifier(string name, short value) : this(name)
+        public Modifier(short value)
         {
             type = ModifierType.INT16;
             union.s = value;
         }
-        public Modifier(string name, bool value) : this(name)
+        public Modifier(bool value)
         {
             type = ModifierType.BOOL;
             union.b = value;
         }
-        public Modifier(string name, float value) : this(name)
+        public Modifier(float value)
         {
             type = ModifierType.FLOAT;
             union.f = value;
         }
-        public Modifier(string name, float fl1, float fl2) : this(name)
+        public Modifier(float fl1, float fl2)
         {
             type = ModifierType.FLOATARRAY;
             union.flArr[0] = fl1;

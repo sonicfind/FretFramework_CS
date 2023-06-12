@@ -10,10 +10,10 @@ namespace Framework.Ini
 {
     public static class IniHandler
     {
-        public static Dictionary<string, List<Modifier>> ReadIniFile(string iniFile, Dictionary<string, Dictionary<string, ModifierNode>> sections)
+        public static Dictionary<string, Dictionary<string, List<Modifier>>> ReadIniFile(string iniFile, Dictionary<string, Dictionary<string, ModifierNode>> sections)
         {
             IniFileReader reader = new(iniFile);
-            Dictionary<string, List<Modifier>> modifierMap = new();
+            Dictionary<string, Dictionary<string, List<Modifier>>> modifierMap = new();
             while (reader.IsStartOfSection())
             {
                 if (sections.TryGetValue(reader.Section, out var nodes))
@@ -153,25 +153,25 @@ namespace Framework.Ini
             });
         }
 
-        public static List<Modifier>? ReadSongIniFile(string iniFile)
+        public static Dictionary<string, List<Modifier>> ReadSongIniFile(string iniFile)
 		{
-            Dictionary<string, List<Modifier>> modifiers = ReadIniFile(iniFile, SONG_INI_DICTIONARY);
+            Dictionary<string, Dictionary<string, List<Modifier>>> modifiers = ReadIniFile(iniFile, SONG_INI_DICTIONARY);
 			if (modifiers.Count == 0)
-				return null;
+				return new();
 			return modifiers.First().Value;
 		}
 
         public static Modifier? GrabLoadingPhrase(string iniFile)
 		{
-            Dictionary<string, List<Modifier>> modifiers = ReadIniFile(iniFile, LOADING_PHRASE_DICTIONARY);
+            Dictionary<string, Dictionary<string, List<Modifier>>> modifiers = ReadIniFile(iniFile, LOADING_PHRASE_DICTIONARY);
             if (modifiers.Count == 0)
                 return null;
 
-            List<Modifier> modifierList = modifiers.First().Value;
+            Dictionary<string, List<Modifier>> modifierList = modifiers.First().Value;
             if (modifierList.Count == 0)
                 return null;
 
-            return modifierList[0];
+            return modifierList.First().Value.First();
 		}
     }
 }

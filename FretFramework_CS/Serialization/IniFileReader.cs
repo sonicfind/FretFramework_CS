@@ -86,14 +86,20 @@ namespace Framework.Serialization
             return !reader.IsEndOfFile() && reader.PeekByte() != '[';
         }
 
-        public List<Modifier> ExtractModifiers(ref Dictionary<string, ModifierNode> validNodes)
+        public Dictionary<string, List<Modifier>> ExtractModifiers(ref Dictionary<string, ModifierNode> validNodes)
         {
-            List<Modifier> modifiers = new();
+            Dictionary<string, List<Modifier>> modifiers = new();
             reader.GotoNextLine();
             while (IsStillCurrentSection())
             {
                 if (validNodes.TryGetValue(reader.ExtractModifierName(), out ModifierNode? node))
-                    modifiers.Add(node.CreateModifier(reader));
+                {
+                    Modifier mod = node.CreateModifier(reader);
+                    if (modifiers.TryGetValue(node.outputName, out List<Modifier>? list))
+                        list.Add(mod);
+                    else
+                        modifiers.Add(node.outputName, new() { mod });
+                }
                 reader.GotoNextLine();
             }
             return modifiers;

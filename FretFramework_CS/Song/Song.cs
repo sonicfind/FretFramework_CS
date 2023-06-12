@@ -45,7 +45,7 @@ namespace Framework.Song
         private byte m_multiplier_note = 116;
         private DrumType m_baseDrumType = DrumType.UNKNOWN;
 
-        private List<Modifier> m_modifiers = new();
+        private Dictionary<string, Modifier> m_modifiers = new();
 
         public ushort Tickrate { get; private set; }
         public string m_midiSequenceName = string.Empty;
@@ -66,99 +66,93 @@ namespace Framework.Song
             if (!File.Exists(iniFile))
                 return;
 
-            bool five_lane_drumsSet = false;
-            bool hopo_frequencySet = false;
-            bool multiplier_noteSet = false;
-            bool eighthnote_hopoSet = false;
-            bool sustain_thresholdSet = false;
-            bool hopofreqSet = false;
-            var modifiers = IniHandler.ReadSongIniFile(iniFile);
-            if (modifiers == null)
-                return;
+            Dictionary<string, List<Modifier>> modifiers = IniHandler.ReadSongIniFile(iniFile);
+            if (modifiers.Remove("name", out List<Modifier>? names))
+                for (int i = 0; i < names.Count; ++i)
+                {
+                    m_name = names[i].SORTSTR.Str;
+                    if (m_name != "Unknown Title")
+                        break;
+                }
 
-            for (int i = 0; i < modifiers.Count; ++i)
+            if (modifiers.Remove("artist", out List<Modifier>? artists))
+                for (int i = 0; i < artists.Count; ++i)
+                {
+                    m_artist = artists[i].SORTSTR.Str;
+                    if (m_artist != "Unknown Artist")
+                        break;
+                }
+
+            if (modifiers.Remove("album", out List<Modifier>? albums))
+                for (int i = 0; i < albums.Count; ++i)
+                {
+                    m_album = albums[i].SORTSTR.Str;
+                    if (m_album != "Unknown Album")
+                        break;
+                }
+
+            if (modifiers.Remove("genre", out List<Modifier>? genres))
+                for (int i = 0; i < genres.Count; ++i)
+                {
+                    m_genre = genres[i].SORTSTR.Str;
+                    if (m_genre != "Unknown Genre")
+                        break;
+                }
+
+            if (modifiers.Remove("year", out List<Modifier>? years))
+                for (int i = 0; i < years.Count; ++i)
+                {
+                    m_year = years[i].SORTSTR.Str;
+                    if (m_year != "Unknown Year")
+                        break;
+                }
+
+            if (modifiers.Remove("charter", out List<Modifier>? charters))
+                for (int i = 0; i < charters.Count; ++i)
+                {
+                    m_charter = charters[i].SORTSTR.Str;
+                    if (m_charter != "Unknown Charter")
+                        break;
+                }
+
+            if (modifiers.Remove("playlist", out List<Modifier>? playlists))
             {
-                Modifier mod = modifiers[i];
-                if (mod.Name == "name")
+                string parentPlaylist = Path.GetDirectoryName(m_directory)!;
+                for (int i = 0; i < playlists.Count; ++i)
                 {
-                    if (m_name.Length == 0 || m_name == "Unknown Title")
-				        m_name = mod.SORTSTR.Str;
+                    m_playlist = playlists[i].SORTSTR.Str;
+                    if (m_playlist != parentPlaylist)
+                        break;
                 }
-                else if (mod.Name == "artist")
-                {
-                    if (m_artist.Length == 0 || m_artist == "Unknown Artist")
-				        m_artist = mod.SORTSTR.Str;
-                }
-                else if (mod.Name == "album")
-                {
-                    if (m_album.Length == 0 || m_album == "Unknown Album")
-				        m_album = mod.SORTSTR.Str;
-                }
-                else if (mod.Name == "genre")
-                {
-                    if (m_genre.Length == 0 || m_genre == "Unknown Genre")
-				        m_genre = mod.SORTSTR.Str;
-                }
-                else if (mod.Name == "year")
-                {
-                    if (m_year.Length == 0 || m_year == "Unknown Year")
-				        m_year = mod.SORTSTR.Str;
-                }
-                else if (mod.Name == "charter")
-                {
-                    if (m_charter.Length == 0 || m_charter == "Unknown Charter")
-				        m_charter = mod.SORTSTR.Str;
-                }
-                else if (mod.Name == "playlist")
-                {
-                    if (m_playlist.Length == 0 || m_playlist == Path.GetDirectoryName(m_directory))
-                        m_playlist = mod.SORTSTR.Str;
-                }
-                else if (mod.Name == "five_lane_drums")
-                {
-                    if (!five_lane_drumsSet && m_baseDrumType == DrumType.UNKNOWN)
-                        m_baseDrumType = mod.BOOL ? DrumType.FIVE_LANE : DrumType.FOUR_PRO;
-                    five_lane_drumsSet = true;
-                }
-                else if (mod.Name == "hopo_frequency")
-                {
-                    if (!hopo_frequencySet)
-                        m_hopo_frequency = mod.UINT64;
-                    hopo_frequencySet = true;
-                }
-                else if (mod.Name == "multiplier_note")
-                {
-                    if (!multiplier_noteSet && mod.UINT16 == 103)
-                        m_multiplier_note = 103;
-                    multiplier_noteSet = true;
-                }
-                else if (mod.Name == "eighthnote_hopo")
-                {
-                    if (!eighthnote_hopoSet)
-                        m_eighthnote_hopo = mod.BOOL;
-                    eighthnote_hopoSet = true;
-                }
-                else if (mod.Name == "sustain_cutoff_threshold")
-                {
-                    if (!sustain_thresholdSet)
-                        m_sustain_cutoff_threshold = mod.UINT64;
-                    sustain_thresholdSet = true;
-                }
-                else if (mod.Name == "hopofreq")
-                {
-                    if (!hopofreqSet)
-                        m_hopofreq_old = mod.UINT16;
-                    hopofreqSet = true;
-                }
-                else if (GetModifier(mod.Name) == null)
-                    m_modifiers.Add(mod);
             }
+
+            if (modifiers.Remove("five_lane_drums", out List<Modifier>? fivelanes))
+                m_baseDrumType = fivelanes[0].BOOL ? DrumType.FIVE_LANE : DrumType.FOUR_PRO;
+
+            if (modifiers.Remove("hopo_frequency", out List<Modifier>? hopo_freq))
+                m_hopo_frequency = hopo_freq[0].UINT64;
+
+            if (modifiers.Remove("multiplier_note", out List<Modifier>? multiplier))
+                if (multiplier[0].UINT16 == 103)
+                    m_multiplier_note = 103;
+
+            if (modifiers.Remove("eighthnote_hopo", out List<Modifier>? eighthnote))
+                m_eighthnote_hopo = eighthnote[0].BOOL;
+
+            if (modifiers.Remove("sustain_cutoff_threshold", out List<Modifier>? threshold))
+                m_sustain_cutoff_threshold = threshold[0].UINT64;
+
+            if (modifiers.Remove("hopofreq", out List<Modifier>? hopofreq_old))
+                m_hopofreq_old = hopofreq_old[0].UINT16;
+
+            foreach(var mod in modifiers)
+                m_modifiers.Add(mod.Key, mod.Value[0]);
         }
 
         public void Load_Midi(string path, Encoding encoding)
         {
             Midi_Loader.encoding = encoding;
-            MidiFileReader reader = new(path, 116);
+            MidiFileReader reader = new(path, m_multiplier_note);
             Tickrate = reader.GetTickRate();
 
             while (reader.StartTrack())
@@ -247,14 +241,6 @@ namespace Framework.Song
                 else
                     legacy.Transfer(m_tracks.drums_4pro);
             }
-        }
-
-        private Modifier? GetModifier(string name)
-        {
-            foreach (var modifier in m_modifiers)
-                if (modifier.Name == name)
-                    return modifier;
-            return null;
         }
     }
 }
