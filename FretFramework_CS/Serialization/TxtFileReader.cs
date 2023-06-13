@@ -160,7 +160,7 @@ namespace Framework.Serialization
                     b = file.ptr[_position];
                 }
 
-                if ('0' < b || b > '9')
+                if (b < '0' || b > '9')
                     return false;
 
                 while (true)
@@ -194,7 +194,7 @@ namespace Framework.Serialization
                     return false;
 
                 b = file.ptr[_position];
-                if ('0' < b || b > '9')
+                if (b < '0' || b > '9')
                     return false;
 
                 while (true)
@@ -286,7 +286,7 @@ namespace Framework.Serialization
                     b = file.ptr[_position];
                 }
 
-                if ('0' < b || b > '9')
+                if (b < '0' || b > '9')
                     return false;
 
                 while (true)
@@ -320,7 +320,7 @@ namespace Framework.Serialization
                     return false;
 
                 b = file.ptr[_position];
-                if ('0' < b || b > '9')
+                if (b < '0' || b > '9')
                     return false;
 
                 while (true)
@@ -411,7 +411,7 @@ namespace Framework.Serialization
                     b = file.ptr[_position];
                 }
 
-                if ('0' < b || b > '9')
+                if (b < '0' || b > '9')
                     return false;
 
                 while (true)
@@ -445,7 +445,7 @@ namespace Framework.Serialization
                     return false;
 
                 b = file.ptr[_position];
-                if ('0' < b || b > '9')
+                if (b < '0' || b > '9')
                     return false;
 
                 while (true)
@@ -577,12 +577,14 @@ namespace Framework.Serialization
                 ++_position;
                 if (_position == _next)
                     return false;
+                b = file.ptr[_position];
             }
             else if (b == '-')
             {
                 ++_position;
                 if (_position == _next)
                     return false;
+                b = file.ptr[_position];
                 isNegative = true;
             }
 
