@@ -15,9 +15,11 @@ using System.Runtime.InteropServices;
 using Framework.SongEntry.TrackScan;
 using System.IO;
 using System.Xml.Linq;
+using System.Diagnostics;
 
 namespace Framework.SongEntry
 {
+    [DebuggerDisplay($"{{{nameof(GetDebuggerDisplay)}(),nq}}")]
     public class SongEntry
     {
         private static readonly SortString s_DEFAULT_ARTIST =  new("Unknown Artist");
@@ -410,6 +412,11 @@ namespace Framework.SongEntry
             if (m_modifiers.TryGetValue("five_lane_drums", out List<Modifier>? fivelanes))
                 return fivelanes[0].BOOL ? DrumType.FIVE_LANE : DrumType.FOUR_PRO;
             return DrumType.UNKNOWN;
+        }
+
+        private string GetDebuggerDisplay()
+        {
+            return $"{Artist.Str} | {Name.Str}";
         }
     }
 }

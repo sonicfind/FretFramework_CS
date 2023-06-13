@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace Framework.SongEntry.TrackScan
 {
+    [DebuggerDisplay($"{{{nameof(GetDebuggerDisplay)}(),nq}}")]
     public unsafe struct ScanValues
     {
         internal static byte[] shifts = { 1, 2, 4, 8, 16 };
@@ -26,6 +28,11 @@ namespace Framework.SongEntry.TrackScan
         {
             lhs.subTracks |= rhs.subTracks;
             return lhs;
+        }
+
+        private string GetDebuggerDisplay()
+        {
+            return $"{subTracks} | {intensity}";
         }
     }
 }
