@@ -8,31 +8,26 @@ namespace Framework.Types
 {
     public struct SortString
     {
-        private string _str;
-        private string sortStr;
+        private string _str = string.Empty;
+        private string _sortStr = string.Empty;
 
         public string Str
         {
             get { return _str; }
             set {
                 _str = value;
-                sortStr = value;
+                _sortStr = value.ToLower();
             }
         }
 
         public int Length { get { return _str.Length; } }
         
-        public readonly string SortStr { get { return sortStr; } }
-        public SortString()
-        {
-            _str = string.Empty;
-            sortStr = string.Empty;
-        }
+        public readonly string SortStr { get { return _sortStr; } }
+        public SortString() { }
 
         public SortString(string str)
         {
-            _str = str;
-            sortStr = str.ToLower();
+            Str = str;
         }
     }
 }
