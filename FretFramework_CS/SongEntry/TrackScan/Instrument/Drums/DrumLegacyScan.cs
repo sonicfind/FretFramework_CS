@@ -87,6 +87,9 @@ namespace Framework.SongEntry.TrackScan.Instrument.Drums
 
         public override bool ParseLaneColor_Off()
         {
+            if (note.value < 60 || 101 < note.value)
+                return false;
+
             uint noteValue = note.value - 60;
             int diffIndex = DIFFVALUES[noteValue];
             if (!difficulties[diffIndex])
