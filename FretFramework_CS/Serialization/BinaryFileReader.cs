@@ -52,8 +52,8 @@ namespace Framework.Serialization
                 {
                     file.Dispose();
                 }
+                Marshal.FreeHGlobal((IntPtr)boundaries);
             }
-            Marshal.FreeHGlobal((IntPtr)boundaries);
             disposed = true;
         }
 

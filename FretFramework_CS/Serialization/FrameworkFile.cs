@@ -13,6 +13,7 @@ namespace Framework.Serialization
         private readonly byte[] buffer;
         private readonly GCHandle handle;
         public readonly byte* ptr;
+        private bool disposed;
 
         public FrameworkFile(byte[] data)
         {
@@ -30,7 +31,9 @@ namespace Framework.Serialization
 
         public void Dispose()
         {
+            if (disposed) return;
             handle.Free();
+            disposed = true;
             GC.SuppressFinalize(this);
         }
     }
