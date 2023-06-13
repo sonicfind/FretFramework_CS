@@ -154,7 +154,7 @@ namespace Framework.SongEntry
                 if (reader.GetTrackNumber() > 1 && reader.GetEvent().type == MidiEventType.Text_TrackName)
                 {
                     string name = Encoding.ASCII.GetString(reader.ExtractTextOrSysEx());
-                    if (MidiFileReader.TRACKNAMES.TryGetValue(name, out MidiTrackType type) && type != MidiTrackType.Events)
+                    if (MidiFileReader.TRACKNAMES.TryGetValue(name, out MidiTrackType type) && type != MidiTrackType.Events && type != MidiTrackType.Beats)
                         m_scans.ScanFromMidi(type, drumType, ref reader);
                 }
             }
