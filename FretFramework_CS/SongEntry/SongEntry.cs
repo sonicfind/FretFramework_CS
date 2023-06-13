@@ -56,7 +56,7 @@ namespace Framework.SongEntry
         private TrackScans m_scans = new();
 
         private (string, ChartType) m_chartFile;
-        private readonly DateTime m_chartWriteTime;
+        private DateTime m_chartWriteTime;
         private DateTime m_iniWriteTime;
 
         public SortString Artist => m_artist;
@@ -74,13 +74,6 @@ namespace Framework.SongEntry
         public bool EightNoteHopo => m_eighthnote_hopo;
 
         public string Directory => Path.GetDirectoryName(m_chartFile.Item1)!;
-
-        public SongEntry((string, ChartType) chartPath, DateTime chartLastWrite)
-        {
-            m_chartFile = chartPath;
-            m_chartWriteTime = chartLastWrite;
-            m_directory_playlist.Str = Path.GetDirectoryName(Directory)!;
-        }
 
         public ScanValues GetValues(NoteTrackType track)
         {
@@ -107,30 +100,35 @@ namespace Framework.SongEntry
             }
         }
 
-        public void Load_Ini(string iniPath, DateTime iniLastWrite)
+        public void Load_Ini(ref FileInfo info)
         {
-            m_modifiers = IniHandler.ReadSongIniFile(iniPath);
-            m_iniWriteTime = iniLastWrite;
+            m_modifiers = IniHandler.ReadSongIniFile(info.FullName);
+            m_iniWriteTime = info.LastWriteTime;
         }
 
-        public bool Scan(out FrameworkFile? file)
+        public bool Scan(FrameworkFile file, ref (FileInfo?, ChartType) chart)
         {
             try
             {
-                file = new(m_chartFile.Item1);
-                if (m_chartFile.Item2 == ChartType.CHART)
+                if (chart.Item2 == ChartType.CHART)
                     Scan_Chart(file);
 
                 if (GetModifier("name") == null)
                     return false;
 
-                if (m_chartFile.Item2 == ChartType.MID)
+                if (chart.Item2 == ChartType.MID)
                     Scan_Midi(file);
-                return m_scans.CheckForValidScans();
+
+                if (!m_scans.CheckForValidScans())
+                    return false;
+
+                m_chartFile = new(chart.Item1!.FullName, chart.Item2);
+                m_chartWriteTime = chart.Item1!.LastWriteTime;
+                m_directory_playlist.Str = Path.GetDirectoryName(Path.GetDirectoryName(m_chartFile.Item1)!)!;
+                return true;
             }
             catch (Exception)
             {
-                file = null;
                 return false;
             }
         }
@@ -341,7 +339,7 @@ namespace Framework.SongEntry
 
             {
                 if (m_modifiers.TryGetValue("diff_drums", out List<Modifier>? intensities))
-	            {
+                {
                     sbyte intensity = (sbyte)intensities[0].INT32;
                     m_scans.drums_4.intensity = intensity;
                     m_scans.drums_4pro.intensity = intensity;
@@ -354,13 +352,13 @@ namespace Framework.SongEntry
                     m_scans.drums_4pro.intensity = (sbyte)intensities[0].INT32;
             }
 
-	        m_scans.drums_4 = m_scans.drums_4pro;
+            m_scans.drums_4 = m_scans.drums_4pro;
 
             {
                 if (m_modifiers.TryGetValue("pro_drums", out List<Modifier>? proDrums) && !proDrums[0].BOOL)
                     m_scans.drums_4pro.subTracks = 0;
             }
-	        
+            
 
             {
                 if (m_modifiers.TryGetValue("diff_guitar_real", out List<Modifier>? intensities))

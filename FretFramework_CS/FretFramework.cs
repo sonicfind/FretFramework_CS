@@ -2,6 +2,7 @@
 using BenchmarkDotNet.Jobs;
 using BenchmarkDotNet.Running;
 using CommandLine;
+using Framework.Library;
 using Framework.Serialization;
 using System;
 using System.Buffers.Binary;
@@ -21,16 +22,22 @@ namespace Framework
     {
         static void Main(string[] args)
         {
-            string path = "E:\\Documents\\My Games\\Clone Hero\\CH Songs\\Charter Application [Sonicfind]\\Mutsuhiko Izumi - L.A.RIDER (Long Version) [Sonicfind]\\notes.mid";
-            SongEntry.SongEntry entry = new(new(path, Types.ChartType.MID), File.GetLastWriteTime(path));
-            path = Path.Combine(Path.GetDirectoryName(path)!, "song.ini");
-            entry.Load_Ini(path, File.GetLastWriteTime(path));
-            if (entry.Scan(out FrameworkFile? file))
+            SongLibrary library = new();
+
+            string? directory = string.Empty;
+            do
             {
-                byte[] hash = file!.HASH_MD5;
-                Console.WriteLine(BitConverter.ToString(hash));
-                entry.FinishScan();
+                Console.Write("Drag and drop song directory: ");
+                directory = Console.ReadLine();
             }
+            while (directory == null);
+            directory = directory.Replace("\"", "");
+
+            Stopwatch stopwatch = Stopwatch.StartNew();
+            library.RunFullScan(new() { directory });
+            stopwatch.Stop();
+            Console.WriteLine($"Time Spent: {stopwatch.ElapsedMilliseconds}ms");
+            Console.WriteLine($"Song Count: {library.Count}");
             BenchmarkRunner.Run<SongBenchmarks>();
         }
     }
@@ -38,68 +45,19 @@ namespace Framework
     [MemoryDiagnoser]
     public class SongBenchmarks
     {
-        private Song.Song? song = null;
-        private SongEntry.SongEntry? entry = null;
-        private string dir = "E:\\Documents\\My Games\\Clone Hero\\CH Songs\\Charter Application [Sonicfind]\\Mutsuhiko Izumi - L.A.RIDER (Long Version) [Sonicfind]";
-        private string ini = string.Empty;
-        private DateTime iniLastWrite;
+        private SongLibrary? library;
+        private readonly List<string> directories = new() { "E:\\Documents\\My Games\\Clone Hero\\CH Songs" };
 
-        [GlobalSetup]
+        [IterationSetup]
         public void Setup()
         {
-            ini = Path.Combine(dir, "song.ini");
-            iniLastWrite = File.GetLastWriteTime(ini);
+            library = new SongLibrary();
         }
 
         [Benchmark]
-        public void Load_Midi()
+        public void Scan_Directory()
         {
-            song = new(dir);
-            song.Load_Ini();
-            song.Load_Midi(Path.Combine(dir, "notes.mid"), Encoding.UTF8);
-        }
-
-        [Benchmark]
-        public void Load_Chart()
-        {
-            song = new(dir);
-            song.Load_Ini();
-            song.Load_Chart(Path.Combine(dir, "notes.chart"), true);
-        }
-
-        [Benchmark]
-        public void Scan_Midi()
-        {
-            string chart = Path.Combine(dir, "notes.mid");
-            entry = new(new(chart, Types.ChartType.MID), File.GetLastWriteTime(chart));
-            entry.Load_Ini(ini, iniLastWrite);
-            if (entry.Scan(out FrameworkFile? file))
-            {
-                byte[] hash = file!.HASH_SHA1;
-                string h = BitConverter.ToString(hash);
-                entry.FinishScan();
-            }
-        }
-
-        [Benchmark]
-        public void Scan_Chart()
-        {
-            string chart = Path.Combine(dir, "notes.chart");
-            entry = new(new(chart, Types.ChartType.CHART), File.GetLastWriteTime(chart));
-            entry.Load_Ini(ini, iniLastWrite);
-            if (entry.Scan(out FrameworkFile? file))
-            {
-                byte[] hash = file!.HASH_SHA1;
-                string h = BitConverter.ToString(hash);
-                entry.FinishScan();
-            }
-        }
-
-        [IterationCleanup]
-        public void IterationCleanup()
-        {
-            song = null;
-            entry = null;
+            library!.RunFullScan(directories);
         }
     }
 }
