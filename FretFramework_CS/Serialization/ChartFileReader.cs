@@ -44,7 +44,7 @@ namespace Framework.Serialization
         Invalid,
     };
 
-    public unsafe class ChartFileReader
+    public unsafe class ChartFileReader : IDisposable
     {
         internal struct EventCombo
         {
@@ -85,6 +85,12 @@ namespace Framework.Serialization
         public ChartFileReader(FrameworkFile file) { reader = new TxtFileReader(file); }
         public ChartFileReader(byte[] data) : this(new FrameworkFile(data)) { }
         public ChartFileReader(string path) : this(File.ReadAllBytes(path)) { }
+
+        public void Dispose()
+        {
+            reader.Dispose();
+            GC.SuppressFinalize(this);
+        }
 
         public bool IsStartOfTrack()
         {

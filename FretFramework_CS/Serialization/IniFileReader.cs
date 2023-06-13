@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Framework.Serialization
 {
-    public unsafe class IniFileReader
+    public unsafe class IniFileReader : IDisposable
     {
         private readonly TxtFileReader reader;
         private string sectionName = string.Empty;
@@ -17,6 +17,12 @@ namespace Framework.Serialization
         public IniFileReader(FrameworkFile file) { reader = new TxtFileReader(file); }
         public IniFileReader(byte[] data) : this(new FrameworkFile(data)) { }
         public IniFileReader(string path) : this(File.ReadAllBytes(path)) { }
+
+        public void Dispose()
+        {
+            reader.Dispose();
+            GC.SuppressFinalize(this);
+        }
 
         public bool IsStartOfSection()
         { 

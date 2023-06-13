@@ -12,7 +12,7 @@ namespace Framework.Ini
     {
         public static Dictionary<string, Dictionary<string, List<Modifier>>> ReadIniFile(string iniFile, Dictionary<string, Dictionary<string, ModifierNode>> sections)
         {
-            IniFileReader reader = new(iniFile);
+            using IniFileReader reader = new(iniFile);
             Dictionary<string, Dictionary<string, List<Modifier>>> modifierMap = new();
             while (reader.IsStartOfSection())
             {

@@ -8,10 +8,10 @@ using System.Threading.Tasks;
 
 namespace Framework.Serialization
 {
-    public unsafe class FrameworkFile
+    public unsafe class FrameworkFile : IDisposable
     {
-        public readonly byte[] buffer;
-        public readonly GCHandle handle;
+        private readonly byte[] buffer;
+        private readonly GCHandle handle;
         public readonly byte* ptr;
 
         public FrameworkFile(byte[] data)
@@ -27,5 +27,11 @@ namespace Framework.Serialization
 
         public byte[] HASH_SHA1 { get { return SHA1.HashData(buffer); } }
         public byte[] HASH_MD5 { get { return MD5.HashData(buffer); } }
+
+        public void Dispose()
+        {
+            handle.Free();
+            GC.SuppressFinalize(this);
+        }
     }
 }

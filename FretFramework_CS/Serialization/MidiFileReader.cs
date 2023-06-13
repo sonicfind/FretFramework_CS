@@ -10,7 +10,7 @@ using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Framework.Serialization
 {
-    public class MidiFileReader
+    public class MidiFileReader : IDisposable
     {
         public static readonly Dictionary<string, MidiTrackType> TRACKNAMES = new();
         
@@ -70,6 +70,12 @@ namespace Framework.Serialization
         public MidiFileReader(string path, byte multiplierNote) : this(File.ReadAllBytes(path))
         {
             m_multiplierNote = multiplierNote;
+        }
+
+        public void Dispose()
+        {
+            m_reader.Dispose();
+            GC.SuppressFinalize(this);
         }
 
         public bool StartTrack()

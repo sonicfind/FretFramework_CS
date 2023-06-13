@@ -13,12 +13,13 @@ namespace Framework.Serialization
         BigEndian = 1,
     };
 
-    public unsafe class BinaryFileReader
+    public unsafe class BinaryFileReader : IDisposable
     {
         private readonly FrameworkFile file;
         private int boundaryIndex = 0;
         private readonly int* boundaries;
         private int currentBoundary;
+        private bool disposed = false;
 
         private int _position;
 
@@ -43,9 +44,23 @@ namespace Framework.Serialization
         public BinaryFileReader(byte[] data) : this(new FrameworkFile(data)) {}
         public BinaryFileReader(string path) : this(File.ReadAllBytes(path)) {}
 
-        ~BinaryFileReader()
+        private void Dispose(bool disposing)
         {
+            if (!disposed)
+            {
+                if (disposing)
+                {
+                    file.Dispose();
+                }
+            }
             Marshal.FreeHGlobal((IntPtr)boundaries);
+            disposed = true;
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
         }
 
         public void ExitSection()

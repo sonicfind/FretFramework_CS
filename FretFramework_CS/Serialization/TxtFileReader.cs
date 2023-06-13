@@ -12,7 +12,7 @@ namespace Framework.Serialization
 {
 
 
-    public unsafe class TxtFileReader
+    public unsafe class TxtFileReader : IDisposable
     {
         private readonly FrameworkFile file;
         private readonly int length;
@@ -59,6 +59,12 @@ namespace Framework.Serialization
         }
         public TxtFileReader(byte[] data) : this(new FrameworkFile(data)) { }
         public TxtFileReader(string path) : this(File.ReadAllBytes(path)) { }
+
+        public void Dispose()
+        {
+            file.Dispose();
+            GC.SuppressFinalize(this);
+        }
 
         public bool IsEndOfFile()
         {
