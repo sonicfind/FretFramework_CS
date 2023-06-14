@@ -12,38 +12,39 @@ namespace Framework.Serialization
 {
     public class MidiFileReader : IDisposable
     {
-        public static readonly Dictionary<string, MidiTrackType> TRACKNAMES = new();
-        
-        static MidiFileReader() {
-            TRACKNAMES.Add("EVENTS", MidiTrackType.Events);
-            TRACKNAMES.Add("PART GUITAR", MidiTrackType.Guitar_5);
-            TRACKNAMES.Add("T1 GEMS", MidiTrackType.Guitar_5);
-            TRACKNAMES.Add("PART GUITAR GHL", MidiTrackType.Guitar_6);
-            TRACKNAMES.Add("PART BASS", MidiTrackType.Bass_5);
-            TRACKNAMES.Add("PART BASS GHL", MidiTrackType.Bass_6);
-            TRACKNAMES.Add("PART RHYTHM", MidiTrackType.Rhythm);
-            TRACKNAMES.Add("PART GUITAR COOP", MidiTrackType.Coop);
-            TRACKNAMES.Add("PART KEYS", MidiTrackType.Keys);
-            TRACKNAMES.Add("PART DRUMS", MidiTrackType.Drums);
-            TRACKNAMES.Add("PART VOCALS", MidiTrackType.Vocals);
-            TRACKNAMES.Add("PART HARM1", MidiTrackType.Harm1);
-            TRACKNAMES.Add("PART HARM2", MidiTrackType.Harm2);
-            TRACKNAMES.Add("PART HARM3", MidiTrackType.Harm3);
-            TRACKNAMES.Add("HARM1", MidiTrackType.Harm1);
-            TRACKNAMES.Add("HARM2", MidiTrackType.Harm2);
-            TRACKNAMES.Add("HARM3", MidiTrackType.Harm3);
-            TRACKNAMES.Add("PART REAL_GUITAR", MidiTrackType.Real_Guitar);
-            TRACKNAMES.Add("PART REAL_GUITAR_22", MidiTrackType.Real_Guitar_22);
-            TRACKNAMES.Add("PART REAL_BASS", MidiTrackType.Real_Bass);
-            TRACKNAMES.Add("PART REAL_BASS_22", MidiTrackType.Real_Bass_22);
-            TRACKNAMES.Add("PART REAL_KEYS_X", MidiTrackType.Real_Keys_X);
-            TRACKNAMES.Add("PART REAL_KEYS_H", MidiTrackType.Real_Keys_H);
-            TRACKNAMES.Add("PART REAL_KEYS_M", MidiTrackType.Real_Keys_M);
-            TRACKNAMES.Add("PART REAL_KEYS_E", MidiTrackType.Real_Keys_E);
-            TRACKNAMES.Add("BEATS", MidiTrackType.Beats);
-        }
+        public static readonly Dictionary<string, MidiTrackType> TRACKNAMES = new()
+        {
+            {"EVENTS", MidiTrackType.Events},
+            {"PART GUITAR", MidiTrackType.Guitar_5},
+            {"T1 GEMS", MidiTrackType.Guitar_5},
+            {"PART GUITAR GHL", MidiTrackType.Guitar_6},
+            {"PART BASS", MidiTrackType.Bass_5},
+            {"PART BASS GHL", MidiTrackType.Bass_6},
+            {"PART RHYTHM", MidiTrackType.Rhythm},
+            {"PART GUITAR COOP", MidiTrackType.Coop},
+            {"PART KEYS", MidiTrackType.Keys},
+            {"PART DRUMS", MidiTrackType.Drums},
+            {"PART VOCALS", MidiTrackType.Vocals},
+            {"PART HARM1", MidiTrackType.Harm1},
+            {"PART HARM2", MidiTrackType.Harm2},
+            {"PART HARM3", MidiTrackType.Harm3},
+            {"HARM1", MidiTrackType.Harm1},
+            {"HARM2", MidiTrackType.Harm2},
+            {"HARM3", MidiTrackType.Harm3},
+            {"PART REAL_GUITAR", MidiTrackType.Real_Guitar},
+            {"PART REAL_GUITAR_22", MidiTrackType.Real_Guitar_22},
+            {"PART REAL_BASS", MidiTrackType.Real_Bass},
+            {"PART REAL_BASS_22", MidiTrackType.Real_Bass_22},
+            {"PART REAL_KEYS_X", MidiTrackType.Real_Keys_X},
+            {"PART REAL_KEYS_H", MidiTrackType.Real_Keys_H},
+            {"PART REAL_KEYS_M", MidiTrackType.Real_Keys_M},
+            {"PART REAL_KEYS_E", MidiTrackType.Real_Keys_E},
+            {"BEATS", MidiTrackType.Beats},
+        };
 
         internal static readonly byte[][] TRACKTAGS = { Encoding.ASCII.GetBytes("MThd"), Encoding.ASCII.GetBytes("MTrk") };
+
+        static MidiFileReader() {}
 
         private struct MidiHeader
         {

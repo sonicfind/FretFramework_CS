@@ -70,11 +70,34 @@ namespace Framework.Serialization
         internal static readonly EventCombo LYRIC =       new(Encoding.ASCII.GetBytes("L"),  ChartEvent.LYRIC );
         internal static readonly EventCombo VOCAL =       new(Encoding.ASCII.GetBytes("V"),  ChartEvent.VOCAL );
         internal static readonly EventCombo PERC =        new(Encoding.ASCII.GetBytes("VP"), ChartEvent.VOCAL_PERCUSSION );
-        internal const double TEMPO_FACTOR = 60000000000;
 
-        internal EventCombo[] EVENTS_SYNC   = { TEMPO, TIMESIG, ANCHOR };
-        internal EventCombo[] EVENTS_EVENTS = { TEXT, SECTION, };
-        internal EventCombo[] EVENTS_DIFF   = { NOTE, SPECIAL, TEXT, };
+        internal static readonly byte[][] DIFFICULTIES =
+        {
+            Encoding.ASCII.GetBytes("[Easy"),
+            Encoding.ASCII.GetBytes("[Medium"),
+            Encoding.ASCII.GetBytes("[Hard"),
+            Encoding.ASCII.GetBytes("[Expert")
+        };
+
+        internal static readonly (byte[], NoteTracks_Chart)[] NOTETRACKS =
+        {
+            new(Encoding.ASCII.GetBytes("Single]"),       NoteTracks_Chart.Single ),
+            new(Encoding.ASCII.GetBytes("DoubleGuitar]"), NoteTracks_Chart.DoubleGuitar ),
+            new(Encoding.ASCII.GetBytes("DoubleBass]"),   NoteTracks_Chart.DoubleBass ),
+            new(Encoding.ASCII.GetBytes("DoubleRhythm]"), NoteTracks_Chart.DoubleRhythm ),
+            new(Encoding.ASCII.GetBytes("Drums]"),        NoteTracks_Chart.Drums ),
+            new(Encoding.ASCII.GetBytes("Keys]"),         NoteTracks_Chart.Keys ),
+            new(Encoding.ASCII.GetBytes("GHLGuitar]"),    NoteTracks_Chart.GHLGuitar ),
+            new(Encoding.ASCII.GetBytes("GHLBass]"),      NoteTracks_Chart.GHLBass ),
+        };
+
+        internal static readonly EventCombo[] EVENTS_SYNC   = { TEMPO, TIMESIG, ANCHOR };
+        internal static readonly EventCombo[] EVENTS_EVENTS = { TEXT, SECTION, };
+        internal static readonly EventCombo[] EVENTS_DIFF   = { NOTE, SPECIAL, TEXT, };
+
+        static ChartFileReader() { }
+
+        internal const double TEMPO_FACTOR = 60000000000;
 
         private readonly TxtFileReader reader;
         private EventCombo[] eventSet = Array.Empty<EventCombo>();
@@ -120,14 +143,6 @@ namespace Framework.Serialization
             return true;
         }
 
-        internal static readonly byte[][] DIFFICULTIES =
-        {
-            Encoding.ASCII.GetBytes("[Easy"),
-            Encoding.ASCII.GetBytes("[Medium"),
-            Encoding.ASCII.GetBytes("[Hard"),
-            Encoding.ASCII.GetBytes("[Expert")
-        };
-
         public bool ValidateDifficulty()
         {
             for (int diff = 3; diff >= 0; --diff)
@@ -140,18 +155,6 @@ namespace Framework.Serialization
                 }
             return false;
         }
-
-        internal static readonly (byte[], NoteTracks_Chart)[] NOTETRACKS =
-        {
-            new(Encoding.ASCII.GetBytes("Single]"),       NoteTracks_Chart.Single ),
-            new(Encoding.ASCII.GetBytes("DoubleGuitar]"), NoteTracks_Chart.DoubleGuitar ),
-            new(Encoding.ASCII.GetBytes("DoubleBass]"),   NoteTracks_Chart.DoubleBass ),
-            new(Encoding.ASCII.GetBytes("DoubleRhythm]"), NoteTracks_Chart.DoubleRhythm ),
-            new(Encoding.ASCII.GetBytes("Drums]"),        NoteTracks_Chart.Drums ),
-            new(Encoding.ASCII.GetBytes("Keys]"),         NoteTracks_Chart.Keys ),
-            new(Encoding.ASCII.GetBytes("GHLGuitar]"),    NoteTracks_Chart.GHLGuitar ),
-            new(Encoding.ASCII.GetBytes("GHLBass]"),      NoteTracks_Chart.GHLBass ),
-        };
 
         public bool ValidateInstrument()
         {
