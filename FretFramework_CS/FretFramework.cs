@@ -37,7 +37,8 @@ namespace Framework
             stopwatch.Stop();
             Console.WriteLine($"Time Spent: {stopwatch.ElapsedMilliseconds}ms");
             Console.WriteLine($"Song Count: {library.Count}");
-            BenchmarkRunner.Run<SongBenchmarks>();
+
+            //BenchmarkRunner.Run<SongBenchmarks>(); // Song directory MUST be hardcoded to run properly
         }
     }
 
