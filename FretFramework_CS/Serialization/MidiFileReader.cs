@@ -66,8 +66,8 @@ namespace Framework.Serialization
             ProcessHeaderChunk();
         }
 
-        public MidiFileReader(byte[] data) : this(new FrameworkFile(data)) {}
-        public MidiFileReader(string path, byte multiplierNote) : this(File.ReadAllBytes(path))
+        public MidiFileReader(byte[] data) : this(new FrameworkFile_Handle(data)) {}
+        public MidiFileReader(string path, byte multiplierNote) : this(new FrameworkFile_Alloc(path))
         {
             m_multiplierNote = multiplierNote;
         }

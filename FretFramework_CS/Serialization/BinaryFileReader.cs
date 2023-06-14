@@ -16,6 +16,7 @@ namespace Framework.Serialization
     public unsafe class BinaryFileReader : IDisposable
     {
         private readonly FrameworkFile file;
+
         private int boundaryIndex = 0;
         private readonly int* boundaries;
         private int currentBoundary;
@@ -41,8 +42,8 @@ namespace Framework.Serialization
             boundaries = (int*)Marshal.AllocHGlobal(sizeof(int) * 8);
             currentBoundary = boundaries[0] = file.Length;
         }
-        public BinaryFileReader(byte[] data) : this(new FrameworkFile(data)) {}
-        public BinaryFileReader(string path) : this(File.ReadAllBytes(path)) {}
+        public BinaryFileReader(byte[] data) : this(new FrameworkFile_Handle(data)) {}
+        public BinaryFileReader(string path) : this(new FrameworkFile_Alloc(path)) {}
 
         private void Dispose(bool disposing)
         {

@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection.PortableExecutable;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
@@ -15,8 +16,8 @@ namespace Framework.Serialization
         private string sectionName = string.Empty;
         public string Section { get { return sectionName; } }
         public IniFileReader(FrameworkFile file) { reader = new TxtFileReader(file); }
-        public IniFileReader(byte[] data) : this(new FrameworkFile(data)) { }
-        public IniFileReader(string path) : this(File.ReadAllBytes(path)) { }
+        public IniFileReader(byte[] data) : this(new FrameworkFile_Handle(data)) { }
+        public IniFileReader(string path) : this(new FrameworkFile_Alloc(path)) { }
 
         public void Dispose()
         {
@@ -51,9 +52,9 @@ namespace Framework.Serialization
         public void SkipSection()
         {
             reader.GotoNextLine();
-            byte* ptr = reader.Ptr;
+            byte* ptr = reader.file.ptr;
             int position = reader.Position;
-            while (GetDistanceToTrackCharacter(out int next))
+            while (GetDistanceToTrackCharacter(position, out int next))
             {
                 int point = position + next - 1;
                 while (point > position && ptr[point] <= 32 && ptr[point] != '\n')
@@ -69,18 +70,18 @@ namespace Framework.Serialization
                 position += next + 1;
             }
 
-            reader.Position = reader.Length;
+            reader.Position = reader.file.Length;
             reader.SetNextPointer();
         }
 
-        private bool GetDistanceToTrackCharacter(out int i)
+        private bool GetDistanceToTrackCharacter(int position, out int i)
         {
-            int distanceToEnd = reader.Length - reader.Position;
-            byte* ptr = reader.CurrentPtr;
+            int distanceToEnd = reader.file.Length - position;
+            byte* curr = reader.file.ptr + position;
             i = 0;
             while (i < distanceToEnd)
             {
-                if (ptr[i] == '[')
+                if (curr[i] == '[')
                     return true;
                 ++i;
             }

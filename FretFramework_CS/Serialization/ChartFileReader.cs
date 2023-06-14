@@ -83,8 +83,8 @@ namespace Framework.Serialization
         public int Difficulty { get; private set; }
 
         public ChartFileReader(FrameworkFile file) { reader = new TxtFileReader(file); }
-        public ChartFileReader(byte[] data) : this(new FrameworkFile(data)) { }
-        public ChartFileReader(string path) : this(File.ReadAllBytes(path)) { }
+        public ChartFileReader(byte[] data) : this(new FrameworkFile_Handle(data)) { }
+        public ChartFileReader(string path) : this(new FrameworkFile_Alloc(path)) { }
 
         public void Dispose()
         {
@@ -211,7 +211,7 @@ namespace Framework.Serialization
                 ++ptr;
 
             ReadOnlySpan<byte> type = reader.ExtractBasicSpan((int)(ptr - start));
-            reader.Position = (int)(ptr - reader.Ptr);
+            reader.Position = (int)(ptr - reader.file.ptr);
             foreach (EventCombo combo in eventSet)
                 if (type.SequenceEqual(combo.descriptor))
                 {
@@ -274,55 +274,41 @@ namespace Framework.Serialization
         public void SkipTrack()
         {
             reader.GotoNextLine();
-            int scopeLevel = 1;
-            int length = GetDistanceToTrackCharacter();
-            while (reader.Position + length != reader.Length)
+            byte* ptr = reader.file.ptr;
+            int position = reader.Position;
+            while (GetDistanceToTrackCharacter(position, out int next))
             {
-                int index = length - 1;
-                byte* ptr = reader.CurrentPtr;
-                byte point = ptr[index];
-                while (index > 0 && point <= 32 && point != '\n')
-                    point = ptr[--index];
+                int point = position + next - 1;
+                while (point > position && ptr[point] <= 32 && ptr[point] != '\n')
+                    --point;
 
-                reader.Position += length;
-                if (point == '\n')
+                if (ptr[point] == '\n')
                 {
-                    if (reader.PeekByte() == '}')
-                    {
-                        if (scopeLevel == 1)
-                        {
-                            reader.SetNextPointer();
-                            reader.GotoNextLine();
-                            return;
-                        }
-                        else
-                            --scopeLevel;
-                    }
-                    else
-                        ++scopeLevel;
+                    reader.Position = position + next;
+                    reader.SetNextPointer();
+                    reader.GotoNextLine();
+                    return;
                 }
 
-                ++reader.Position;
-                length = GetDistanceToTrackCharacter();
+                position += next + 1;
             }
 
-            reader.Position = reader.Length;
+            reader.Position = reader.file.Length;
             reader.SetNextPointer();
         }
 
-        private int GetDistanceToTrackCharacter()
+        private bool GetDistanceToTrackCharacter(int position, out int i)
         {
-            int distanceToEnd = reader.Length - reader.Position;
-            byte* ptr = reader.CurrentPtr;
-            int i = 0;
+            int distanceToEnd = reader.file.Length - position;
+            byte* curr = reader.file.ptr + position;
+            i = 0;
             while (i < distanceToEnd)
             {
-                byte b = ptr[i];
-                if (b == '[' || b == '}')
-                    break;
+                if (curr[i] == '}')
+                    return true;
                 ++i;
             }
-            return i;
+            return false;
         }
     }
 }

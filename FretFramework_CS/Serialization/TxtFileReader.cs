@@ -4,6 +4,7 @@ using System;
 using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
@@ -14,22 +15,16 @@ namespace Framework.Serialization
 
     public unsafe class TxtFileReader : IDisposable
     {
-        private readonly FrameworkFile file;
-        private readonly int length;
-        public byte* Ptr
-        {
-            get { return file.ptr; }
-        }
-
-        public int Length { get { return file.Length; } }
+        public readonly FrameworkFile file;
 
         private int _position;
+
         public int Position
         {
             get { return _position; }
             set
             {
-                if (value < _position)
+                if (value < _position && _position <= file.Length)
                     throw new ArgumentOutOfRangeException("Position");
                 _position = value;
             }
@@ -48,7 +43,6 @@ namespace Framework.Serialization
         public TxtFileReader(FrameworkFile file)
         {
             this.file = file;
-            length = file.Length;
             if (new ReadOnlySpan<byte>(file.ptr, 3).SequenceEqual(BOM))
                 _position += 3;
 
@@ -57,8 +51,8 @@ namespace Framework.Serialization
             if (file.ptr[_position] == '\n')
                 GotoNextLine();
         }
-        public TxtFileReader(byte[] data) : this(new FrameworkFile(data)) { }
-        public TxtFileReader(string path) : this(File.ReadAllBytes(path)) { }
+        public TxtFileReader(byte[] data) : this(new FrameworkFile_Handle(data)) { }
+        public TxtFileReader(string path) : this(new FrameworkFile_Alloc(path)) { }
 
         public void Dispose()
         {
@@ -68,12 +62,12 @@ namespace Framework.Serialization
 
         public bool IsEndOfFile()
         {
-            return _position == file.Length;
+            return _position >= file.Length;
         }
 
         public void SkipWhiteSpace()
         {
-            while (_position < length)
+            while (_position < file.Length)
             {
                 byte ch = file.ptr[_position];
                 if (ch <= 32)
@@ -92,7 +86,7 @@ namespace Framework.Serialization
             do
             {
                 _position = _next;
-                if (_position == length)
+                if (_position >= file.Length)
                     break;
 
                 _position++;
@@ -111,7 +105,7 @@ namespace Framework.Serialization
         public void SetNextPointer()
         {
             _next = _position;
-            while (_next < length && file.ptr[_next] != '\n')
+            while (_next < file.Length && file.ptr[_next] != '\n')
                 ++_next;
         }
 
@@ -846,7 +840,7 @@ namespace Framework.Serialization
         public ReadOnlySpan<byte> ExtractTextSpan(bool checkForQuotes = true)
         {
             (int, int) boundaries = new(_position, _next);
-            if (boundaries.Item2 == length)
+            if (boundaries.Item2 == file.Length)
                 --boundaries.Item2;
 
             if (checkForQuotes && file.ptr[_position] == '\"')
@@ -891,7 +885,7 @@ namespace Framework.Serialization
             ReadOnlySpan<byte> name = new(file.ptr + _position, curr - _position);
             _position = curr;
             SkipWhiteSpace();
-            return Encoding.UTF8.GetString(name);
+            return Encoding.UTF8.GetString(name).ToLower();
         }
     }
 }
