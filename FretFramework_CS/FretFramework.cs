@@ -22,8 +22,6 @@ namespace Framework
     {
         static void Main(string[] args)
         {
-            SongLibrary library = new();
-
             string? directory = string.Empty;
             do
             {
@@ -33,6 +31,7 @@ namespace Framework
             while (directory == null);
             directory = directory.Replace("\"", "");
 
+            SongLibrary library = new();
             Stopwatch stopwatch = Stopwatch.StartNew();
             library.RunFullScan(new() { directory });
             stopwatch.Stop();

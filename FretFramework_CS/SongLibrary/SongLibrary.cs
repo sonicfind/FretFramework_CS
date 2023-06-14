@@ -29,6 +29,8 @@ namespace Framework.Library
             }
         }
 
+        public void Clear() { m_songlist.Clear(); }
+
         public void RunFullScan(List<string> baseDirectories)
         {
             Parallel.For(0, baseDirectories.Count, i => ScanDirectory(new(baseDirectories[i])));
