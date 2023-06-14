@@ -26,22 +26,22 @@ namespace Framework.Song.Tracks
         public Midi_PhraseList((byte[], Midi_Phrase)[] phrases) { _phrases = phrases; }
 
         public bool AddPhrase(ref TimedFlatMap<List<SpecialPhrase>> phrases, ulong position, MidiNote note)
-		{
+        {
             for (int i = 0; i < _phrases.Length; ++i)
             {
                 foreach (byte val in _phrases[i].Item1)
                 {
-					if (val == note.value)
-					{
+                    if (val == note.value)
+                    {
                         phrases.Get_Or_Add_Back(position);
                         _phrases[i].Item2.Position = position;
                         _phrases[i].Item2.Velocity = note.velocity;
-						return true;
-					}
-				}
+                        return true;
+                    }
+                }
             }
-			return false;
-		}
+            return false;
+        }
 
         public bool AddPhrase_Off(ref TimedFlatMap<List<SpecialPhrase>> phrases, ulong position, MidiNote note)
         {

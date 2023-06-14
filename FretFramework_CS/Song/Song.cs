@@ -197,7 +197,7 @@ namespace Framework.Song
 
             LegacyDrumTrack legacy = new(m_baseDrumType);
             while (reader.IsStartOfTrack())
-	        {
+            {
                 if (reader.ValidateSyncTrack())
                     m_sync.AddFromDotChart(ref reader);
                 else if (reader.ValidateEventsTrack())

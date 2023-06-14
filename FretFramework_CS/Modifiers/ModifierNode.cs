@@ -64,7 +64,7 @@ namespace Framework.Modifiers
                 }
             }
             catch (Exception)
-	        {
+            {
                 switch (type)
                 {
                     case ModifierNodeType.UINT64:     return new((ulong)0);

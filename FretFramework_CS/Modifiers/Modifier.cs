@@ -14,16 +14,16 @@ namespace Framework.Modifiers
     {
         NONE,
         SORTSTRING,
-		STRING,
-		UINT64,
-		INT64,
-		UINT32,
-		INT32,
-		UINT16,
-		INT16,
-		BOOL,
-		FLOAT,
-		FLOATARRAY,
+        STRING,
+        UINT64,
+        INT64,
+        UINT32,
+        INT32,
+        UINT16,
+        INT16,
+        BOOL,
+        FLOAT,
+        FLOATARRAY,
     };
 
     public unsafe class Modifier
@@ -42,10 +42,10 @@ namespace Framework.Modifiers
             [FieldOffset(0)] public fixed float flArr[2];
         }
 
-		private readonly ModifierType type;
+        private readonly ModifierType type;
 
         SortString _sortStr;
-		string _str = string.Empty;
+        string _str = string.Empty;
         ModifierUnion union;
 
         public Modifier(SortString str)

@@ -24,10 +24,10 @@ namespace Framework.Ini
             return modifierMap;
         }
 
-		internal static readonly Dictionary<string, Dictionary<string, ModifierNode>> SONG_INI_DICTIONARY = new();
+        internal static readonly Dictionary<string, Dictionary<string, ModifierNode>> SONG_INI_DICTIONARY = new();
         internal static readonly Dictionary<string, Dictionary<string, ModifierNode>> LOADING_PHRASE_DICTIONARY = new();
         static IniHandler()
-		{
+        {
             SONG_INI_DICTIONARY.Add("[song]", new()
             {
                 { "album",                                new("album", ModifierNodeType.SORTSTRING) },
@@ -156,15 +156,15 @@ namespace Framework.Ini
         }
 
         public static Dictionary<string, List<Modifier>> ReadSongIniFile(string iniFile)
-		{
+        {
             Dictionary<string, Dictionary<string, List<Modifier>>> modifiers = ReadIniFile(iniFile, SONG_INI_DICTIONARY);
-			if (modifiers.Count == 0)
-				return new();
-			return modifiers.First().Value;
-		}
+            if (modifiers.Count == 0)
+                return new();
+            return modifiers.First().Value;
+        }
 
         public static Modifier? GrabLoadingPhrase(string iniFile)
-		{
+        {
             Dictionary<string, Dictionary<string, List<Modifier>>> modifiers = ReadIniFile(iniFile, LOADING_PHRASE_DICTIONARY);
             if (modifiers.Count == 0)
                 return null;
@@ -174,6 +174,6 @@ namespace Framework.Ini
                 return null;
 
             return modifierList.First().Value.First();
-		}
+        }
     }
 }

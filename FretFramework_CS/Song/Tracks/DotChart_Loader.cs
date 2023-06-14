@@ -18,54 +18,54 @@ namespace Framework.Song.Tracks
         public static bool Load<T>(ref DifficultyTrack<T> diff, ref ChartFileReader reader)
             where T : struct, INote, IReadableFromDotChart
         {
-			if (diff.IsOccupied())
-				return false;
+            if (diff.IsOccupied())
+                return false;
 
-			ulong solo = 0;
-			diff.notes.Capacity = 5000;
-			while (reader.IsStillCurrentTrack())
-			{
-				var trackEvent = reader.ParseEvent();
-				switch (trackEvent.Item2)
-				{
-				case ChartEvent.NOTE:
-				{
-					var note = reader.ExtractLaneAndSustain();
-					if (!diff.notes.Get_Or_Add_Back(trackEvent.Item1).Set_From_Chart(note.Item1, note.Item2))
-						if (!diff.notes.Last().HasActiveNotes())
-							diff.notes.Pop();
-					break;
-				}
-				case ChartEvent.SPECIAL:
-				{
-					var phrase = reader.ExtractSpecialPhrase();
-					switch (phrase.Type)
-					{
-					case SpecialPhraseType.StarPower:
-					case SpecialPhraseType.BRE:
-					case SpecialPhraseType.Tremolo:
-					case SpecialPhraseType.Trill:
-						diff.specialPhrases.Get_Or_Add_Back(trackEvent.Item1).Add(phrase);
-						break;
-					}
-					break;
-				}
-				case ChartEvent.EVENT:
-				{
-					var str = reader.ExtractText();
-					if (str.StartsWith(SOLOEND))
-						diff.specialPhrases[trackEvent.Item1].Add(new(SpecialPhraseType.Solo, trackEvent.Item1 - solo));
-					else if (str.StartsWith(SOLO))
-						solo = trackEvent.Item1;
-					else
-						diff.events.Get_Or_Add_Back(trackEvent.Item1).Add(Encoding.UTF8.GetString(str));
-					break;
-				}
-				}
-				reader.NextEvent();
-			}
-			diff.TrimExcess();
-			return true;
-		}
+            ulong solo = 0;
+            diff.notes.Capacity = 5000;
+            while (reader.IsStillCurrentTrack())
+            {
+                var trackEvent = reader.ParseEvent();
+                switch (trackEvent.Item2)
+                {
+                case ChartEvent.NOTE:
+                {
+                    var note = reader.ExtractLaneAndSustain();
+                    if (!diff.notes.Get_Or_Add_Back(trackEvent.Item1).Set_From_Chart(note.Item1, note.Item2))
+                        if (!diff.notes.Last().HasActiveNotes())
+                            diff.notes.Pop();
+                    break;
+                }
+                case ChartEvent.SPECIAL:
+                {
+                    var phrase = reader.ExtractSpecialPhrase();
+                    switch (phrase.Type)
+                    {
+                    case SpecialPhraseType.StarPower:
+                    case SpecialPhraseType.BRE:
+                    case SpecialPhraseType.Tremolo:
+                    case SpecialPhraseType.Trill:
+                        diff.specialPhrases.Get_Or_Add_Back(trackEvent.Item1).Add(phrase);
+                        break;
+                    }
+                    break;
+                }
+                case ChartEvent.EVENT:
+                {
+                    var str = reader.ExtractText();
+                    if (str.StartsWith(SOLOEND))
+                        diff.specialPhrases[trackEvent.Item1].Add(new(SpecialPhraseType.Solo, trackEvent.Item1 - solo));
+                    else if (str.StartsWith(SOLO))
+                        solo = trackEvent.Item1;
+                    else
+                        diff.events.Get_Or_Add_Back(trackEvent.Item1).Add(Encoding.UTF8.GetString(str));
+                    break;
+                }
+                }
+                reader.NextEvent();
+            }
+            diff.TrimExcess();
+            return true;
+        }
     }
 }

@@ -12,11 +12,11 @@ namespace Framework.Song.Tracks.Notes.Guitar_Pro
     public enum StringMode
     {
         Normal,
-		Bend,
-		Muted,
-		Tapped,
-		Harmonics,
-		Pinch_Harmonics
+        Bend,
+        Muted,
+        Tapped,
+        Harmonics,
+        Pinch_Harmonics
     };
 
     public interface IFretted
@@ -70,16 +70,16 @@ namespace Framework.Song.Tracks.Notes.Guitar_Pro
     public enum ProSlide
     {
         None,
-	    Normal,
-	    Reversed
+        Normal,
+        Reversed
     };
 
     public enum EmphasisType
     {
         None,
-	    High,
-	    Middle,
-	    Low
+        High,
+        Middle,
+        Low
     };
 
     public struct ProString<FretType> : IEnableable
