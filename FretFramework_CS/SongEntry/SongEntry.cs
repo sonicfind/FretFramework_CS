@@ -22,11 +22,27 @@ namespace Framework.SongEntry
     [DebuggerDisplay($"{{{nameof(GetDebuggerDisplay)}(),nq}}")]
     public class SongEntry
     {
+        private const string s_DEFAULT_NAME = "Unknown Title";
         private static readonly SortString s_DEFAULT_ARTIST =  new("Unknown Artist");
         private static readonly SortString s_DEFAULT_ALBUM =   new("Unknown Album");
         private static readonly SortString s_DEFAULT_GENRE =   new("Unknown Genre");
         private static readonly SortString s_DEFAULT_YEAR =    new("Unknown Year");
         private static readonly SortString s_DEFAULT_CHARTER = new("Unknown Charter");
+
+        private static readonly Dictionary<string, ModifierNode> MODIFIER_LIST = new()
+        {
+            { "Album",        new("album", ModifierNodeType.STRING_CHART ) },
+            { "Artist",       new("artist", ModifierNodeType.STRING_CHART ) },
+            { "Charter",      new("charter", ModifierNodeType.STRING_CHART ) },
+            { "Difficulty",   new("diff_band", ModifierNodeType.INT32 ) },
+            { "Genre",        new("genre", ModifierNodeType.STRING_CHART ) },
+            { "Name",         new("name", ModifierNodeType.STRING_CHART ) },
+            { "PreviewEnd",   new("preview_end_time", ModifierNodeType.FLOAT ) },
+            { "PreviewStart", new("preview_start_time", ModifierNodeType.FLOAT ) },
+            { "Year",         new("year", ModifierNodeType.STRING_CHART ) },
+        };
+
+        static SongEntry() { }
 
         private SortString m_name;
         private SortString m_artist;
@@ -165,8 +181,14 @@ namespace Framework.SongEntry
             ChartFileReader reader = new(file);
             if (!reader.ValidateHeaderTrack())
                 throw new Exception("[Song] track expected at the start of the file");
-            // Add [Song] parsing later
-            reader.SkipTrack();
+
+            foreach (var node in reader.ExtractModifiers(MODIFIER_LIST))
+            {
+                if (m_modifiers.TryGetValue(node.Key, out List<Modifier>? modifiers))
+                    modifiers.AddRange(node.Value);
+                else
+                    m_modifiers.Add(node.Key, modifiers!);
+            }
 
             LegacyDrumScan legacy = new(GetDrumTypeFromModifier());
             while (reader.IsStartOfTrack())
@@ -188,7 +210,7 @@ namespace Framework.SongEntry
                 for (int i = 0; i < names.Count; ++i)
                 {
                     m_name = names[i].SORTSTR;
-                    if (m_name.Str != "Unknown Title")
+                    if (m_name.Str != s_DEFAULT_NAME)
                         break;
                 }
             }
@@ -198,7 +220,7 @@ namespace Framework.SongEntry
                 for (int i = 0; i < artists.Count; ++i)
                 {
                     m_artist = artists[i].SORTSTR;
-                    if (m_artist.Str != "Unknown Artist")
+                    if (m_artist.Str != s_DEFAULT_ARTIST.Str)
                         break; 
                 }
             }
@@ -210,7 +232,7 @@ namespace Framework.SongEntry
                 for (int i = 0; i < albums.Count; ++i)
                 {
                     m_album = albums[i].SORTSTR;
-                    if (m_album.Str != "Unknown Album")
+                    if (m_album.Str != s_DEFAULT_ALBUM.Str)
                         break;
                 }
             }
@@ -222,7 +244,7 @@ namespace Framework.SongEntry
                 for (int i = 0; i < genres.Count; ++i)
                 {
                     m_genre = genres[i].SORTSTR;
-                    if (m_genre.Str != "Unknown Genre")
+                    if (m_genre.Str != s_DEFAULT_GENRE.Str)
                         break;
                 }
             }
@@ -234,7 +256,7 @@ namespace Framework.SongEntry
                 for (int i = 0; i < years.Count; ++i)
                 {
                     m_year = years[i].SORTSTR;
-                    if (m_year.Str != "Unknown Year")
+                    if (m_year.Str != s_DEFAULT_YEAR.Str)
                         break;
                 }
             }
@@ -246,7 +268,7 @@ namespace Framework.SongEntry
                 for (int i = 0; i < charters.Count; ++i)
                 {
                     m_charter = charters[i].SORTSTR;
-                    if (m_charter.Str != "Unknown Charter")
+                    if (m_charter.Str != s_DEFAULT_CHARTER.Str)
                         break;
                 }
             }

@@ -24,11 +24,53 @@ using Framework.Types;
 using Framework.Modifiers;
 using System.IO;
 using Framework.Ini;
+using System.Reflection.PortableExecutable;
 
 namespace Framework.Song
 {
     public class Song
     {
+        private const string s_DEFAULT_NAME =    "Unknown Title";
+        private const string s_DEFAULT_ARTIST =  "Unknown Artist";
+        private const string s_DEFAULT_ALBUM =   "Unknown Album";
+        private const string s_DEFAULT_GENRE =   "Unknown Genre";
+        private const string s_DEFAULT_YEAR =    "Unknown Year";
+        private const string s_DEFAULT_CHARTER = "Unknown Charter";
+
+        private static readonly Dictionary<string, ModifierNode> MODIFIER_LIST = new()
+        {
+		    { "Album",         new("album", ModifierNodeType.STRING_CHART ) },
+		    { "Artist",        new("artist", ModifierNodeType.STRING_CHART ) },
+		    { "BassStream",    new("BassStream", ModifierNodeType.STRING_CHART ) },
+		    { "Charter",       new("charter", ModifierNodeType.STRING_CHART ) },
+		    { "CrowdStream",   new("CrowdStream", ModifierNodeType.STRING_CHART ) },
+		    { "Difficulty",    new("diff_band", ModifierNodeType.INT32 ) },
+		    { "Drum2Stream",   new("Drum2Stream", ModifierNodeType.STRING_CHART ) },
+		    { "Drum3Stream",   new("Drum3Stream", ModifierNodeType.STRING_CHART ) },
+		    { "Drum4Stream",   new("Drum4Stream", ModifierNodeType.STRING_CHART ) },
+		    { "DrumStream",    new("DrumStream", ModifierNodeType.STRING_CHART ) },
+		    { "Genre",         new("genre", ModifierNodeType.STRING_CHART ) },
+		    { "GuitarStream",  new("GuitarStream", ModifierNodeType.STRING_CHART ) },
+		    { "HarmonyStream", new("HarmonyStream", ModifierNodeType.STRING_CHART ) },
+		    { "KeysStream",    new("KeysStream", ModifierNodeType.STRING_CHART ) },
+		    { "MusicStream",   new("MusicStream", ModifierNodeType.STRING_CHART ) },
+		    { "Name",          new("name", ModifierNodeType.STRING_CHART ) },
+		    { "Offset",        new("delay", ModifierNodeType.FLOAT ) },
+		    { "PreviewEnd",    new("preview_end_time", ModifierNodeType.FLOAT ) },
+		    { "PreviewStart",  new("preview_start_time", ModifierNodeType.FLOAT ) },
+		    { "Resolution",    new("Resolution", ModifierNodeType.UINT16 ) },
+		    { "RhythmStream",  new("RhythmStream", ModifierNodeType.STRING_CHART ) },
+		    { "VocalStream",   new("VocalStream", ModifierNodeType.STRING_CHART ) },
+		    { "Year",          new("year", ModifierNodeType.STRING_CHART ) },
+	    };
+
+        private static readonly Dictionary<string, ModifierNode> TICKRATE_LIST = new()
+        {
+            { "Resolution", new("Resolution", ModifierNodeType.UINT16 ) },
+        };
+
+        static Song() { }
+
         private string m_directory = string.Empty;
         private string m_name = string.Empty;
         private string m_artist = string.Empty;
@@ -192,8 +234,8 @@ namespace Framework.Song
             ChartFileReader reader = new(path);
             if (!reader.ValidateHeaderTrack())
                 throw new Exception("[Song] track expected at the start of the file");
-            // Add [Song] parsing later
-            reader.SkipTrack();
+
+            ParseHeaderTrack(fullLoad ? MODIFIER_LIST : TICKRATE_LIST, ref reader);
 
             LegacyDrumTrack legacy = new(m_baseDrumType);
             while (reader.IsStartOfTrack())
@@ -244,6 +286,99 @@ namespace Framework.Song
             }
 
             reader.Dispose();
+        }
+
+        private void ParseHeaderTrack(Dictionary<string, ModifierNode> list, ref ChartFileReader reader)
+        {
+            var modifiers = reader.ExtractModifiers(list);
+            if (modifiers.Remove("Resolution", out List<Modifier>? tickrate))
+            {
+                Tickrate = tickrate[0].UINT16;
+                if (modifiers.Count == 0)
+                    return;
+            }
+
+            if (modifiers.Remove("Name", out List<Modifier>? names))
+            {
+                int i = 0;
+                if (m_name.Length == 0 || m_name == s_DEFAULT_NAME)
+                {
+                    m_name = names[0].STR;
+                    ++i;
+                }
+
+                while (m_name != s_DEFAULT_NAME && i < names.Count)
+                    m_name = names[i++].SORTSTR.Str;
+            }
+
+            if (modifiers.Remove("Artist", out List<Modifier>? artists))
+            {
+                int i = 0;
+                if (m_artist.Length == 0 || m_artist == s_DEFAULT_ARTIST)
+                {
+                    m_artist = artists[0].STR;
+                    ++i;
+                }
+
+                while (m_artist != s_DEFAULT_ARTIST && i < artists.Count)
+                    m_artist = artists[i++].SORTSTR.Str;
+            }
+
+            if (modifiers.Remove("Album", out List<Modifier>? albums))
+            {
+                int i = 0;
+                if (m_album.Length == 0 || m_album == s_DEFAULT_ALBUM)
+                {
+                    m_album = albums[0].STR;
+                    ++i;
+                }
+
+                while (m_album != s_DEFAULT_ALBUM && i < albums.Count)
+                    m_album = albums[i++].SORTSTR.Str;
+            }
+
+            if (modifiers.Remove("Genre", out List<Modifier>? genres))
+            {
+                int i = 0;
+                if (m_genre.Length == 0 || m_genre == s_DEFAULT_GENRE)
+                {
+                    m_genre = genres[0].STR;
+                    ++i;
+                }
+
+                while (m_genre != s_DEFAULT_GENRE && i < genres.Count)
+                    m_genre = genres[i++].SORTSTR.Str;
+            }
+
+            if (modifiers.Remove("Year", out List<Modifier>? years))
+            {
+                int i = 0;
+                if (m_year.Length == 0 || m_year == s_DEFAULT_YEAR)
+                {
+                    m_year = years[0].STR;
+                    ++i;
+                }
+
+                while (m_year != s_DEFAULT_YEAR && i < years.Count)
+                    m_year = years[i++].SORTSTR.Str;
+            }
+
+            if (modifiers.Remove("Charter", out List<Modifier>? charters))
+            {
+                int i = 0;
+                if (m_charter.Length == 0 || m_charter == s_DEFAULT_CHARTER)
+                {
+                    m_charter = charters[0].STR;
+                    ++i;
+                }
+
+                while (m_charter != s_DEFAULT_CHARTER && i < charters.Count)
+                    m_charter = charters[i++].SORTSTR.Str;
+            }
+
+            foreach (var modifier in modifiers)
+                if (!m_modifiers.ContainsKey(modifier.Key))
+                    m_modifiers.Add(modifier.Key, modifier.Value[0]);
         }
     }
 }

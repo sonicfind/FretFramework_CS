@@ -1,4 +1,4 @@
-﻿using Framework.Song.Tracks;
+﻿using Framework.Modifiers;
 using Framework.Types;
 using System;
 using System.Collections.Generic;
@@ -309,6 +309,25 @@ namespace Framework.Serialization
                 ++i;
             }
             return false;
+        }
+
+        public Dictionary<string, List<Modifier>> ExtractModifiers(Dictionary<string, ModifierNode> validNodes)
+        {
+            Dictionary<string, List<Modifier>> modifiers = new();
+            reader.GotoNextLine();
+            while (IsStillCurrentTrack())
+            {
+                if (validNodes.TryGetValue(reader.ExtractModifierName(), out ModifierNode? node))
+                {
+                    Modifier mod = node.CreateModifier(reader);
+                    if (modifiers.TryGetValue(node.outputName, out List<Modifier>? list))
+                        list.Add(mod);
+                    else
+                        modifiers.Add(node.outputName, new() { mod });
+                }
+                reader.GotoNextLine();
+            }
+            return modifiers;
         }
     }
 }
