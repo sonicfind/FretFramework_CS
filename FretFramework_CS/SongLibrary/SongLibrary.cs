@@ -80,8 +80,9 @@ namespace Framework.Library
 
                 }
             }
-            catch (Exception)
+            catch (Exception e)
             {
+                Console.WriteLine(e.Message);
                 Console.WriteLine(directory.FullName);
                 return;
             }
@@ -97,19 +98,31 @@ namespace Framework.Library
                 ref var chart = ref charts[i];
                 if (chart.Item1 != null)
                 {
+                    SongEntry.SongEntry entry = new();
+                    if (ini != null)
+                    {
+                        try
+                        {
+                            entry.Load_Ini(ref ini);
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e.Message);
+                            Console.WriteLine(ini.FullName);
+                            return;
+                        }
+                    }
+
                     try
                     {
-                        SongEntry.SongEntry entry = new();
-                        if (ini != null)
-                            entry.Load_Ini(ref ini);
-
-                        using FrameworkFile file = new(chart.Item1!.FullName);
+                        using FrameworkFile_Alloc file = new(chart.Item1!.FullName);
                         if (entry.Scan(file, ref chart))
-                            AddEntry(new SHA1Wrapper(file.HASH_SHA1), entry);
+                            AddEntry(new SHA1Wrapper(file.CalcSHA1()), entry);
                     }
-                    catch (Exception)
+                    catch (Exception e)
                     {
-                        Console.WriteLine(directory.FullName);
+                        Console.WriteLine(e.Message);
+                        Console.WriteLine(chart.Item1!.FullName);
                     }
                     return;
                 }
