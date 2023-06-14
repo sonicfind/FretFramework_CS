@@ -93,27 +93,26 @@ namespace Framework.SongEntry
 
         public ScanValues GetValues(NoteTrackType track)
         {
-            switch (track)
+            return track switch
             {
-                case NoteTrackType.Lead:         return m_scans.lead_5;
-                case NoteTrackType.Lead_6:       return m_scans.lead_6;
-                case NoteTrackType.Bass:         return m_scans.lead_5;
-                case NoteTrackType.Bass_6:       return m_scans.lead_6;
-                case NoteTrackType.Rhythm:       return m_scans.rhythm;
-                case NoteTrackType.Coop:         return m_scans.coop;
-                case NoteTrackType.Keys:         return m_scans.keys;
-                case NoteTrackType.Drums_4:      return m_scans.drums_4;
-                case NoteTrackType.Drums_4Pro:   return m_scans.drums_4pro;
-                case NoteTrackType.Drums_5:      return m_scans.drums_5;
-                case NoteTrackType.Vocals:       return m_scans.leadVocals;
-                case NoteTrackType.Harmonies:    return m_scans.harmonyVocals;
-                case NoteTrackType.ProGuitar_17: return m_scans.proguitar_17;
-                case NoteTrackType.ProGuitar_22: return m_scans.proguitar_22;
-                case NoteTrackType.ProBass_17:   return m_scans.probass_17;
-                case NoteTrackType.ProBass_22:   return m_scans.probass_22;
-                default:
-                    throw new ArgumentException("track value is not of a valid type");
-            }
+                NoteTrackType.Lead         => m_scans.lead_5,
+                NoteTrackType.Lead_6       => m_scans.lead_6,
+                NoteTrackType.Bass         => m_scans.lead_5,
+                NoteTrackType.Bass_6       => m_scans.lead_6,
+                NoteTrackType.Rhythm       => m_scans.rhythm,
+                NoteTrackType.Coop         => m_scans.coop,
+                NoteTrackType.Keys         => m_scans.keys,
+                NoteTrackType.Drums_4      => m_scans.drums_4,
+                NoteTrackType.Drums_4Pro   => m_scans.drums_4pro,
+                NoteTrackType.Drums_5      => m_scans.drums_5,
+                NoteTrackType.Vocals       => m_scans.leadVocals,
+                NoteTrackType.Harmonies    => m_scans.harmonyVocals,
+                NoteTrackType.ProGuitar_17 => m_scans.proguitar_17,
+                NoteTrackType.ProGuitar_22 => m_scans.proguitar_22,
+                NoteTrackType.ProBass_17   => m_scans.probass_17,
+                NoteTrackType.ProBass_22   => m_scans.probass_22,
+                _ => throw new ArgumentException("track value is not of a valid type"),
+            };
         }
 
         public void Load_Ini(ref FileInfo info)
