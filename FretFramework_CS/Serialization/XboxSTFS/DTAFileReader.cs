@@ -241,7 +241,19 @@ namespace Framework.Serialization.XboxSTFS
 
     public unsafe struct DTAFileNode
     {
-        public static List<DTAFileNode> GetNodes(DTAFileReader reader)
+        public static List<DTAFileNode> GetNodes(string path)
+        {
+            using DTAFileReader reader = new(path);
+            return GetNodes(reader);
+        }
+
+        public static List<DTAFileNode> GetNodes(PointerHandler ptr)
+        {
+            using DTAFileReader reader = new(ptr);
+            return GetNodes(reader);
+        }
+
+        private static List<DTAFileNode> GetNodes(DTAFileReader reader)
         {
             List<DTAFileNode> nodes = new();
             while (reader.StartNode())
