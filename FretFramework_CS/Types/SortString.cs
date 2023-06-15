@@ -29,5 +29,7 @@ namespace Framework.Types
         {
             Str = str;
         }
+
+        public static implicit operator SortString(string str) => new(str);
     }
 }
