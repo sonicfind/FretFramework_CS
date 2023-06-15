@@ -15,9 +15,9 @@ using System.Xml.Linq;
 namespace Framework.Serialization.XboxSTFS
 {
     public unsafe class DTAFileReader : TxtReader_Base
-	{
+    {
         private List<int> nodeEnds = new();
-		public DTAFileReader(FrameworkFile file) : base(file)
+        public DTAFileReader(FrameworkFile file) : base(file)
         {
             SkipWhiteSpace();
         }
@@ -77,12 +77,12 @@ namespace Framework.Serialization.XboxSTFS
             }
             int end = _position++;
             SkipWhiteSpace();
-			return Encoding.UTF8.GetString(new ReadOnlySpan<byte>(file.ptr + start, end - start));
-		}
+            return Encoding.UTF8.GetString(new ReadOnlySpan<byte>(file.ptr + start, end - start));
+        }
 
         public string ExtractText()
         {
-			byte ch = file.ptr[_position];
+            byte ch = file.ptr[_position];
             bool inSquirley = ch == '{';
             bool inQuotes = !inSquirley && ch == '\"';
             bool inApostrophes = !inQuotes && ch == '\'';
@@ -136,18 +136,18 @@ namespace Framework.Serialization.XboxSTFS
             else if (inSquirley || inQuotes || inApostrophes)
                 throw new Exception("Improper end to text");
 
-			return Encoding.UTF8.GetString(new ReadOnlySpan<byte>(file.ptr + start, end - start));
+            return Encoding.UTF8.GetString(new ReadOnlySpan<byte>(file.ptr + start, end - start));
         }
 
         public List<ushort> ExtractList()
-		{
+        {
             List<ushort> values = new();
-			while (*CurrentPtr != ')')
+            while (*CurrentPtr != ')')
                 values.Add(ReadUInt16());
-			return values;
-		}
+            return values;
+        }
 
-		public bool StartNode()
+        public bool StartNode()
         {
             byte ch = file.ptr[_position];
             if (ch != '(')
@@ -208,22 +208,25 @@ namespace Framework.Serialization.XboxSTFS
                 _next = nodeEnds[--index];
             SkipWhiteSpace();
         }
-	};
+    };
 
-	struct DTARanks
-	{
-		public ushort guitar5;
-		public ushort bass5;
-		public ushort drum4_pro;
-		public ushort keys;
-		public ushort vocals;
-		public ushort real_guitar;
-		public ushort real_bass;
-		public ushort real_keys;
-		public ushort band;
-	};
+    public struct DTARanks
+    {
+        public ushort guitar5 = ushort.MaxValue;
+        public ushort bass5 = ushort.MaxValue;
+        public ushort drum4 = ushort.MaxValue;
+        public ushort keys = ushort.MaxValue;
+        public ushort vocals = ushort.MaxValue;
+        public ushort harmony = ushort.MaxValue;
+        public ushort real_guitar = ushort.MaxValue;
+        public ushort real_bass = ushort.MaxValue;
+        public ushort drum4_pro = ushort.MaxValue;
+        public ushort real_keys = ushort.MaxValue;
+        public ushort band = ushort.MaxValue;
+        public DTARanks() { }
+    };
 
-    unsafe struct DTAAudio
+    public unsafe struct DTAAudio
     {
         public fixed float pan[2];
         public fixed float volume[2];
@@ -236,8 +239,8 @@ namespace Framework.Serialization.XboxSTFS
         }
     };
 
-	unsafe struct DTAFileNode
-	{
+    public unsafe struct DTAFileNode
+    {
         public static List<DTAFileNode> GetNodes(DTAFileReader reader)
         {
             List<DTAFileNode> nodes = new();
@@ -317,14 +320,14 @@ namespace Framework.Serialization.XboxSTFS
                             }
                             break;
                         }
-                    case "song_id": SongID = reader.ExtractText(); break;
+                    case "song_id": SongID = reader.ReadUInt32(); break;
                     case "rating": Rating = reader.ReadUInt32(); break;
                     case "short_version": ShortVersion = reader.ReadUInt32(); break;
                     case "album_art": HasAlbumArt = reader.ReadBoolean(); break;
                     case "year_released": Year_Released = reader.ReadUInt32(); break;
                     case "year_recorded": Year_Recorded = reader.ReadUInt32(); break;
                     case "album_name": Album = reader.ExtractText(); break;
-                    case "album_track_number": AlbumTrack = reader.ReadUInt32(); break;
+                    case "album_track_number": AlbumTrack = reader.ReadUInt16(); break;
                     case "pack_name": Packname = reader.ExtractText(); break;
                     case "base_points": BasePoints = reader.ReadUInt32(); break;
                     case "band_fail_cue": BandFailCue = reader.ExtractText(); break;
@@ -336,6 +339,7 @@ namespace Framework.Serialization.XboxSTFS
                     case "encoding": Encoding = reader.ExtractText(); break;
                     case "vocal_tonic_note": VocalTonic = reader.ReadUInt32(); break;
                     case "song_tonality": Tonality = reader.ReadBoolean(); break;
+                    case "alternate_path": AlternatePath = reader.ReadBoolean(); break;
                     case "real_guitar_tuning":
                         {
                             while (reader.StartNode())
@@ -374,8 +378,8 @@ namespace Framework.Serialization.XboxSTFS
             }
         }
 
-		private void SongLoop(ref DTAFileReader reader)
-		{
+        private void SongLoop(ref DTAFileReader reader)
+        {
             while (reader.StartNode())
             {
                 string descriptor = reader.GetNameOfNode();
@@ -388,14 +392,15 @@ namespace Framework.Serialization.XboxSTFS
                     case "pans": PanLoop(ref reader); break;
                     case "vols": VolLoop(ref reader); break;
                     case "cores": CoreLoop(ref reader); break;
+                    case "hopo_threshold": Hopo_Threshold = reader.ReadUInt32(); break;
                     case "midi_file": MidiFile = reader.ExtractText(); break;
                 }
                 reader.EndNode();
             }
-		}
+        }
 
-		private void TracksLoop(ref DTAFileReader reader)
-		{
+        private void TracksLoop(ref DTAFileReader reader)
+        {
             while (reader.StartNode())
             {
                 while (reader.StartNode())
@@ -452,10 +457,10 @@ namespace Framework.Serialization.XboxSTFS
                 }
                 reader.EndNode();
             }
-		}
+        }
 
-		private void PanLoop(ref DTAFileReader reader)
-		{
+        private void PanLoop(ref DTAFileReader reader)
+        {
             while (reader.StartNode())
             {
                 if (drumIndices != null)
@@ -485,8 +490,8 @@ namespace Framework.Serialization.XboxSTFS
                 if (bassIndices != null)
                 {
                     bass.pan[0] = reader.ReadFloat();
-					if (bassIndices.Count > 1)
-						bass.pan[1] = reader.ReadFloat();
+                    if (bassIndices.Count > 1)
+                        bass.pan[1] = reader.ReadFloat();
                 }
 
                 if (guitarIndices != null)
@@ -521,7 +526,7 @@ namespace Framework.Serialization.XboxSTFS
                 }
                 reader.EndNode();
             }
-		}
+        }
 
         private void VolLoop(ref DTAFileReader reader)
         {
@@ -667,14 +672,22 @@ namespace Framework.Serialization.XboxSTFS
             {
                 switch (reader.GetNameOfNode())
                 {
-                    case "drum": _ranks.drum4_pro = reader.ReadUInt16(); break;
+                    case "drum":
+                    case "drums": _ranks.drum4_pro = reader.ReadUInt16(); break;
                     case "guitar": _ranks.guitar5 = reader.ReadUInt16(); break;
                     case "bass": _ranks.bass5 = reader.ReadUInt16(); break;
                     case "vocals": _ranks.vocals = reader.ReadUInt16(); break;
                     case "keys": _ranks.keys = reader.ReadUInt16(); break;
+                    case "realGuitar":
                     case "real_guitar": _ranks.real_guitar = reader.ReadUInt16(); break;
+                    case "realBass":
                     case "real_bass": _ranks.real_bass = reader.ReadUInt16(); break;
+                    case "realKeys":
                     case "real_keys": _ranks.real_keys = reader.ReadUInt16(); break;
+                    case "realDrums":
+                    case "real_drums": _ranks.drum4_pro = reader.ReadUInt16(); break;
+                    case "harmVocals":
+                    case "vocal_harm": _ranks.harmony = reader.ReadUInt16(); break;
                     case "band": _ranks.band = reader.ReadUInt16(); break;
                 }
                 reader.EndNode();
@@ -683,68 +696,70 @@ namespace Framework.Serialization.XboxSTFS
 
         public string NodeName { get; private set; } = string.Empty;
 
-		public string Name { get; private set; } = string.Empty;
-		public string Artist { get; private set; } = string.Empty;
-		public string Album { get; private set; } = string.Empty;
-		public string Genre { get; private set; } = string.Empty;
-		public string Subgenre { get; private set; } = string.Empty;
-		public string Charter { get; private set; } = string.Empty;
-		public string Source { get; private set; } = string.Empty;
-		public string SongID { get; private set; } = string.Empty;
-		public string Encoding { get; private set; } = string.Empty;
-		public string VocalPercBank { get; private set; } = string.Empty;
-		public string DrumBank { get; private set; } = string.Empty;
-		public string BandFailCue { get; private set; } = string.Empty;
-		public string Decade { get; private set; } = string.Empty;
-		public string Fake { get; private set; } = string.Empty;
-		public string Downloaded { get; private set; } = string.Empty;
-		public string Packname { get; private set; } = string.Empty;
+        public string Name { get; private set; } = string.Empty;
+        public string Artist { get; private set; } = string.Empty;
+        public string Album { get; private set; } = string.Empty;
+        public string Genre { get; private set; } = string.Empty;
+        public string Subgenre { get; private set; } = string.Empty;
+        public string Charter { get; private set; } = string.Empty;
+        public string Source { get; private set; } = string.Empty;
+        public string Encoding { get; private set; } = string.Empty;
+        public string VocalPercBank { get; private set; } = string.Empty;
+        public string DrumBank { get; private set; } = string.Empty;
+        public string BandFailCue { get; private set; } = string.Empty;
+        public string Decade { get; private set; } = string.Empty;
+        public string Fake { get; private set; } = string.Empty;
+        public string Downloaded { get; private set; } = string.Empty;
+        public string Packname { get; private set; } = string.Empty;
 
-		public uint Year_Released { get; private set; } = uint.MaxValue;
-		public uint Year_Recorded { get; private set; } = uint.MaxValue;
-		public uint AlbumTrack { get; private set; } = uint.MaxValue;
-		public uint ScrollSpeed { get; private set; } = uint.MaxValue;
-		public uint Length { get; private set; } = uint.MaxValue;
-		public uint Version { get; private set; } = uint.MaxValue;
-		public uint Format { get; private set; } = uint.MaxValue;
-		public uint Rating { get; private set; } = uint.MaxValue;
-		public int  TuningOffsetCents { get; private set; } = int.MaxValue;
-		public uint VocalTonic { get; private set; } = uint.MaxValue;
-		public uint ShortVersion { get; private set; } = 0;
-		public uint AnimTempo { get; private set; } = uint.MaxValue;
-		public uint Context { get; private set; } = uint.MaxValue;
-		public uint BasePoints { get; private set; } = uint.MaxValue;
+        public uint SongID { get; private set; } = uint.MaxValue;
+        public uint Year_Released { get; private set; } = uint.MaxValue;
+        public uint Year_Recorded { get; private set; } = uint.MaxValue;
+        public ushort AlbumTrack { get; private set; } = ushort.MaxValue;
+        public uint ScrollSpeed { get; private set; } = uint.MaxValue;
+        public uint Length { get; private set; } = uint.MaxValue;
+        public uint Version { get; private set; } = uint.MaxValue;
+        public uint Format { get; private set; } = uint.MaxValue;
+        public uint Rating { get; private set; } = uint.MaxValue;
+        public int  TuningOffsetCents { get; private set; } = int.MaxValue;
+        public uint VocalTonic { get; private set; } = uint.MaxValue;
+        public uint ShortVersion { get; private set; } = 0;
+        public uint AnimTempo { get; private set; } = uint.MaxValue;
+        public uint Context { get; private set; } = uint.MaxValue;
+        public uint BasePoints { get; private set; } = uint.MaxValue;
+        public uint Hopo_Threshold { get; private set; } = uint.MaxValue;
 
-		public float GuidePitchVolume { get; private set; } = -1;
+        public float GuidePitchVolume { get; private set; } = -1;
 
-		public bool IsMaster { get; private set; } = false;
-		public bool HasAlbumArt { get; private set; } = false;
-		public bool Tonality { get; private set; } = false;
+        public bool IsMaster { get; private set; } = false;
+        public bool HasAlbumArt { get; private set; } = false;
+        public bool Tonality { get; private set; } = false;
         public bool VocalIsMale { get; private set; } = true;
+        public bool AlternatePath { get; private set; } = false;
 
         public uint PreviewStart { get; private set; } = uint.MaxValue;
         public uint PreviewEnd { get; private set; } = uint.MaxValue;
 
         private DTARanks _ranks;
-		public DTARanks Ranks { get; }
+        public DTARanks Ranks { get; }
 
         private List<string>? soloes;
         private List<string>? videoVenues;
 
-		private fixed short realGuitarTuning[6];
+        private fixed short realGuitarTuning[6];
         private fixed short realBassTuning[4];
 
         public string Location { get; private set; } = string.Empty;
         
-		
-		List<ushort>? drumIndices;
-		List<ushort>? bassIndices;
-		List<ushort>? guitarIndices;
-		List<ushort>? keysIndices;
-		List<ushort>? vocalsIndices;
-		List<ushort>? crowdIndices;
-		
-		public ushort NumVocalParts { get; private set; }
+        
+        List<ushort>? drumIndices;
+        List<ushort>? bassIndices;
+        List<ushort>? guitarIndices;
+        List<ushort>? keysIndices;
+        List<ushort>? vocalsIndices;
+        List<ushort>? crowdIndices;
+        
+        public ushort NumVocalParts { get; private set; } = ushort.MaxValue;
 
         private DTAAudio kick;
         private DTAAudio snare;
@@ -755,7 +770,7 @@ namespace Framework.Serialization.XboxSTFS
         private DTAAudio vocals;
         private DTAAudio tracks;
         private DTAAudio crowd;
-		public DTAAudio KickAudio => kick;
+        public DTAAudio KickAudio => kick;
         public DTAAudio SnareAudio => snare;
         public DTAAudio CymbalsAudio => cymbals;
         public DTAAudio BassAudio => bass;
@@ -767,6 +782,6 @@ namespace Framework.Serialization.XboxSTFS
 
         public string MidiFile { get; private set; } = string.Empty;
 
-		readonly List<(string, string)> others = new();
-	};
+        readonly List<(string, string)> others = new();
+    };
 }
