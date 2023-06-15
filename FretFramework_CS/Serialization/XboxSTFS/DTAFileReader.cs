@@ -1,6 +1,7 @@
 ﻿using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Running;
 using BenchmarkDotNet.Toolchains;
+using Framework.Types;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.Diagnostics.Tracing.Parsers.Clr;
 using System;
@@ -22,6 +23,7 @@ namespace Framework.Serialization.XboxSTFS
         }
         public DTAFileReader(byte[] data) : this(new FrameworkFile_Handle(data)) { }
         public DTAFileReader(string path) : this(new FrameworkFile_Alloc(path)) { }
+        public DTAFileReader(PointerHandler ptr) : this(new FrameworkFile(ptr)) { }
 
         public override void SkipWhiteSpace()
         {
