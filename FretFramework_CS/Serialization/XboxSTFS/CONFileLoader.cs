@@ -1,7 +1,10 @@
-﻿using System;
+﻿using Framework.Types;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -41,7 +44,7 @@ namespace Framework.Serialization.XboxSTFS
         public bool IsContiguous() { return (Flags & 0x40) > 0; }
     }
 
-    public class CONFile
+    public unsafe class CONFile
     {
         public string Filename { get { return stream.Name; } }
         private readonly FileStream stream;
@@ -140,6 +143,23 @@ namespace Framework.Serialization.XboxSTFS
             return Load(files[index]);
         }
 
+        public PointerHandler? LoadSubFile_unsafe(string filename)
+        {
+            for (int i = 0; i < files.Count; ++i)
+                if (filename == files[i].Filename)
+                    return Load_unsafe(files[i]);
+            Debug.WriteLine("File " + filename + " does not exist in CON and thus could not be loaded");
+            return null;
+        }
+
+        public PointerHandler? LoadSubFile_unsafe(int index)
+        {
+            if (index < 0 || index >= files.Count)
+                return null;
+
+            return Load_unsafe(files[index]);
+        }
+
         public bool IsMoggUnencrypted(int index)
         {
             if (index < 0 || index >= files.Count)
@@ -167,6 +187,22 @@ namespace Framework.Serialization.XboxSTFS
                     return ReadContiguousBlocks(listing.FirstBlock, listing.Size);
                 else
                     return ReadSplitBlocks(listing.FirstBlock, listing.Size);
+            }
+            catch (Exception e)
+            {
+                throw new Exception(Filename + ": " + e.Message);
+            }
+        }
+
+        private PointerHandler Load_unsafe(FileListing listing)
+        {
+            Debug.Assert(!listing.IsDirectory(), "Directory listing cannot be loaded as a file");
+            try
+            {
+                if (listing.IsContiguous())
+                    return ReadContiguousBlocks_unsafe(listing.FirstBlock, listing.Size);
+                else
+                    return ReadSplitBlocks_unsafe(listing.FirstBlock, listing.Size);
             }
             catch (Exception e)
             {
@@ -260,6 +296,91 @@ namespace Framework.Serialization.XboxSTFS
                 blockNum = buffer[0] << 16 | buffer[1] << 8 | buffer[2];
             }
             return data;
+        }
+
+        private PointerHandler ReadContiguousBlocks_unsafe(int blockNum, int fileSize)
+        {
+            PointerHandler ptr = new(fileSize);
+            byte* data = ptr.GetData();
+            long skipVal = BYTES_PER_BLOCK << shift;
+            int threshold = blockNum - (blockNum % NUM_BLOCKS_SQUARED) + NUM_BLOCKS_SQUARED;
+            int numBlocks = BLOCKS_PER_SECTION - (blockNum % BLOCKS_PER_SECTION);
+            int readSize = BYTES_PER_BLOCK * numBlocks;
+            int offset = 0;
+
+            lock (fileLock)
+            {
+                stream.Seek(0xC000 + (long)CalculateBlockNum(blockNum) * BYTES_PER_BLOCK, SeekOrigin.Begin);
+                while (true)
+                {
+                    if (readSize > fileSize - offset)
+                        readSize = fileSize - offset;
+
+                    if (stream.Read(new Span<byte>(data + offset, readSize)) != readSize)
+                        throw new Exception("Read error in CON-like subfile - Type: Contiguous");
+
+                    offset += readSize;
+                    if (offset == fileSize)
+                        break;
+
+                    blockNum += numBlocks;
+                    numBlocks = BLOCKS_PER_SECTION;
+                    readSize = BYTES_PER_SECTION;
+
+                    int seekCount = 1;
+                    if (blockNum == BLOCKS_PER_SECTION)
+                        seekCount = 2;
+                    else if (blockNum == threshold)
+                    {
+                        if (blockNum == NUM_BLOCKS_SQUARED)
+                            seekCount = 2;
+                        ++seekCount;
+                        threshold += NUM_BLOCKS_SQUARED;
+                    }
+
+                    stream.Seek(seekCount * skipVal, SeekOrigin.Current);
+                }
+            }
+            return ptr;
+        }
+
+        private PointerHandler ReadSplitBlocks_unsafe(int blockNum, int fileSize)
+        {
+            PointerHandler ptr = new(fileSize);
+            byte* data = ptr.GetData();
+            byte[] buffer = new byte[3];
+
+            int offset = 0;
+            while (true)
+            {
+                int block = CalculateBlockNum(blockNum);
+                long blockLocation = 0xC000 + (long)block * BYTES_PER_BLOCK;
+                int readSize = BYTES_PER_BLOCK;
+                if (readSize > fileSize - offset)
+                    readSize = fileSize - offset;
+
+                lock (fileLock)
+                {
+                    stream.Seek(blockLocation, SeekOrigin.Begin);
+                    if (stream.Read(new Span<byte>(data + offset, readSize)) != readSize)
+                        throw new Exception("Pre-Read error in CON-like subfile - Type: Split");
+                }
+
+                offset += readSize;
+                if (offset == fileSize)
+                    break;
+
+                long hashlocation = blockLocation - ((long)(blockNum % BLOCKS_PER_SECTION) * 4072 + 4075);
+                lock (fileLock)
+                {
+                    stream.Seek(hashlocation, SeekOrigin.Begin);
+                    if (stream.Read(buffer, 0, 3) != 3)
+                        throw new Exception("Post-Read error in CON-like subfile - Type: Split");
+                }
+
+                blockNum = buffer[0] << 16 | buffer[1] << 8 | buffer[2];
+            }
+            return ptr;
         }
 
         private int CalculateBlockNum(int blocknum)
