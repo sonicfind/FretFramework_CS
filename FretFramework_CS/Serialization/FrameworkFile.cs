@@ -15,6 +15,9 @@ namespace Framework.Serialization
         protected bool disposed;
 
         public abstract void Dispose();
+
+        public byte[] GetMD5() { return MD5.HashData(new ReadOnlySpan<byte>(ptr, Length)); }
+        public byte[] CalcSHA1() { return SHA1.HashData(new ReadOnlySpan<byte>(ptr, Length)); }
     }
 
     public unsafe class FrameworkFile_Handle : FrameworkFile, IDisposable
@@ -60,8 +63,5 @@ namespace Framework.Serialization
             disposed = true;
             GC.SuppressFinalize(this);
         }
-
-        public byte[] GetMD5() { return MD5.HashData(new ReadOnlySpan<byte>(ptr, Length)); }
-        public byte[] CalcSHA1() { return SHA1.HashData(new ReadOnlySpan<byte>(ptr, Length)); }
     }
 }
