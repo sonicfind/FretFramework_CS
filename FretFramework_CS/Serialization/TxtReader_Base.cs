@@ -42,7 +42,10 @@ namespace Framework.Serialization
 
         public void Dispose()
         {
-            file.Dispose();
+            if (file is FrameworkFile_Handle handle)
+                handle.Dispose();
+            else if (file is FrameworkFile_Alloc alloc)
+                alloc.Dispose();
             GC.SuppressFinalize(this);
         }
 

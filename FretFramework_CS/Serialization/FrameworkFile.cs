@@ -1,6 +1,8 @@
-﻿using System;
+﻿using Framework.Types;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection.Metadata;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
@@ -8,13 +10,18 @@ using System.Threading.Tasks;
 
 namespace Framework.Serialization
 {
-    public unsafe abstract class FrameworkFile : IDisposable
+    public unsafe class FrameworkFile
     {
         public byte* ptr;
         public int Length { get; init; }
-        protected bool disposed;
 
-        public abstract void Dispose();
+        protected FrameworkFile() { }
+
+        public FrameworkFile(PointerHandler ptr)
+        {
+            this.ptr = ptr.GetData();
+            Length = ptr.length;
+        }
 
         public byte[] GetMD5() { return MD5.HashData(new ReadOnlySpan<byte>(ptr, Length)); }
         public byte[] CalcSHA1() { return SHA1.HashData(new ReadOnlySpan<byte>(ptr, Length)); }
@@ -24,6 +31,7 @@ namespace Framework.Serialization
     {
         private readonly byte[] buffer;
         private readonly GCHandle handle;
+        private bool disposed;
 
         public FrameworkFile_Handle(byte[] data)
         {
@@ -35,7 +43,7 @@ namespace Framework.Serialization
 
         ~FrameworkFile_Handle() { handle.Free(); }
 
-        public override void Dispose()
+        public void Dispose()
         {
             if (disposed) return;
             handle.Free();
@@ -46,6 +54,7 @@ namespace Framework.Serialization
 
     public unsafe class FrameworkFile_Alloc : FrameworkFile, IDisposable
     {
+        private bool disposed;
         public FrameworkFile_Alloc(string path)
         {
             FileStream fs = File.OpenRead(path);
@@ -54,9 +63,10 @@ namespace Framework.Serialization
             ptr = (byte*)Marshal.AllocHGlobal(length);
             fs.Read(new Span<byte>(ptr, length));
         }
+
         ~FrameworkFile_Alloc() { Marshal.FreeHGlobal((IntPtr)ptr); }
 
-        public override void Dispose()
+        public void Dispose()
         {
             if (disposed) return;
             Marshal.FreeHGlobal((IntPtr)ptr);

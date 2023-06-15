@@ -51,7 +51,10 @@ namespace Framework.Serialization
             {
                 if (disposing)
                 {
-                    file.Dispose();
+                    if (file is FrameworkFile_Handle handle)
+                        handle.Dispose();
+                    else if (file is FrameworkFile_Alloc alloc)
+                        alloc.Dispose();
                 }
                 Marshal.FreeHGlobal((IntPtr)boundaries);
             }
