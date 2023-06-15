@@ -19,7 +19,7 @@ namespace Framework.SongEntry.TrackScan.Instrument
         protected ScanValues value = new();
         protected MidiNote note;
 
-        public ScanValues Scan(ref MidiFileReader reader)
+        public ScanValues Scan(MidiFileReader reader)
         {
             while (reader.TryParseEvent())
             {

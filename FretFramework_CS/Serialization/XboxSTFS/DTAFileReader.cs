@@ -241,13 +241,13 @@ namespace Framework.Serialization.XboxSTFS
             List<DTAFileNode> nodes = new();
             while (reader.StartNode())
             {
-                nodes.Add(new DTAFileNode(ref reader));
+                nodes.Add(new DTAFileNode(reader));
                 reader.EndNode();
             }
             return nodes;
         }
 
-		public DTAFileNode(ref DTAFileReader reader)
+        public DTAFileNode(DTAFileReader reader)
         {
             NodeName = reader.GetNameOfNode();
             while (reader.StartNode())

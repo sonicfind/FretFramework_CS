@@ -19,14 +19,14 @@ namespace Framework.SongEntry.TrackScan.Instrument.Drums
 
         public LegacyDrumScan(DrumType type = DrumType.UNKNOWN) { _type = type; }
 
-        public DrumType ScanMidi(ref MidiFileReader reader)
+        public DrumType ScanMidi(MidiFileReader reader)
         {
             Midi_DrumLegacy_Scanner scanner = new();
-            _values = scanner.Scan(ref reader);
+            _values = scanner.Scan(reader);
             return scanner.Type;
         }
 
-        public bool ScanDotChart(ref ChartFileReader reader)
+        public bool ScanDotChart(ChartFileReader reader)
         {
             int index = reader.Difficulty;
             if (_values[index])

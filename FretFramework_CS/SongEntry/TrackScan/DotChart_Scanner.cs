@@ -13,7 +13,7 @@ namespace Framework.SongEntry.TrackScan
 {
     public static class DotChart_Scanner
     {
-        public static bool Scan<T>(ref ScanValues scan, ref ChartFileReader reader)
+        public static bool Scan<T>(ref ScanValues scan, ChartFileReader reader)
             where T : IScannableFromDotChart
         {
             int index = reader.Difficulty;

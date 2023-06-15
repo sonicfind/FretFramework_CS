@@ -16,10 +16,10 @@ namespace Framework.Song.Tracks.Instrument.DrumTrack
 
         public LegacyDrumTrack(DrumType type = DrumType.UNKNOWN) { _type = type; }
 
-        public DrumType LoadMidi(ref MidiFileReader reader)
+        public DrumType LoadMidi(MidiFileReader reader)
         {
             Midi_DrumsLegacy_Loader loader = new(reader.GetMultiplierNote());
-            loader.Load(this, ref reader);
+            loader.Load(this, reader);
             for (int i = 0; i < 4; ++i)
             {
                 ParseDrumType(ref difficulties[i]);
@@ -29,10 +29,10 @@ namespace Framework.Song.Tracks.Instrument.DrumTrack
             return _type;
         }
 
-        public bool LoadDotChart(ref ChartFileReader reader)
+        public bool LoadDotChart(ChartFileReader reader)
         {
             ref DifficultyTrack<Drum_Legacy> diff = ref difficulties[reader.Difficulty];
-            if (!DotChart_Loader.Load(ref diff, ref reader))
+            if (!DotChart_Loader.Load(ref diff, reader))
                 return false;
 
             ParseDrumType(ref diff);

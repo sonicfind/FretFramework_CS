@@ -170,7 +170,6 @@ namespace Framework.SongEntry
                 {
                     string name = Encoding.ASCII.GetString(reader.ExtractTextOrSysEx());
                     if (MidiFileReader.TRACKNAMES.TryGetValue(name, out MidiTrackType type) && type != MidiTrackType.Events && type != MidiTrackType.Beats)
-                        m_scans.ScanFromMidi(type, drumType, ref reader);
                 }
             }
         }
@@ -281,6 +280,7 @@ namespace Framework.SongEntry
                     m_playlist = playlists[i].SORTSTR;
                     if (m_playlist.Str != m_directory_playlist.Str)
                         break;
+                        m_scans.ScanFromMidi(type, drumType, reader);
                 }
             }
             else

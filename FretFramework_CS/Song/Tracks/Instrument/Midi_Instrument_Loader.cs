@@ -25,7 +25,7 @@ namespace Framework.Song.Tracks.Instrument
         protected readonly Midi_PhraseList phrases;
         protected Midi_Loader_Base(Midi_PhraseList phrases) { this.phrases = phrases; }
 
-        public bool Load(TrackType track, ref MidiFileReader reader)
+        public bool Load(TrackType track, MidiFileReader reader)
         {
             if (track.IsOccupied())
                 return false;

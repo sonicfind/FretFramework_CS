@@ -29,7 +29,7 @@ namespace Framework.Song
 
         internal static byte[][] PREFIXES = { Encoding.ASCII.GetBytes("[section "), Encoding.ASCII.GetBytes("[prc_") };
 
-        public bool AddFromMidi(ref MidiFileReader reader, Encoding encoding)
+        public bool AddFromMidi(MidiFileReader reader, Encoding encoding)
         {
             if (!globals.IsEmpty() || !sections.IsEmpty())
                 return false;

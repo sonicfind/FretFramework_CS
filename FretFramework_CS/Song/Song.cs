@@ -194,7 +194,7 @@ namespace Framework.Song
         public void Load_Midi(string path, Encoding encoding)
         {
             Midi_Loader.encoding = encoding;
-            MidiFileReader reader = new(path, m_multiplier_note);
+            using MidiFileReader reader = new(path, m_multiplier_note);
             Tickrate = reader.GetTickRate();
 
             while (reader.StartTrack())
@@ -203,7 +203,7 @@ namespace Framework.Song
                 {
                     if (reader.GetEvent().type == MidiEventType.Text_TrackName)
                         m_midiSequenceName = encoding.GetString(reader.ExtractTextOrSysEx());
-                    m_sync.AddFromMidi(ref reader);
+                    m_sync.AddFromMidi(reader);
                 }
                 else if (reader.GetEvent().type == MidiEventType.Text_TrackName)
                 {
@@ -212,10 +212,10 @@ namespace Framework.Song
                     {
                         if (type == MidiTrackType.Events)
                         {
-                            if (!m_events.AddFromMidi(ref reader, encoding))
+                            if (!m_events.AddFromMidi(reader, encoding))
                                 Console.WriteLine($"EVENTS track appeared previously");
                         }
-                        else if (!m_tracks.LoadFromMidi(type, m_baseDrumType, ref reader))
+                        else if (!m_tracks.LoadFromMidi(type, m_baseDrumType, reader))
                             Console.WriteLine($"Track '{name}' failed to load or was already loaded previously");
                     }
                 }
@@ -231,17 +231,17 @@ namespace Framework.Song
 
         public void Load_Chart(string path, bool fullLoad)
         {
-            ChartFileReader reader = new(path);
+            using ChartFileReader reader = new(path);
             if (!reader.ValidateHeaderTrack())
                 throw new Exception("[Song] track expected at the start of the file");
 
-            ParseHeaderTrack(fullLoad ? MODIFIER_LIST : TICKRATE_LIST, ref reader);
+            ParseHeaderTrack(fullLoad ? MODIFIER_LIST : TICKRATE_LIST, reader);
 
             LegacyDrumTrack legacy = new(m_baseDrumType);
             while (reader.IsStartOfTrack())
             {
                 if (reader.ValidateSyncTrack())
-                    m_sync.AddFromDotChart(ref reader);
+                    m_sync.AddFromDotChart(reader);
                 else if (reader.ValidateEventsTrack())
                 {
                     ulong phrase = ulong.MaxValue;
@@ -273,7 +273,7 @@ namespace Framework.Song
                         reader.NextEvent();
                     }
                 }
-                else if (!reader.ValidateDifficulty() || !reader.ValidateInstrument() || !m_tracks.LoadFromDotChart(ref legacy, ref reader))
+                else if (!reader.ValidateDifficulty() || !reader.ValidateInstrument() || !m_tracks.LoadFromDotChart(ref legacy, reader))
                     reader.SkipTrack();
             }
 
@@ -288,7 +288,7 @@ namespace Framework.Song
             reader.Dispose();
         }
 
-        private void ParseHeaderTrack(Dictionary<string, ModifierNode> list, ref ChartFileReader reader)
+        private void ParseHeaderTrack(Dictionary<string, ModifierNode> list, ChartFileReader reader)
         {
             var modifiers = reader.ExtractModifiers(list);
             if (modifiers.Remove("Resolution", out List<Modifier>? tickrate))

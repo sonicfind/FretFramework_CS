@@ -22,7 +22,7 @@ namespace Framework.SongEntry.TrackScan.Vocals
 
         public Midi_Vocal_Scanner(int index) { this.index = index; }
 
-        public bool Scan(ref MidiFileReader reader)
+        public bool Scan(MidiFileReader reader)
         {
             while (reader.TryParseEvent())
             {

@@ -15,7 +15,7 @@ namespace Framework.Song.Tracks
         internal static readonly byte[] SOLO = Encoding.ASCII.GetBytes("solo");
         internal static readonly byte[] SOLOEND = Encoding.ASCII.GetBytes("soloend");
 
-        public static bool Load<T>(ref DifficultyTrack<T> diff, ref ChartFileReader reader)
+        public static bool Load<T>(ref DifficultyTrack<T> diff, ChartFileReader reader)
             where T : struct, INote, IReadableFromDotChart
         {
             if (diff.IsOccupied())

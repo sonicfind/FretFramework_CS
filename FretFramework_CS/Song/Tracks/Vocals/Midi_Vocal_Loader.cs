@@ -37,7 +37,7 @@ namespace Framework.Song.Tracks.Vocals
             this.index = index;
         }
 
-        public bool Load(VocalTrack track, ref MidiFileReader reader)
+        public bool Load(VocalTrack track, MidiFileReader reader)
         {
             if (!track[index].IsEmpty())
                 return false;

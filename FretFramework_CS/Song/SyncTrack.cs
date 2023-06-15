@@ -15,7 +15,7 @@ namespace Framework.Song
         public readonly TimedFlatMap<TimeSig> timeSigs = new();
         public SyncTrack() {}
 
-        public void AddFromMidi(ref MidiFileReader reader)
+        public void AddFromMidi(MidiFileReader reader)
         {
             while (reader.TryParseEvent())
             {
@@ -32,7 +32,7 @@ namespace Framework.Song
             }
         }
 
-        public void AddFromDotChart(ref ChartFileReader reader)
+        public void AddFromDotChart(ChartFileReader reader)
         {
             while (reader.IsStillCurrentTrack())
             {
