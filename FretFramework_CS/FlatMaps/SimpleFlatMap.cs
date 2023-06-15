@@ -1,4 +1,5 @@
 ﻿using Framework.Song.Tracks.Notes.Keys;
+using Framework.Types;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -14,15 +15,6 @@ using System.Threading.Tasks;
 
 namespace Framework.FlatMaps
 {
-    internal unsafe static class Copier
-    {
-        [DllImport("msvcrt.dll", EntryPoint = "memcpy", CallingConvention = CallingConvention.Cdecl, SetLastError = false)]
-        public static extern IntPtr MemCpy(void* dest, void* src, UIntPtr count);
-
-        [DllImport("msvcrt.dll", EntryPoint = "memmove", CallingConvention = CallingConvention.Cdecl, SetLastError = false)]
-        public static extern IntPtr MemMove(void* dest, void* src, UIntPtr count);
-    }
-
     public unsafe class SimpleFlatMap<Key, T> : IDisposable
        where T : new()
        where Key : IComparable<Key>, IEquatable<Key>
