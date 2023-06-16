@@ -11,6 +11,8 @@ namespace Framework.Hashes
     public unsafe struct SHA1Wrapper : IComparable<SHA1Wrapper>, IEquatable<SHA1Wrapper>
     {
         private fixed byte _hash[20];
+
+        public SHA1Wrapper() { }
         public SHA1Wrapper(byte[] hash)
         {
             fixed(byte* src = hash, dst = _hash)
@@ -50,6 +52,8 @@ namespace Framework.Hashes
     public unsafe struct MD5Wrapper : IComparable<MD5Wrapper>, IEquatable<MD5Wrapper>
     {
         private fixed byte _hash[16];
+
+        public MD5Wrapper() { }
         public MD5Wrapper(byte[] hash)
         {
             fixed (byte* src = hash, dst = _hash)
