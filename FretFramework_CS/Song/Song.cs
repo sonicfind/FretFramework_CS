@@ -220,7 +220,6 @@ namespace Framework.Song
                     }
                 }
             }
-            reader.Dispose();
             m_tracks.FinalizeProKeys();
         }
 
@@ -284,8 +283,6 @@ namespace Framework.Song
                 else
                     legacy.Transfer(m_tracks.drums_4pro);
             }
-
-            reader.Dispose();
         }
 
         private void ParseHeaderTrack(Dictionary<string, ModifierNode> list, ChartFileReader reader)

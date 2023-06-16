@@ -11,8 +11,8 @@ namespace Framework.Types
     public unsafe class PointerHandler : IDisposable
     {
         private byte* data = null;
+        private bool disposedValue;
         public readonly int length;
-        private bool disposed;
 
         public PointerHandler(int length)
         {
@@ -37,13 +37,23 @@ namespace Framework.Types
             return ptr;
         }
 
-        ~PointerHandler() { if (!disposed && data != null) Marshal.FreeHGlobal((IntPtr)data); }
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                Marshal.FreeHGlobal((IntPtr)data);
+                disposedValue = true;
+            }
+        }
+
+        ~PointerHandler()
+        {
+            Dispose(disposing: false);
+        }
+
         public void Dispose()
         {
-            if (!disposed)
-                return;
-            Marshal.FreeHGlobal((IntPtr)data);
-            disposed = true;
+            Dispose(disposing: true);
             GC.SuppressFinalize(this);
         }
     }
