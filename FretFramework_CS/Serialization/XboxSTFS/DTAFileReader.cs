@@ -323,7 +323,7 @@ namespace Framework.Serialization.XboxSTFS
                             }
                             break;
                         }
-                    case "song_id": SongID = reader.ReadUInt32(); break;
+                    case "song_id": SongID = reader.ExtractText(); break;
                     case "rating": Rating = reader.ReadUInt32(); break;
                     case "short_version": ShortVersion = reader.ReadUInt32(); break;
                     case "album_art": HasAlbumArt = reader.ReadBoolean(); break;
@@ -707,6 +707,8 @@ namespace Framework.Serialization.XboxSTFS
         public string Charter { get; private set; } = string.Empty;
         public string Source { get; private set; } = string.Empty;
         public string Encoding { get; private set; } = string.Empty;
+
+        public string SongID { get; private set; } = string.Empty;
         public string VocalPercBank { get; private set; } = string.Empty;
         public string DrumBank { get; private set; } = string.Empty;
         public string BandFailCue { get; private set; } = string.Empty;
@@ -715,7 +717,6 @@ namespace Framework.Serialization.XboxSTFS
         public string Downloaded { get; private set; } = string.Empty;
         public string Packname { get; private set; } = string.Empty;
 
-        public uint SongID { get; private set; } = uint.MaxValue;
         public uint Year_Released { get; private set; } = uint.MaxValue;
         public uint Year_Recorded { get; private set; } = uint.MaxValue;
         public ushort AlbumTrack { get; private set; } = ushort.MaxValue;
