@@ -20,9 +20,9 @@ namespace Framework.Serialization.XboxSTFS
         public int Size { get; init; }
         public int LastWrite { get; init; }
 
-        public FileListing(ReadOnlySpan<byte> data)
+        public unsafe FileListing(byte* data)
         {
-            Filename = Encoding.UTF8.GetString(data.ToArray(), 0, 0x28).TrimEnd('\0');
+            Filename = Encoding.UTF8.GetString(data, 0x28).TrimEnd('\0');
             Flags = data[0x28];
 
             NumBlocks = BitConverter.ToInt32(new byte[4] { data[0x29], data[0x2A], data[0x2B], 0x00 });
@@ -34,7 +34,7 @@ namespace Framework.Serialization.XboxSTFS
 
         public void SetParentDirectory(string parentDirectory)
         {
-            Filename = Path.Combine(parentDirectory, Filename);
+            Filename = parentDirectory + "/" + Filename;
         }
 
         public FileListing() { }
@@ -103,10 +103,11 @@ namespace Framework.Serialization.XboxSTFS
 
         private void ParseFileList(int firstBlock, int length)
         {
-            byte[] fileListingBuffer = ReadContiguousBlocks(firstBlock, length);
+            using PointerHandler fileListingBuffer = ReadContiguousBlocks(firstBlock, length);
+            byte* ptr = fileListingBuffer.GetData();
             for (int i = 0; i < length; i += 0x40)
             {
-                FileListing listing = new(new ReadOnlySpan<byte>(fileListingBuffer, i, 0x40));
+                FileListing listing = new(ptr + i);
                 if (listing.Filename.Length == 0)
                     break;
 
@@ -126,38 +127,21 @@ namespace Framework.Serialization.XboxSTFS
 
         public FileListing this[int index] { get { return files[index]; } }
 
-        public byte[] LoadSubFile(string filename)
+        public PointerHandler? LoadSubFile(string filename)
         {
             for (int i = 0; i < files.Count; ++i)
                 if (filename == files[i].Filename)
                     return Load(files[i]);
             Debug.WriteLine("File " + filename + " does not exist in CON and thus could not be loaded");
-            return Array.Empty<byte>();
-        }
-
-        public byte[] LoadSubFile(int index)
-        {
-            if (index < 0 || index >= files.Count)
-                return Array.Empty<byte>();
-
-            return Load(files[index]);
-        }
-
-        public PointerHandler? LoadSubFile_unsafe(string filename)
-        {
-            for (int i = 0; i < files.Count; ++i)
-                if (filename == files[i].Filename)
-                    return Load_unsafe(files[i]);
-            Debug.WriteLine("File " + filename + " does not exist in CON and thus could not be loaded");
             return null;
         }
 
-        public PointerHandler? LoadSubFile_unsafe(int index)
+        public PointerHandler? LoadSubFile(int index)
         {
             if (index < 0 || index >= files.Count)
                 return null;
 
-            return Load_unsafe(files[index]);
+            return Load(files[index]);
         }
 
         public bool IsMoggUnencrypted(int index)
@@ -178,7 +162,7 @@ namespace Framework.Serialization.XboxSTFS
             }
         }
 
-        private byte[] Load(FileListing listing)
+        private PointerHandler Load(FileListing listing)
         {
             Debug.Assert(!listing.IsDirectory(), "Directory listing cannot be loaded as a file");
             try
@@ -194,111 +178,12 @@ namespace Framework.Serialization.XboxSTFS
             }
         }
 
-        private PointerHandler Load_unsafe(FileListing listing)
-        {
-            Debug.Assert(!listing.IsDirectory(), "Directory listing cannot be loaded as a file");
-            try
-            {
-                if (listing.IsContiguous())
-                    return ReadContiguousBlocks_unsafe(listing.FirstBlock, listing.Size);
-                else
-                    return ReadSplitBlocks_unsafe(listing.FirstBlock, listing.Size);
-            }
-            catch (Exception e)
-            {
-                throw new Exception(Filename + ": " + e.Message);
-            }
-        }
-
         internal const int BYTES_PER_BLOCK = 0x1000;
         internal const int BLOCKS_PER_SECTION = 170;
         internal const int BYTES_PER_SECTION = BLOCKS_PER_SECTION * BYTES_PER_BLOCK;
         internal const int NUM_BLOCKS_SQUARED = BLOCKS_PER_SECTION * BLOCKS_PER_SECTION;
 
-        private byte[] ReadContiguousBlocks(int blockNum, int fileSize)
-        {
-            byte[] data = new byte[fileSize];
-            long skipVal = BYTES_PER_BLOCK << shift;
-            int threshold = blockNum - (blockNum % NUM_BLOCKS_SQUARED) + NUM_BLOCKS_SQUARED;
-            int numBlocks = BLOCKS_PER_SECTION - (blockNum % BLOCKS_PER_SECTION);
-            int readSize = BYTES_PER_BLOCK * numBlocks;
-            int offset = 0;
-
-            lock (fileLock)
-            {
-                stream.Seek(0xC000 + (long)CalculateBlockNum(blockNum) * BYTES_PER_BLOCK, SeekOrigin.Begin);
-                while (true)
-                {
-                    if (readSize > fileSize - offset)
-                        readSize = fileSize - offset;
-
-                    if (stream.Read(data, offset, readSize) != readSize)
-                        throw new Exception("Read error in CON-like subfile - Type: Contiguous");
-
-                    offset += readSize;
-                    if (offset == fileSize)
-                        break;
-
-                    blockNum += numBlocks;
-                    numBlocks = BLOCKS_PER_SECTION;
-                    readSize = BYTES_PER_SECTION;
-
-                    int seekCount = 1;
-                    if (blockNum == BLOCKS_PER_SECTION)
-                        seekCount = 2;
-                    else if (blockNum == threshold)
-                    {
-                        if (blockNum == NUM_BLOCKS_SQUARED)
-                            seekCount = 2;
-                        ++seekCount;
-                        threshold += NUM_BLOCKS_SQUARED;
-                    }
-
-                    stream.Seek(seekCount * skipVal, SeekOrigin.Current);
-                }
-            }
-            return data;
-        }
-
-        private byte[] ReadSplitBlocks(int blockNum, int fileSize)
-        {
-            byte[] data = new byte[fileSize];
-            byte[] buffer = new byte[3];
-
-            int offset = 0;
-            while (true)
-            {
-                int block = CalculateBlockNum(blockNum);
-                long blockLocation = 0xC000 + (long)block * BYTES_PER_BLOCK;
-                int readSize = BYTES_PER_BLOCK;
-                if (readSize > fileSize - offset)
-                    readSize = fileSize - offset;
-
-                lock (fileLock)
-                {
-                    stream.Seek(blockLocation, SeekOrigin.Begin);
-                    if (stream.Read(data, offset, readSize) != readSize)
-                        throw new Exception("Pre-Read error in CON-like subfile - Type: Split");
-                }
-
-                offset += readSize;
-                if (offset == fileSize)
-                    break;
-
-                long hashlocation = blockLocation - ((long)(blockNum % BLOCKS_PER_SECTION) * 4072 + 4075);
-                lock (fileLock)
-                {
-                    stream.Seek(hashlocation, SeekOrigin.Begin);
-                    if (stream.Read(buffer, 0, 3) != 3)
-                        throw new Exception("Post-Read error in CON-like subfile - Type: Split");
-                }
-
-                blockNum = buffer[0] << 16 | buffer[1] << 8 | buffer[2];
-            }
-            return data;
-        }
-
-        private PointerHandler ReadContiguousBlocks_unsafe(int blockNum, int fileSize)
+        private PointerHandler ReadContiguousBlocks(int blockNum, int fileSize)
         {
             PointerHandler ptr = new(fileSize);
             byte* data = ptr.GetData();
@@ -344,7 +229,7 @@ namespace Framework.Serialization.XboxSTFS
             return ptr;
         }
 
-        private PointerHandler ReadSplitBlocks_unsafe(int blockNum, int fileSize)
+        private PointerHandler ReadSplitBlocks(int blockNum, int fileSize)
         {
             PointerHandler ptr = new(fileSize);
             byte* data = ptr.GetData();
