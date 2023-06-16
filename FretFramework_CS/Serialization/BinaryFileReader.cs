@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Framework.Types;
+using System;
 using System.Buffers.Binary;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
@@ -20,9 +21,10 @@ namespace Framework.Serialization
         private int boundaryIndex = 0;
         private readonly int* boundaries;
         private int currentBoundary;
-        private bool disposed = false;
 
         private int _position;
+        private bool disposedValue;
+        private readonly bool disposeFile = false;
 
         public int Position
         {
@@ -30,7 +32,7 @@ namespace Framework.Serialization
             set
             {
                 if (value > boundaries[boundaryIndex])
-                    throw new ArgumentOutOfRangeException("value");
+                    throw new ArgumentOutOfRangeException("Position");
                 _position = value;
             }
         }
@@ -42,28 +44,32 @@ namespace Framework.Serialization
             boundaries = (int*)Marshal.AllocHGlobal(sizeof(int) * 8);
             currentBoundary = boundaries[0] = file.Length;
         }
-        public BinaryFileReader(byte[] data) : this(new FrameworkFile_Handle(data)) {}
-        public BinaryFileReader(string path) : this(new FrameworkFile_Alloc(path)) {}
 
-        private void Dispose(bool disposing)
+        public BinaryFileReader(byte[] data) : this(new FrameworkFile_Handle(data)) { disposeFile = true; }
+
+        public BinaryFileReader(string path) : this(new FrameworkFile_Alloc(path)) { disposeFile = true; }
+
+        public BinaryFileReader(PointerHandler handler, bool dispose = false) : this(new FrameworkFile_Pointer(handler, dispose)) { disposeFile = true; }
+
+        protected virtual void Dispose(bool disposing)
         {
-            if (!disposed)
+            if (!disposedValue)
             {
-                if (disposing)
-                {
-                    if (file is FrameworkFile_Handle handle)
-                        handle.Dispose();
-                    else if (file is FrameworkFile_Alloc alloc)
-                        alloc.Dispose();
-                }
+                if (disposeFile)
+                    file.Dispose();
                 Marshal.FreeHGlobal((IntPtr)boundaries);
+                disposedValue = true;
             }
-            disposed = true;
+        }
+
+        ~BinaryFileReader()
+        {
+            Dispose(disposing: false);
         }
 
         public void Dispose()
         {
-            Dispose(true);
+            Dispose(disposing: true);
             GC.SuppressFinalize(this);
         }
 
@@ -330,5 +336,5 @@ namespace Framework.Serialization
             _position += length;
             return span;
         }
-    };
+    }
 }

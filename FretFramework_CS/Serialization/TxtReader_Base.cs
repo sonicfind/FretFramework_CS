@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -9,7 +10,7 @@ namespace Framework.Serialization
     public unsafe abstract class TxtReader_Base : IDisposable
     {
         public readonly FrameworkFile file;
-
+        private readonly bool disposeFile;
         protected int _position;
 
         public int Position
@@ -33,19 +34,16 @@ namespace Framework.Serialization
 
         public byte* CurrentPtr { get { return file.ptr + _position; } }
 
-        public TxtReader_Base(FrameworkFile file)
+        protected TxtReader_Base(FrameworkFile file, bool disposeFile)
         {
             this.file = file;
+            this.disposeFile = disposeFile;
         }
-        public TxtReader_Base(byte[] data) : this(new FrameworkFile_Handle(data)) { }
-        public TxtReader_Base(string path) : this(new FrameworkFile_Alloc(path)) { }
 
         public void Dispose()
         {
-            if (file is FrameworkFile_Handle handle)
-                handle.Dispose();
-            else if (file is FrameworkFile_Alloc alloc)
-                alloc.Dispose();
+            if (disposeFile)
+                file.Dispose();
             GC.SuppressFinalize(this);
         }
 

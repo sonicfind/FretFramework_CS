@@ -58,25 +58,32 @@ namespace Framework.Serialization
         private MidiEvent m_event;
         private int m_runningOffset;
 
-        private readonly byte m_multiplierNote = 116;
+        private readonly byte m_multiplierNote;
         private readonly BinaryFileReader m_reader;
+        private bool disposeReader = false;
 
-        public MidiFileReader(FrameworkFile file)
+        public MidiFileReader(BinaryFileReader reader, byte multiplierNote = 116)
         {
-            m_reader = new BinaryFileReader(file);
+            m_reader = reader;
+            m_multiplierNote = multiplierNote;
             ProcessHeaderChunk();
         }
 
-        public MidiFileReader(byte[] data) : this(new FrameworkFile_Handle(data)) {}
-        public MidiFileReader(string path) : this(new FrameworkFile_Alloc(path)) {}
-        public MidiFileReader(string path, byte multiplierNote) : this(path)
-        {
-            m_multiplierNote = multiplierNote;
-        }
+        public MidiFileReader(FrameworkFile file, byte multiplierNote = 116) : this(new BinaryFileReader(file), multiplierNote) { disposeReader = true; }
+
+        public MidiFileReader(byte[] data, byte multiplierNote = 116) : this(new BinaryFileReader(data), multiplierNote) { disposeReader = true; }
+
+        public MidiFileReader(string path, byte multiplierNote = 116) : this(new BinaryFileReader(path), multiplierNote) { disposeReader = true; }
+
+        public MidiFileReader(PointerHandler handler, bool dispose = false, byte multiplierNote = 116) : this(new BinaryFileReader(handler, dispose), multiplierNote) { disposeReader = true; }
 
         public void Dispose()
         {
-            m_reader.Dispose();
+            if (disposeReader)
+            {
+                m_reader.Dispose();
+                disposeReader = false;
+            }
             GC.SuppressFinalize(this);
         }
 

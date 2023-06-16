@@ -10,28 +10,30 @@ using System.Threading.Tasks;
 
 namespace Framework.Serialization
 {
-    public unsafe class FrameworkFile
+    public unsafe abstract class FrameworkFile : IDisposable
     {
         public byte* ptr;
+        protected bool disposedValue;
+
         public int Length { get; init; }
-
-        protected FrameworkFile() { }
-
-        public FrameworkFile(PointerHandler ptr)
-        {
-            this.ptr = ptr.GetData();
-            Length = ptr.length;
-        }
 
         public byte[] GetMD5() { return MD5.HashData(new ReadOnlySpan<byte>(ptr, Length)); }
         public byte[] CalcSHA1() { return SHA1.HashData(new ReadOnlySpan<byte>(ptr, Length)); }
+
+        protected abstract void Dispose(bool disposing);
+
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
+        }
     }
 
-    public unsafe class FrameworkFile_Handle : FrameworkFile, IDisposable
+    public unsafe class FrameworkFile_Handle : FrameworkFile
     {
         private readonly byte[] buffer;
         private readonly GCHandle handle;
-        private bool disposed;
 
         public FrameworkFile_Handle(byte[] data)
         {
@@ -41,20 +43,20 @@ namespace Framework.Serialization
             Length = data.Length;
         }
 
-        ~FrameworkFile_Handle() { handle.Free(); }
+        ~FrameworkFile_Handle() { Dispose(false); }
 
-        public void Dispose()
+        protected override void Dispose(bool disposing)
         {
-            if (disposed) return;
-            handle.Free();
-            disposed = true;
-            GC.SuppressFinalize(this);
+            if (!disposedValue)
+            {
+                handle.Free();
+                disposedValue = true;
+            }
         }
     }
 
-    public unsafe class FrameworkFile_Alloc : FrameworkFile, IDisposable
+    public unsafe class FrameworkFile_Alloc : FrameworkFile
     {
-        private bool disposed;
         public FrameworkFile_Alloc(string path)
         {
             FileStream fs = File.OpenRead(path);
@@ -64,14 +66,36 @@ namespace Framework.Serialization
             fs.Read(new Span<byte>(ptr, length));
         }
 
-        ~FrameworkFile_Alloc() { Marshal.FreeHGlobal((IntPtr)ptr); }
+        ~FrameworkFile_Alloc() { Dispose(false); }
 
-        public void Dispose()
+        protected override void Dispose(bool disposing)
         {
-            if (disposed) return;
-            Marshal.FreeHGlobal((IntPtr)ptr);
-            disposed = true;
-            GC.SuppressFinalize(this);
+            if (!disposedValue)
+            {
+                Marshal.FreeHGlobal((IntPtr)ptr);
+                disposedValue = true;
+            }
+        }
+    }
+
+    public unsafe class FrameworkFile_Pointer : FrameworkFile
+    {
+        private readonly PointerHandler handler;
+        public FrameworkFile_Pointer(PointerHandler handler, bool dispose = false)
+        {
+            this.handler = handler;
+            this.ptr = handler.GetData();
+            Length = handler.length;
+            disposedValue= !dispose;
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                handler.Dispose();
+                disposedValue = true;
+            }
         }
     }
 }

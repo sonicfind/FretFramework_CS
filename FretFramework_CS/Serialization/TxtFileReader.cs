@@ -14,7 +14,8 @@ namespace Framework.Serialization
     public unsafe class TxtFileReader : TxtReader_Base
     {
         internal static readonly byte[] BOM = { 0xEF, 0xBB, 0xBF };
-        public TxtFileReader(FrameworkFile file) : base(file)
+
+        private TxtFileReader(FrameworkFile file, bool disposeFile) : base(file, disposeFile)
         {
             if (new ReadOnlySpan<byte>(file.ptr, 3).SequenceEqual(BOM))
                 _position += 3;
@@ -24,9 +25,14 @@ namespace Framework.Serialization
             if (file.ptr[_position] == '\n')
                 GotoNextLine();
         }
-        public TxtFileReader(byte[] data) : this(new FrameworkFile_Handle(data)) { }
-        public TxtFileReader(string path) : this(new FrameworkFile_Alloc(path)) { }
 
+        public TxtFileReader(FrameworkFile file) : this(file, false) { }
+
+        public TxtFileReader(byte[] data) : this(new FrameworkFile_Handle(data), true) { }
+
+        public TxtFileReader(string path) : this(new FrameworkFile_Alloc(path), true) { }
+
+        public TxtFileReader(PointerHandler pointer, bool dispose = false) : this(new FrameworkFile_Pointer(pointer, dispose), true) { }
 
         public override void SkipWhiteSpace()
         {

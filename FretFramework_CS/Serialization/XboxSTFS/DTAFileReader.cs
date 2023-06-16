@@ -16,14 +16,17 @@ namespace Framework.Serialization.XboxSTFS
 {
     public unsafe class DTAFileReader : TxtReader_Base
     {
-        private List<int> nodeEnds = new();
-        public DTAFileReader(FrameworkFile file) : base(file)
-        {
-            SkipWhiteSpace();
-        }
-        public DTAFileReader(byte[] data) : this(new FrameworkFile_Handle(data)) { }
-        public DTAFileReader(string path) : this(new FrameworkFile_Alloc(path)) { }
-        public DTAFileReader(PointerHandler ptr) : this(new FrameworkFile(ptr)) { }
+        private readonly List<int> nodeEnds = new();
+
+        private DTAFileReader(FrameworkFile file, bool disposeFile) : base(file, disposeFile) { SkipWhiteSpace(); }
+
+        public DTAFileReader(FrameworkFile file) : this(file, false) { }
+
+        public DTAFileReader(byte[] data) : this(new FrameworkFile_Handle(data), true) { }
+
+        public DTAFileReader(string path) : this(new FrameworkFile_Alloc(path), true) { }
+
+        public DTAFileReader(PointerHandler pointer, bool dispose = false) : this(new FrameworkFile_Pointer(pointer, dispose), true) { }
 
         public override void SkipWhiteSpace()
         {
@@ -241,19 +244,7 @@ namespace Framework.Serialization.XboxSTFS
 
     public unsafe struct DTAFileNode
     {
-        public static List<DTAFileNode> GetNodes(string path)
-        {
-            using DTAFileReader reader = new(path);
-            return GetNodes(reader);
-        }
-
-        public static List<DTAFileNode> GetNodes(PointerHandler ptr)
-        {
-            using DTAFileReader reader = new(ptr);
-            return GetNodes(reader);
-        }
-
-        private static List<DTAFileNode> GetNodes(DTAFileReader reader)
+        public static List<DTAFileNode> GetNodes(DTAFileReader reader)
         {
             List<DTAFileNode> nodes = new();
             while (reader.StartNode())

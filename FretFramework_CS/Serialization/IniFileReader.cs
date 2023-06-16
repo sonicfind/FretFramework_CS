@@ -1,4 +1,5 @@
 ﻿using Framework.Modifiers;
+using Framework.Types;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,15 +14,27 @@ namespace Framework.Serialization
     public unsafe class IniFileReader : IDisposable
     {
         private readonly TxtFileReader reader;
+        private bool disposeReader = false;
         private string sectionName = string.Empty;
         public string Section { get { return sectionName; } }
-        public IniFileReader(FrameworkFile file) { reader = new TxtFileReader(file); }
-        public IniFileReader(byte[] data) : this(new FrameworkFile_Handle(data)) { }
-        public IniFileReader(string path) : this(new FrameworkFile_Alloc(path)) { }
+
+        public IniFileReader(TxtFileReader reader) { this.reader = reader; }
+
+        public IniFileReader(FrameworkFile file) : this(new TxtFileReader(file)) { disposeReader = true; }
+
+        public IniFileReader(byte[] data) : this(new TxtFileReader(data)) { disposeReader = true; }
+
+        public IniFileReader(string path) : this(new TxtFileReader(path)) { disposeReader = true; }
+
+        public IniFileReader(PointerHandler handler, bool dispose = false) : this(new TxtFileReader(handler, dispose)) { disposeReader = true; }
 
         public void Dispose()
         {
-            reader.Dispose();
+            if (disposeReader)
+            {
+                reader.Dispose();
+                disposeReader = false;
+            }
             GC.SuppressFinalize(this);
         }
 

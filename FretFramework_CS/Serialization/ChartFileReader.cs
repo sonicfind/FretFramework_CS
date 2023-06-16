@@ -100,18 +100,29 @@ namespace Framework.Serialization
         internal const double TEMPO_FACTOR = 60000000000;
 
         private readonly TxtFileReader reader;
+        private bool disposeReader = false;
         private EventCombo[] eventSet = Array.Empty<EventCombo>();
         private ulong tickPosition = 0;
         public NoteTracks_Chart Instrument { get; private set; }
         public int Difficulty { get; private set; }
 
-        public ChartFileReader(FrameworkFile file) { reader = new TxtFileReader(file); }
-        public ChartFileReader(byte[] data) : this(new FrameworkFile_Handle(data)) { }
-        public ChartFileReader(string path) : this(new FrameworkFile_Alloc(path)) { }
+        public ChartFileReader(TxtFileReader reader) { this.reader = reader; }
+
+        public ChartFileReader(FrameworkFile file) : this(new TxtFileReader(file)) { disposeReader = true; }
+
+        public ChartFileReader(byte[] data) : this(new TxtFileReader(data)) { disposeReader = true; }
+
+        public ChartFileReader(string path) : this(new TxtFileReader(path)) { disposeReader = true; }
+
+        public ChartFileReader(PointerHandler handler, bool dispose = false) : this(new TxtFileReader(handler, dispose)) { disposeReader = true; }
 
         public void Dispose()
         {
-            reader.Dispose();
+            if (disposeReader)
+            {
+                reader.Dispose();
+                disposeReader = false;
+            }
             GC.SuppressFinalize(this);
         }
 
