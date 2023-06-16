@@ -56,6 +56,7 @@ namespace Framework.Serialization
         private ushort m_trackCount = 0;
 
         private MidiEvent m_event;
+        private MidiEventType m_midiEvent = MidiEventType.Reset_Or_Meta;
         private int m_runningOffset;
 
         private readonly byte m_multiplierNote;
@@ -127,8 +128,9 @@ namespace Framework.Serialization
             MidiEventType type = (MidiEventType)tmp;
             if (type < MidiEventType.Note_Off)
             {
-                if (m_event.type < MidiEventType.Note_Off || m_event.type >= MidiEventType.SysEx)
+                if (m_midiEvent == MidiEventType.Reset_Or_Meta)
                     throw new Exception("Invalid running event");
+                m_event.type = m_midiEvent;
                 m_reader.EnterSection(m_runningOffset);
             }
             else
@@ -137,8 +139,8 @@ namespace Framework.Serialization
                 if (type < MidiEventType.SysEx)
                 {
                     m_event.channel = (byte)(tmp & 15);
-                    m_event.type = (MidiEventType)(tmp & 240);
-                    m_runningOffset = m_event.type switch
+                    m_midiEvent = (MidiEventType)(tmp & 240);
+                    m_runningOffset = m_midiEvent switch
                     {
                         MidiEventType.Note_On => 2,
                         MidiEventType.Note_Off => 2,
@@ -147,6 +149,7 @@ namespace Framework.Serialization
                         MidiEventType.Pitch_Wheel => 2,
                         _ => 1
                     };
+                    m_event.type = m_midiEvent;
                     m_reader.EnterSection(m_runningOffset);
                 }
                 else
