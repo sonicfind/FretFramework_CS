@@ -242,7 +242,7 @@ namespace Framework.Serialization.XboxSTFS
         }
     };
 
-    public unsafe struct DTAFileNode
+    public unsafe class DTAFileNode
     {
         public static List<DTAFileNode> GetNodes(DTAFileReader reader)
         {
@@ -747,11 +747,11 @@ namespace Framework.Serialization.XboxSTFS
         private DTARanks _ranks;
         public DTARanks Ranks { get; }
 
-        private List<string>? soloes;
-        private List<string>? videoVenues;
+        private readonly List<string>? soloes;
+        private readonly List<string>? videoVenues;
 
-        private fixed short realGuitarTuning[6];
-        private fixed short realBassTuning[4];
+        private readonly short[] realGuitarTuning = new short[6];
+        private readonly short[] realBassTuning = new short[4];
 
         public string Location { get; private set; } = string.Empty;
         
