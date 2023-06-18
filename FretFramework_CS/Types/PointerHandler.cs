@@ -28,7 +28,8 @@ namespace Framework.Types
 
         public byte* GetData() { return data; }
 
-        public ReadOnlySpan<byte> AsSpan() { return new(data, length); }
+        public ReadOnlySpan<byte> AsReadOnlySpan() { return new(data, length); }
+        public Span<byte> AsSpan() { return new(data, length); }
 
         public byte* Release()
         {
