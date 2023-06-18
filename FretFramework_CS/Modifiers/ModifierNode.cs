@@ -43,10 +43,10 @@ namespace Framework.Modifiers
             {
                 switch (type)
                 {
-                    case ModifierNodeType.SORTSTRING:       return new(new SortString(reader.ExtractUTF8String(false)));
-                    case ModifierNodeType.SORTSTRING_CHART: return new(new SortString(reader.ExtractUTF8String(true)));
-                    case ModifierNodeType.STRING:           return new(reader.ExtractUTF8String(false));
-                    case ModifierNodeType.STRING_CHART:     return new(reader.ExtractUTF8String(true));
+                    case ModifierNodeType.SORTSTRING:       return new(new SortString(reader.ExtractEncodedString(false)));
+                    case ModifierNodeType.SORTSTRING_CHART: return new(new SortString(reader.ExtractEncodedString(true)));
+                    case ModifierNodeType.STRING:           return new(reader.ExtractEncodedString(false));
+                    case ModifierNodeType.STRING_CHART:     return new(reader.ExtractEncodedString(true));
                     case ModifierNodeType.UINT64:           return new(reader.ReadUInt64());
                     case ModifierNodeType.INT64:            return new(reader.ReadInt64());
                     case ModifierNodeType.UINT32:           return new(reader.ReadUInt32());

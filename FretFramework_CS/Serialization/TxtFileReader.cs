@@ -14,6 +14,8 @@ namespace Framework.Serialization
     public unsafe class TxtFileReader : TxtReader_Base
     {
         internal static readonly byte[] BOM = { 0xEF, 0xBB, 0xBF };
+        internal static readonly UTF8Encoding UTF8 = new(true, true);
+        static TxtFileReader() { }
 
         private TxtFileReader(FrameworkFile file, bool disposeFile) : base(file, disposeFile)
         {
@@ -108,9 +110,20 @@ namespace Framework.Serialization
             return new(file.ptr + boundaries.Item1, boundaries.Item2 - boundaries.Item1);
         }
 
-        public string ExtractUTF8String(bool checkForQuotes = true)
+        public string ExtractEncodedString(bool checkForQuotes = true)
         {
-            return Encoding.UTF8.GetString(ExtractTextSpan(checkForQuotes));
+            var span = ExtractTextSpan(checkForQuotes);
+            try
+            {
+                return UTF8.GetString(span);
+            }
+            catch
+            {
+                char[] str = new char[span.Length];
+                for (int i = 0; i < span.Length; ++i)
+                    str[i] = (char)span[i];
+                return new(str);
+            }
         }
 
         public string ExtractModifierName()
