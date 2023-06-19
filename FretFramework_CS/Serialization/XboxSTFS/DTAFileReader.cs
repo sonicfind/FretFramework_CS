@@ -213,7 +213,7 @@ namespace Framework.Serialization.XboxSTFS
         }
     };
 
-    public struct DTARanks
+    public class DTARanks
     {
         public ushort guitar5 = ushort.MaxValue;
         public ushort bass5 = ushort.MaxValue;
@@ -226,7 +226,6 @@ namespace Framework.Serialization.XboxSTFS
         public ushort drum4_pro = ushort.MaxValue;
         public ushort real_keys = ushort.MaxValue;
         public ushort band = ushort.MaxValue;
-        public DTARanks() { }
     };
 
     public unsafe struct DTAAudio
@@ -288,7 +287,11 @@ namespace Framework.Serialization.XboxSTFS
                         PreviewStart = reader.ReadUInt32();
                         PreviewEnd = reader.ReadUInt32();
                         break;
-                    case "rank": RankLoop(ref reader); break;
+                    case "rank":
+                        {
+                            ranks = new();
+                            RankLoop(ref reader); break;
+                        }
                     case "solo":
                         {
                             soloes = new();
@@ -676,22 +679,22 @@ namespace Framework.Serialization.XboxSTFS
                 switch (reader.GetNameOfNode())
                 {
                     case "drum":
-                    case "drums": _ranks.drum4_pro = reader.ReadUInt16(); break;
-                    case "guitar": _ranks.guitar5 = reader.ReadUInt16(); break;
-                    case "bass": _ranks.bass5 = reader.ReadUInt16(); break;
-                    case "vocals": _ranks.vocals = reader.ReadUInt16(); break;
-                    case "keys": _ranks.keys = reader.ReadUInt16(); break;
+                    case "drums": ranks!.drum4_pro = reader.ReadUInt16(); break;
+                    case "guitar": ranks!.guitar5 = reader.ReadUInt16(); break;
+                    case "bass": ranks!.bass5 = reader.ReadUInt16(); break;
+                    case "vocals": ranks!.vocals = reader.ReadUInt16(); break;
+                    case "keys": ranks!.keys = reader.ReadUInt16(); break;
                     case "realGuitar":
-                    case "real_guitar": _ranks.real_guitar = reader.ReadUInt16(); break;
+                    case "real_guitar": ranks!.real_guitar = reader.ReadUInt16(); break;
                     case "realBass":
-                    case "real_bass": _ranks.real_bass = reader.ReadUInt16(); break;
+                    case "real_bass": ranks!.real_bass = reader.ReadUInt16(); break;
                     case "realKeys":
-                    case "real_keys": _ranks.real_keys = reader.ReadUInt16(); break;
+                    case "real_keys": ranks!.real_keys = reader.ReadUInt16(); break;
                     case "realDrums":
-                    case "real_drums": _ranks.drum4_pro = reader.ReadUInt16(); break;
+                    case "real_drums": ranks!.drum4_pro = reader.ReadUInt16(); break;
                     case "harmVocals":
-                    case "vocal_harm": _ranks.harmony = reader.ReadUInt16(); break;
-                    case "band": _ranks.band = reader.ReadUInt16(); break;
+                    case "vocal_harm": ranks!.harmony = reader.ReadUInt16(); break;
+                    case "band": ranks!.band = reader.ReadUInt16(); break;
                 }
                 reader.EndNode();
             }
@@ -744,8 +747,7 @@ namespace Framework.Serialization.XboxSTFS
         public uint PreviewStart { get; private set; } = uint.MaxValue;
         public uint PreviewEnd { get; private set; } = uint.MaxValue;
 
-        private DTARanks _ranks;
-        public DTARanks Ranks { get; }
+        public readonly DTARanks? ranks;
 
         private readonly List<string>? soloes;
         private readonly List<string>? videoVenues;
