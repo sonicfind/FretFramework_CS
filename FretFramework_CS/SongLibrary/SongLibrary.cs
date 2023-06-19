@@ -100,7 +100,7 @@ namespace Framework.Library
                 ref var chart = ref charts[i];
                 if (chart.Item1 != null)
                 {
-                    SongEntry.SongEntry entry = new();
+                    IniSongEntry entry = new();
                     if (ini != null)
                     {
                         try
