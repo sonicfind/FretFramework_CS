@@ -1,9 +1,12 @@
 ﻿using Framework.Hashes;
 using Framework.Serialization;
+using Framework.Serialization.XboxSTFS;
 using Framework.SongEntry;
+using Framework.SongEntry.ConEntry;
 using Framework.Types;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
@@ -11,12 +14,24 @@ using System.Threading.Tasks;
 
 namespace Framework.Library
 {
+    public class CONGroup
+    {
+        public CONFile File { get; init; }
+        private readonly List<CONEntry> entries = new();
+        private readonly object entryLock = new();
+        public int Count => entries.Count;
+
+        public CONGroup(CONFile file) { File = file; }
+        public void AddEntry(CONEntry entry) { lock (entryLock) entries.Add(entry); }
+    }
     public class SongLibrary
     {
         private readonly SortedDictionary<SHA1Wrapper, List<SongEntry.SongEntry>> m_songlist = new();
+        private readonly List<CONGroup> m_conGroups = new();
         private readonly HashSet<string> m_preScannedDirectories = new();
         private readonly object dirLock = new();
         private readonly object entryLock = new();
+        private readonly object basicLock = new();
 
         public int Count
         {
@@ -29,7 +44,7 @@ namespace Framework.Library
             }
         }
 
-        public void Clear() { m_songlist.Clear(); }
+        public void Clear() { m_songlist.Clear(); m_conGroups.Clear(); }
 
         public void RunFullScan(List<string> baseDirectories)
         {
@@ -54,32 +69,39 @@ namespace Framework.Library
             (FileInfo?, ChartType) [] charts = { new(null, ChartType.MID), new(null, ChartType.MID), new(null, ChartType.CHART) };
             FileInfo? ini = null;
             List<DirectoryInfo> subDirectories = new();
+            List<FileInfo> files = new();
+
             try
             {
-                foreach (FileSystemInfo file in directory.EnumerateFileSystemInfos())
+                foreach (FileSystemInfo info in directory.EnumerateFileSystemInfos())
                 {
-                    if ((file.Attributes & FileAttributes.Directory) > 0)
+                    string filename = info.Name;
+                    if ((info.Attributes & FileAttributes.Directory) > 0)
                     {
-                        subDirectories.Add((file as DirectoryInfo)!);
+                        subDirectories.Add((info as DirectoryInfo)!);
                         continue;
                     }
 
-                    string filename = file.Name;
+                    FileInfo file = (info as FileInfo)!;
                     if (filename == "song.ini")
                     {
-                        ini = file as FileInfo;
+                        ini = file;
                         continue;
                     }
 
+                    bool found = false;
                     for (int i = 0; i < 3; ++i)
                     {
                         if (filename == CHARTTYPES[i].Item1)
                         {
-                            charts[i].Item1 = file as FileInfo;
+                            charts[i].Item1 = file;
+                            found = true;
                             break;
                         }
                     }
 
+                    if (!found)
+                        files.Add(file);
                 }
             }
             catch (Exception e)
@@ -130,7 +152,59 @@ namespace Framework.Library
                 }
             }
 
+            Parallel.For(0, files.Count, i => ScanPossibleCON(files[i]));
             Parallel.For(0, subDirectories.Count, i => ScanDirectory(subDirectories[i]));
+        }
+
+        internal const string SongsFilePath = "songs/songs.dta";
+        private void ScanPossibleCON(FileInfo info)
+        {
+            if (!CONFile.LoadCON(info.FullName, out CONFile? conFile))
+                return;
+
+            PointerHandler? dtaFile = conFile!.LoadSubFile(SongsFilePath);
+            if (dtaFile == null)
+            {
+                Debug.WriteLine("DTA file was not located in CON");
+                return;
+            }
+
+            CONGroup group = new(conFile);
+            List<DTAFileNode> nodes;
+
+            try
+            {
+                using DTAFileReader reader = new(dtaFile, true);
+                nodes = DTAFileNode.GetNodes(reader);
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine($"Failed to parse songs.dta for `{info.FullName}`.");
+                Debug.WriteLine(e.Message);
+                return;
+            }
+
+            Parallel.For(0, nodes.Count, i =>
+            {
+                try
+                {
+                    var node = nodes[i];
+                    CONEntry currentSong = new(conFile, node);
+                    if (currentSong.Scan(out SHA1Wrapper hash))
+                    {
+                        if (AddEntry(hash, currentSong))
+                            group.AddEntry(currentSong);
+                    }
+                }
+                catch (Exception e)
+                {
+                    Debug.WriteLine($"Failed to load song, skipping...");
+                    Debug.WriteLine(e.Message);
+                }
+            });
+
+            if (group.Count > 0)
+                m_conGroups.Add(group);
         }
 
         private void FinishScans()
@@ -141,7 +215,7 @@ namespace Framework.Library
                     entry.FinishScan();
         }
 
-        private void AddEntry(SHA1Wrapper hash, SongEntry.SongEntry entry)
+        private bool AddEntry(SHA1Wrapper hash, SongEntry.SongEntry entry)
         {
             lock (entryLock)
             {
@@ -150,6 +224,7 @@ namespace Framework.Library
                 else
                     m_songlist.Add(hash, new() { entry });
             }
+            return true;
         }
 
         private void MarkDirectory(string directory)
