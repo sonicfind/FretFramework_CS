@@ -4,6 +4,7 @@ using Framework.Serialization.XboxSTFS;
 using Framework.SongEntry;
 using Framework.SongEntry.ConEntry;
 using Framework.Types;
+using Iced.Intel;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -14,24 +15,12 @@ using System.Threading.Tasks;
 
 namespace Framework.Library
 {
-    public class CONGroup
-    {
-        public CONFile File { get; init; }
-        private readonly List<CONEntry> entries = new();
-        private readonly object entryLock = new();
-        public int Count => entries.Count;
-
-        public CONGroup(CONFile file) { File = file; }
-        public void AddEntry(CONEntry entry) { lock (entryLock) entries.Add(entry); }
-    }
+    
     public class SongLibrary
     {
         private readonly SortedDictionary<SHA1Wrapper, List<SongEntry.SongEntry>> m_songlist = new();
-        private readonly List<CONGroup> m_conGroups = new();
-        private readonly HashSet<string> m_preScannedDirectories = new();
-        private readonly object dirLock = new();
         private readonly object entryLock = new();
-        private readonly object basicLock = new();
+        private SongCache? cache;
 
         public int Count
         {
@@ -44,12 +33,14 @@ namespace Framework.Library
             }
         }
 
-        public void Clear() { m_songlist.Clear(); m_conGroups.Clear(); }
+        public void Clear() { m_songlist.Clear(); }
 
         public void RunFullScan(List<string> baseDirectories)
         {
+            cache = new();
             Parallel.For(0, baseDirectories.Count, i => ScanDirectory(new(baseDirectories[i])));
             FinishScans();
+            cache = null;
         }
 
         public SortedDictionary<SHA1Wrapper, List<SongEntry.SongEntry>>.Enumerator GetEnumerator() => m_songlist.GetEnumerator();
@@ -63,7 +54,7 @@ namespace Framework.Library
 
         private void ScanDirectory(DirectoryInfo directory)
         {
-            if (!FindOrMarkDirectory(directory.FullName))
+            if (!cache!.FindOrMarkDirectory(directory.FullName))
                 return;
 
             (FileInfo?, ChartType) [] charts = { new(null, ChartType.MID), new(null, ChartType.MID), new(null, ChartType.CHART) };
@@ -141,7 +132,11 @@ namespace Framework.Library
                     {
                         using FrameworkFile_Alloc file = new(chart.Item1!.FullName);
                         if (entry.Scan(file, ref chart))
-                            AddEntry(new SHA1Wrapper(file.CalcSHA1()), entry);
+                        {
+                            if (AddEntry(new SHA1Wrapper(file.CalcSHA1()), entry))
+                                cache.AddBasicEntry(entry);
+                                
+                        }
                     }
                     catch (Exception e)
                     {
@@ -204,12 +199,11 @@ namespace Framework.Library
             });
 
             if (group.Count > 0)
-                m_conGroups.Add(group);
+                cache!.AddConGroup(group);
         }
 
         private void FinishScans()
         {
-            m_preScannedDirectories.Clear();
             foreach (var node in m_songlist)
                 foreach (var entry in node.Value)
                     entry.FinishScan();
@@ -227,22 +221,6 @@ namespace Framework.Library
             return true;
         }
 
-        private void MarkDirectory(string directory)
-        {
-            lock (dirLock)
-                m_preScannedDirectories.Add(directory);
-        }
-
-        private bool FindOrMarkDirectory(string directory)
-        {
-            lock (dirLock)
-            {
-                if (m_preScannedDirectories.Contains(directory))
-                    return false;
-
-                m_preScannedDirectories.Add(directory);
-                return true;
-            }
-        }
+        
     }
 }
