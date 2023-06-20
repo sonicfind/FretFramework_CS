@@ -135,7 +135,6 @@ namespace Framework.Library
                         {
                             if (AddEntry(new SHA1Wrapper(file.CalcSHA1()), entry))
                                 cache.AddBasicEntry(entry);
-                                
                         }
                     }
                     catch (Exception e)
@@ -151,40 +150,21 @@ namespace Framework.Library
             Parallel.For(0, subDirectories.Count, i => ScanDirectory(subDirectories[i]));
         }
 
-        internal const string SongsFilePath = "songs/songs.dta";
         private void ScanPossibleCON(FileInfo info)
         {
-            if (!CONFile.LoadCON(info.FullName, out CONFile? conFile))
+            if (!CONEntryGroup.TryLoadCon(info, out CONEntryGroup? group))
                 return;
 
-            PointerHandler? dtaFile = conFile!.LoadSubFile(SongsFilePath);
-            if (dtaFile == null)
-            {
-                Debug.WriteLine("DTA file was not located in CON");
+            if (!group!.LoadSongs(out List<DTAFileNode>? nodes))
                 return;
-            }
 
-            CONGroup group = new(conFile);
-            List<DTAFileNode> nodes;
-
-            try
-            {
-                using DTAFileReader reader = new(dtaFile, true);
-                nodes = DTAFileNode.GetNodes(reader);
-            }
-            catch (Exception e)
-            {
-                Debug.WriteLine($"Failed to parse songs.dta for `{info.FullName}`.");
-                Debug.WriteLine(e.Message);
-                return;
-            }
-
-            Parallel.For(0, nodes.Count, i =>
+            CONFile file = group.File;
+            Parallel.For(0, nodes!.Count, i =>
             {
                 try
                 {
                     var node = nodes[i];
-                    CONEntry currentSong = new(conFile, node);
+                    CONEntry currentSong = new(file, node);
                     if (currentSong.Scan(out SHA1Wrapper hash))
                     {
                         if (AddEntry(hash, currentSong))

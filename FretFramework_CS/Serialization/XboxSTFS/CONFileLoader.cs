@@ -52,22 +52,21 @@ namespace Framework.Serialization.XboxSTFS
         private readonly List<FileListing> files = new();
         private readonly object fileLock = new();
 
-        static public bool LoadCON(string filename, out CONFile? con)
+        static public CONFile? LoadCON(string filename)
         {
-            con = null;
             byte[] buffer = new byte[4];
             FileStream stream = new(filename, FileMode.Open, FileAccess.Read);
 
             if (stream.Read(buffer) != 4)
-                return false;
+                return null;
 
             string tag = Encoding.Default.GetString(buffer, 0, buffer.Length);
             if (tag != "CON " && tag != "LIVE" && tag != "PIRS")
-                return false;
+                return null;
 
             stream.Seek(0x0340, SeekOrigin.Begin);
             if (stream.Read(buffer) != 4)
-                return false;
+                return null;
 
             byte shift = 0;
             int entryID = buffer[0] << 24 | buffer[1] << 16 | buffer[2] << 8 | buffer[3];
@@ -76,23 +75,25 @@ namespace Framework.Serialization.XboxSTFS
 
             stream.Seek(0x37C, SeekOrigin.Begin);
             if (stream.Read(buffer, 0, 2) != 2)
-                return false;
+                return null;
 
             int length = 0x1000 * (buffer[0] << 8 | buffer[1]);
 
             stream.Seek(0x37E, SeekOrigin.Begin);
             if (stream.Read(buffer, 0, 3) != 3)
-                return false;
+                return null;
 
             int firstBlock = buffer[0] << 16 | buffer[1] << 8 | buffer[2];
-
-            con = new(stream, shift);
             try
             {
+                CONFile con = new(stream, shift);
                 con.ParseFileList(firstBlock, length);
-                return true;
+                return con;
             }
-            catch (Exception) { return false; }
+            catch
+            {
+                return null;
+            }
         }
 
         private CONFile(FileStream stream, byte shift)
