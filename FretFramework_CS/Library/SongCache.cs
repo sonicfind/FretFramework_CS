@@ -74,12 +74,12 @@ namespace Framework.Library
         private readonly object CONlock = new();
 
         private readonly List<CONEntryGroup> conGroups = new();
-        private readonly List<SongEntry.SongEntry> basicEntries = new();
+        private readonly List<SongEntry.SongEntry> iniEntries = new();
         private readonly HashSet<string> preScannedDirectories = new();
 
-        public void AddBasicEntry(SongEntry.SongEntry entry)
+        public void AddIniEntry(IniSongEntry entry)
         {
-            lock (basicLock) basicEntries.Add(entry);
+            lock (basicLock) iniEntries.Add(entry);
         }
 
         public void AddConGroup(CONEntryGroup group)

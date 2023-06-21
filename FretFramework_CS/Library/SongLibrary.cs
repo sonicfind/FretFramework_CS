@@ -134,7 +134,7 @@ namespace Framework.Library
                         if (entry.Scan(file, ref chart))
                         {
                             if (AddEntry(new SHA1Wrapper(file.CalcSHA1()), entry))
-                                cache.AddBasicEntry(entry);
+                                cache.AddIniEntry(entry);
                         }
                     }
                     catch (Exception e)
