@@ -47,6 +47,7 @@ namespace Framework.SongEntry
 
         private DateTime m_iniWriteTime;
         private (string, ChartType) m_chartFile;
+        private DateTime m_chartWriteTime;
 
         public void Load_Ini(ref FileInfo info)
         {

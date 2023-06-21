@@ -22,13 +22,13 @@ namespace Framework.SongEntry
     [DebuggerDisplay($"{{{nameof(GetDebuggerDisplay)}(),nq}}")]
     public abstract class SongEntry
     {
-        protected SortString m_name;
-        protected SortString m_artist;
-        protected SortString m_album;
-        protected SortString m_genre;
-        protected SortString m_year;
-        protected SortString m_charter;
-        protected SortString m_playlist;
+        protected SortString m_name = new();
+        protected SortString m_artist = new();
+        protected SortString m_album = new();
+        protected SortString m_genre = new();
+        protected SortString m_year = new();
+        protected SortString m_charter = new();
+        protected SortString m_playlist = new();
 
         protected ulong m_song_length = 0;
         protected float m_previewStart = 0.0f;
@@ -41,8 +41,6 @@ namespace Framework.SongEntry
         protected ulong m_hopo_frequency = 0;
 
         protected TrackScans m_scans = new();
-        
-        protected DateTime m_chartWriteTime;
 
         public SortString Artist => m_artist;
         public SortString Name => m_name;
