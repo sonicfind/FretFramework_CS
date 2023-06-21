@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -30,6 +31,9 @@ namespace Framework.Types
 
         public ReadOnlySpan<byte> AsReadOnlySpan() { return new(data, length); }
         public Span<byte> AsSpan() { return new(data, length); }
+
+        public byte[] CalcMD5() { return MD5.HashData(AsReadOnlySpan()); }
+        public byte[] CalcSHA1() { return SHA1.HashData(AsReadOnlySpan()); }
 
         public byte* Release()
         {

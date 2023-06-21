@@ -167,7 +167,7 @@ namespace Framework.SongEntry.ConEntry
                         PointerHandler finalFile = new(midiFile.Length + updateFile.Length);
                         Copier.MemCpy(finalFile.GetData(), midiFile.ptr, (nuint)midiFile.Length);
                         Copier.MemCpy(finalFile.GetData() + midiFile.Length, updateFile.ptr, (nuint)updateFile.Length);
-                        hash = new(SHA1.HashData(finalFile.AsReadOnlySpan()));
+                        hash = new(finalFile.CalcSHA1());
                     }
                     result = true;
                 }

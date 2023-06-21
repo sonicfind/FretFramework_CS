@@ -17,7 +17,7 @@ namespace Framework.Serialization
 
         public int Length { get; init; }
 
-        public byte[] GetMD5() { return MD5.HashData(new ReadOnlySpan<byte>(ptr, Length)); }
+        public byte[] CalcMD5() { return MD5.HashData(new ReadOnlySpan<byte>(ptr, Length)); }
         public byte[] CalcSHA1() { return SHA1.HashData(new ReadOnlySpan<byte>(ptr, Length)); }
 
         protected abstract void Dispose(bool disposing);
