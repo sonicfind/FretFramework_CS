@@ -330,6 +330,11 @@ namespace Framework.SongEntry
                 if (m_modifiers.TryGetValue("diff_vocals_harm", out List<Modifier>? intensities))
                     m_scans.harmonyVocals.intensity = (sbyte)intensities[0].INT32;
             }
+
+            if (m_scans.harmonyVocals.subTracks > 0)
+                VocalParts = 3;
+            else if (m_scans.leadVocals.subTracks > 0)
+                VocalParts = 1;
         }
 
         private DrumType GetDrumTypeFromModifier()
