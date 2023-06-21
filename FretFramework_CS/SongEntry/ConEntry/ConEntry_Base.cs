@@ -85,6 +85,11 @@ namespace Framework.SongEntry.ConEntry
             if (dta.AlbumTrack != ushort.MaxValue)
                 m_album_track = dta.AlbumTrack;
 
+            if (dta.Year_Recorded != ushort.MaxValue)
+                m_year = dta.Year_Recorded.ToString();
+            else if (dta.Year_Released != ushort.MaxValue)
+                m_year = dta.Year_Released.ToString();
+
             if (dta.Charter != string.Empty)
                 m_charter = dta.Charter;
 
