@@ -63,20 +63,21 @@ namespace Framework.Serialization
         private readonly BinaryFileReader m_reader;
         private bool disposeReader = false;
 
-        public MidiFileReader(BinaryFileReader reader, byte multiplierNote = 116)
+        public MidiFileReader(BinaryFileReader reader, bool disposeReader, byte multiplierNote = 116)
         {
             m_reader = reader;
+            this.disposeReader = disposeReader;
             m_multiplierNote = multiplierNote;
             ProcessHeaderChunk();
         }
 
-        public MidiFileReader(FrameworkFile file, byte multiplierNote = 116) : this(new BinaryFileReader(file), multiplierNote) { disposeReader = true; }
+        public MidiFileReader(FrameworkFile file, bool disposeFile = false, byte multiplierNote = 116) : this(new BinaryFileReader(file, disposeFile), true, multiplierNote) { }
 
-        public MidiFileReader(byte[] data, byte multiplierNote = 116) : this(new BinaryFileReader(data), multiplierNote) { disposeReader = true; }
+        public MidiFileReader(byte[] data, byte multiplierNote = 116) : this(new BinaryFileReader(data), true, multiplierNote) { }
 
-        public MidiFileReader(string path, byte multiplierNote = 116) : this(new BinaryFileReader(path), multiplierNote) { disposeReader = true; }
+        public MidiFileReader(string path, byte multiplierNote = 116) : this(new BinaryFileReader(path), true, multiplierNote) { }
 
-        public MidiFileReader(PointerHandler handler, bool dispose = false, byte multiplierNote = 116) : this(new BinaryFileReader(handler, dispose), multiplierNote) { disposeReader = true; }
+        public MidiFileReader(PointerHandler handler, bool disposeHandler = false, byte multiplierNote = 116) : this(new BinaryFileReader(handler, disposeHandler), true, multiplierNote) { }
 
         public void Dispose()
         {

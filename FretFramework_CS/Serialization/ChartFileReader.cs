@@ -106,15 +106,19 @@ namespace Framework.Serialization
         public NoteTracks_Chart Instrument { get; private set; }
         public int Difficulty { get; private set; }
 
-        public ChartFileReader(TxtFileReader reader) { this.reader = reader; }
+        public ChartFileReader(TxtFileReader reader, bool disposeReader = false)
+        {
+            this.reader = reader;
+            this.disposeReader = disposeReader;
+        }
 
-        public ChartFileReader(FrameworkFile file) : this(new TxtFileReader(file)) { disposeReader = true; }
+        public ChartFileReader(FrameworkFile file, bool disoseFile = false) : this(new TxtFileReader(file, disoseFile), true) { }
 
-        public ChartFileReader(byte[] data) : this(new TxtFileReader(data)) { disposeReader = true; }
+        public ChartFileReader(byte[] data) : this(new TxtFileReader(data), true) { }
 
-        public ChartFileReader(string path) : this(new TxtFileReader(path)) { disposeReader = true; }
+        public ChartFileReader(string path) : this(new TxtFileReader(path), true) { }
 
-        public ChartFileReader(PointerHandler handler, bool dispose = false) : this(new TxtFileReader(handler, dispose)) { disposeReader = true; }
+        public ChartFileReader(PointerHandler handler, bool dispose = false) : this(new TxtFileReader(handler, dispose), true) { }
 
         public void Dispose()
         {

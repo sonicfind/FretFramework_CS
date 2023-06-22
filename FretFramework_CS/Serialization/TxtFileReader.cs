@@ -17,7 +17,7 @@ namespace Framework.Serialization
         internal static readonly UTF8Encoding UTF8 = new(true, true);
         static TxtFileReader() { }
 
-        private TxtFileReader(FrameworkFile file, bool disposeFile) : base(file, disposeFile)
+        public TxtFileReader(FrameworkFile file, bool disposeFile = false) : base(file, disposeFile)
         {
             if (new ReadOnlySpan<byte>(file.ptr, 3).SequenceEqual(BOM))
                 _position += 3;
@@ -27,8 +27,6 @@ namespace Framework.Serialization
             if (file.ptr[_position] == '\n')
                 GotoNextLine();
         }
-
-        public TxtFileReader(FrameworkFile file) : this(file, false) { }
 
         public TxtFileReader(byte[] data) : this(new FrameworkFile_Handle(data), true) { }
 

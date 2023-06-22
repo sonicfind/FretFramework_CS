@@ -18,9 +18,7 @@ namespace Framework.Serialization.XboxSTFS
     {
         private readonly List<int> nodeEnds = new();
 
-        private DTAFileReader(FrameworkFile file, bool disposeFile) : base(file, disposeFile) { SkipWhiteSpace(); }
-
-        public DTAFileReader(FrameworkFile file) : this(file, false) { }
+        public DTAFileReader(FrameworkFile file, bool disposeFile = false) : base(file, disposeFile) { SkipWhiteSpace(); }
 
         public DTAFileReader(byte[] data) : this(new FrameworkFile_Handle(data), true) { }
 

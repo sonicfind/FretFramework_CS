@@ -38,18 +38,19 @@ namespace Framework.Serialization
         }
         public int Boundary { get { return currentBoundary; } }
 
-        public BinaryFileReader(FrameworkFile file)
+        public BinaryFileReader(FrameworkFile file, bool disposeFile = false)
         {
             this.file = file;
+            this.disposeFile = disposeFile;
             boundaries = (int*)Marshal.AllocHGlobal(sizeof(int) * 8);
             currentBoundary = boundaries[0] = file.Length;
         }
 
-        public BinaryFileReader(byte[] data) : this(new FrameworkFile_Handle(data)) { disposeFile = true; }
+        public BinaryFileReader(byte[] data) : this(new FrameworkFile_Handle(data), true) { }
 
-        public BinaryFileReader(string path) : this(new FrameworkFile_Alloc(path)) { disposeFile = true; }
+        public BinaryFileReader(string path) : this(new FrameworkFile_Alloc(path), true) { }
 
-        public BinaryFileReader(PointerHandler handler, bool dispose = false) : this(new FrameworkFile_Pointer(handler, dispose)) { disposeFile = true; }
+        public BinaryFileReader(PointerHandler handler, bool dispose = false) : this(new FrameworkFile_Pointer(handler, dispose), true) { }
 
         protected virtual void Dispose(bool disposing)
         {
