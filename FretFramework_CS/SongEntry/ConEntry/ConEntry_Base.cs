@@ -27,10 +27,10 @@ namespace Framework.SongEntry.ConEntry
         public string VocalPercussionBank { get; protected set; } = string.Empty;
         public uint VocalSongScrollSpeed { get; protected set; }
         public uint SongRating { get; protected set; } // 1 = FF; 2 = SR; 3 = M; 4 = NR
-        public bool VocalGender { get; protected set; } //true for male, false for female
+        public bool VocalGender { get; protected set; } = true;//true for male, false for female
         public bool HasAlbumArt { get; protected set; }
         public bool IsFake { get; protected set; }
-        public int VocalTonicNote { get; protected set; }
+        public uint VocalTonicNote { get; protected set; }
         public bool SongTonality { get; protected set; } // 0 = major, 1 = minor
         public int TuningOffsetCents { get; protected set; }
 
@@ -42,8 +42,8 @@ namespace Framework.SongEntry.ConEntry
         public bool DiscUpdate { get; protected set; } = false;
         public string UpdateMidiPath { get; protected set; } = string.Empty;
 
-        public int[] RealGuitarTuning { get; protected set; } = Array.Empty<int>();
-        public int[] RealBassTuning { get; protected set; } = Array.Empty<int>();
+        public short[] RealGuitarTuning { get; protected set; } = Array.Empty<short>();
+        public short[] RealBassTuning { get; protected set; } = Array.Empty<short>();
 
         // .mogg info
         public bool UsingUpdateMogg { get; protected set; } = false;
@@ -54,7 +54,7 @@ namespace Framework.SongEntry.ConEntry
         // .milo info
         public bool UsingUpdateMilo { get; protected set; } = false;
         public string MiloPath { get; protected set; } = string.Empty;
-        public int VenueVersion { get; protected set; }
+        public uint VenueVersion { get; protected set; }
 
         // image info
         public bool AlternatePath { get; protected set; } = false;
@@ -146,6 +146,30 @@ namespace Framework.SongEntry.ConEntry
 
             if (dta.Rating != uint.MaxValue)
                 SongRating = dta.Rating;
+
+            if (VocalGender)
+                VocalGender = dta.VocalIsMale;
+
+            if (dta.VocalTonic != uint.MaxValue)
+                VocalTonicNote = dta.VocalTonic;
+
+            if (!SongTonality)
+                SongTonality = dta.Tonality;
+
+            if (dta.TuningOffsetCents != int.MaxValue)
+                TuningOffsetCents = dta.TuningOffsetCents;
+
+            if (!DiscUpdate)
+                DiscUpdate = dta.DiscUpdate;
+
+            if (dta.RealGuitarTuning != Array.Empty<short>())
+                RealGuitarTuning = dta.RealGuitarTuning;
+
+            if (dta.RealBassTuning != Array.Empty<short>())
+                RealBassTuning = dta.RealBassTuning;
+
+            if (dta.Version != uint.MaxValue)
+                VenueVersion = dta.Version;
         }
 
         public bool Scan(out SHA1Wrapper hash)

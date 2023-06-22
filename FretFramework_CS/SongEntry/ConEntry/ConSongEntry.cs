@@ -31,7 +31,7 @@ namespace Framework.SongEntry.ConEntry
                 throw new Exception($"Required midi file '{MidiFile}' was not located");
             moggIndex = conFile.GetFileIndex(location + ".mogg");
 
-            string genPAth = $"songs/{dta.NodeName}/gen/{dta.NodeName}";
+            string genPAth = $"songs/{ShortName}/gen/{ShortName}";
             miloIndex = conFile.GetFileIndex(genPAth + ".milo_xbox");
             imgIndex = conFile.GetFileIndex(genPAth + "_keep.png_xbox");
             Directory = conFile.Filename;

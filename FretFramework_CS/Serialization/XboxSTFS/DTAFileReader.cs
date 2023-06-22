@@ -150,6 +150,14 @@ namespace Framework.Serialization.XboxSTFS
             return values;
         }
 
+        public List<string> ExtractStringList()
+        {
+            List<string> strings = new();
+            while (*CurrentPtr != ')')
+                strings.Add(ExtractText());
+            return strings;
+        }
+
         public bool StartNode()
         {
             byte ch = file.ptr[_position];
@@ -348,6 +356,7 @@ namespace Framework.Serialization.XboxSTFS
                     case "alternate_path": AlternatePath = reader.ReadBoolean(); break;
                     case "real_guitar_tuning":
                         {
+                            realGuitarTuning = new short[6];
                             while (reader.StartNode())
                             {
                                 for (int i = 0; i < 6; i++)
@@ -358,6 +367,7 @@ namespace Framework.Serialization.XboxSTFS
                         }
                     case "real_bass_tuning":
                         {
+                            realBassTuning = new short[4];
                             while (reader.StartNode())
                             {
                                 for (int i = 0; i < 4; i++)
@@ -376,6 +386,16 @@ namespace Framework.Serialization.XboxSTFS
                             }
                             break;
                         }
+                    case "extra_authoring":
+                        foreach (string str in reader.ExtractStringList())
+                        {
+                            if (str == "disc_update")
+                            {
+                                DiscUpdate = true;
+                                break;
+                            }
+                        }
+                        break;
                     default:
                         others.Add(new(name, reader.ExtractText()));
                         break;
@@ -752,8 +772,11 @@ namespace Framework.Serialization.XboxSTFS
         private readonly List<string>? soloes;
         private readonly List<string>? videoVenues;
 
-        private readonly short[] realGuitarTuning = new short[6];
-        private readonly short[] realBassTuning = new short[4];
+        private short[] realGuitarTuning = Array.Empty<short>();
+        private short[] realBassTuning = Array.Empty<short>();
+
+        public short[] RealGuitarTuning { get { return realGuitarTuning; } }
+        public short[] RealBassTuning { get { return realBassTuning; } }
 
         public string Location { get; private set; } = string.Empty;
         
@@ -787,6 +810,7 @@ namespace Framework.Serialization.XboxSTFS
         public DTAAudio CrowdAudio => crowd;
 
         public string MidiFile { get; private set; } = string.Empty;
+        public bool DiscUpdate { get; private set; }
 
         readonly List<(string, string)> others = new();
     };

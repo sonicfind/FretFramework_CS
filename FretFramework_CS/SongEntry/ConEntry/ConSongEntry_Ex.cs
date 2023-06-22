@@ -17,6 +17,7 @@ namespace Framework.SongEntry.ConEntry
     {
         public CONEntry_Extracted(string folder, DTAFileNode dta) : base(dta)
         {
+            Directory = folder;
             string dir = Path.Combine(folder, location);
             string file = Path.Combine(dir, location);
             MidiFile = file + ".mid";
@@ -30,7 +31,6 @@ namespace Framework.SongEntry.ConEntry
             path = file + "_keep.png_xbox";
             if (File.Exists(path))
                 ImagePath = path;
-
             location = dir;
         }
 
