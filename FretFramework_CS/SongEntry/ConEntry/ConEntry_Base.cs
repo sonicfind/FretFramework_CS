@@ -172,8 +172,10 @@ namespace Framework.SongEntry.ConEntry
                 VenueVersion = dta.Version;
         }
 
-        public bool Scan(out SHA1Wrapper hash)
+        public bool Scan(out byte[] hash)
         {
+            hash = Array.Empty<byte>();
+
             if (!IsMoggUnencrypted())
             {
                 Debug.WriteLine($"{ShortName} - Mogg encrypted");
@@ -183,31 +185,20 @@ namespace Framework.SongEntry.ConEntry
             using FrameworkFile midiFile = LoadMidiFile();
             Scan_Midi(midiFile, DrumType.FOUR_PRO);
 
-            bool result = false;
+            PointerHandler hashBuffer = new(midiFile.Length);
+            unsafe { Copier.MemCpy(hashBuffer.GetData(), midiFile.ptr, (nuint)midiFile.Length); }
+
             if (DiscUpdate)
-            {
-                using FrameworkFile_Alloc updateFile = LoadMidiUpdateFile();
-                Scan_Midi(updateFile, DrumType.FOUR_PRO);
+                hashBuffer = ScanExtraMidi(LoadMidiUpdateFile(), hashBuffer);
 
-                if (m_scans.CheckForValidScans())
-                {
-                    unsafe
-                    {
-                        PointerHandler finalFile = new(midiFile.Length + updateFile.Length);
-                        Copier.MemCpy(finalFile.GetData(), midiFile.ptr, (nuint)midiFile.Length);
-                        Copier.MemCpy(finalFile.GetData() + midiFile.Length, updateFile.ptr, (nuint)updateFile.Length);
-                        hash = new(finalFile.CalcSHA1());
-                    }
-                    result = true;
-                }
-            }
-            else if (m_scans.CheckForValidScans())
-            {
-                hash = new(midiFile.CalcSHA1());
-                result = true;
-            }
 
-            return result;
+            if (!m_scans.CheckForValidScans())
+                return false;
+
+            hash = hashBuffer.CalcSHA1();
+            hashBuffer.Dispose();
+            return true;
+
         }
 
         public abstract FrameworkFile LoadMidiFile();
@@ -295,6 +286,30 @@ namespace Framework.SongEntry.ConEntry
                 --i;
             scan.intensity = i;
             return true;
+        }
+
+        private PointerHandler ScanExtraMidi(FrameworkFile file, PointerHandler hashBuffer)
+        {
+            using MidiFileReader reader = new(file, true);
+            TrackScans scans = new();
+            while (reader.StartTrack())
+            {
+                if (reader.GetTrackNumber() > 1 && reader.GetEvent().type == MidiEventType.Text_TrackName)
+                {
+                    string name = Encoding.ASCII.GetString(reader.ExtractTextOrSysEx());
+                    if (MidiFileReader.TRACKNAMES.TryGetValue(name, out MidiTrackType type) && type != MidiTrackType.Events && type != MidiTrackType.Beats)
+                        scans.ScanFromMidi(type, DrumType.FOUR_PRO, reader);
+                }
+            }
+            m_scans.Update(ref scans);
+
+            PointerHandler newBuffer = new(hashBuffer.length + file.Length);
+            unsafe
+            {
+                Copier.MemCpy(newBuffer.GetData(), hashBuffer.GetData(), (nuint)hashBuffer.length);
+                Copier.MemCpy(newBuffer.GetData() + hashBuffer.length, file.ptr, (nuint)file.Length);
+            }
+            return newBuffer;
         }
     }
 }

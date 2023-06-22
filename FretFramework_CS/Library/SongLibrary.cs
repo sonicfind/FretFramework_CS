@@ -165,9 +165,9 @@ namespace Framework.Library
                 {
                     var node = nodes[i];
                     CONEntry currentSong = new(file, node);
-                    if (currentSong.Scan(out SHA1Wrapper hash))
+                    if (currentSong.Scan(out byte[] hash))
                     {
-                        if (AddEntry(hash, currentSong))
+                        if (AddEntry(new SHA1Wrapper(hash), currentSong))
                             group.AddEntry(currentSong);
                     }
                 }
