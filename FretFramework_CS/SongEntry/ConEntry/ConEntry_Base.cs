@@ -62,6 +62,8 @@ namespace Framework.SongEntry.ConEntry
 
         protected string location = string.Empty;
 
+        public SongProUpgrade? Upgrade { get; set; }
+
         public override string Directory { get; protected set; } = string.Empty;
 
         protected CONEntry_Base(DTAFileNode dta)
@@ -191,6 +193,8 @@ namespace Framework.SongEntry.ConEntry
             if (DiscUpdate)
                 hashBuffer = ScanExtraMidi(LoadMidiUpdateFile(), hashBuffer);
 
+            if (Upgrade != null)
+                hashBuffer = ScanExtraMidi(Upgrade.GetUpgradeMidi(), hashBuffer);
 
             if (!m_scans.CheckForValidScans())
                 return false;
