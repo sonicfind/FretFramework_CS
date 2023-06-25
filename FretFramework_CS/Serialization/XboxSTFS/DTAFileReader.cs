@@ -140,7 +140,15 @@ namespace Framework.Serialization.XboxSTFS
             return Encoding.UTF8.GetString(new ReadOnlySpan<byte>(file.ptr + start, end - start));
         }
 
-        public List<ushort> ExtractList()
+        public List<short> ExtractList_Int16()
+        {
+            List<short> values = new();
+            while (*CurrentPtr != ')')
+                values.Add(ReadInt16());
+            return values;
+        }
+
+        public List<ushort> ExtractList_UInt16()
         {
             List<ushort> values = new();
             while (*CurrentPtr != ')')
@@ -148,7 +156,15 @@ namespace Framework.Serialization.XboxSTFS
             return values;
         }
 
-        public List<string> ExtractStringList()
+        public List<float> ExtractList_Float()
+        {
+            List<float> values = new();
+            while (*CurrentPtr != ')')
+                values.Add(ReadFloat());
+            return values;
+        }
+
+        public List<string> ExtractList_String()
         {
             List<string> strings = new();
             while (*CurrentPtr != ')')
@@ -254,7 +270,7 @@ namespace Framework.Serialization.XboxSTFS
             List<DTAFileNode> nodes = new();
             while (reader.StartNode())
             {
-                nodes.Add(new DTAFileNode(reader));
+                nodes.Add(new(reader));
                 reader.EndNode();
             }
             return nodes;
@@ -293,21 +309,8 @@ namespace Framework.Serialization.XboxSTFS
                         PreviewStart = reader.ReadUInt32();
                         PreviewEnd = reader.ReadUInt32();
                         break;
-                    case "rank":
-                        {
-                            ranks = new();
-                            RankLoop(ref reader); break;
-                        }
-                    case "solo":
-                        {
-                            soloes = new();
-                            while (reader.StartNode())
-                            {
-                                soloes.Add(reader.ExtractText());
-                                reader.EndNode();
-                            }
-                            break;
-                        }
+                    case "rank": RankLoop(ref reader); break;
+                    case "solo": soloes = reader.ExtractList_String(); break;
                     case "genre": Genre = reader.ExtractText(); break;
                     case "decade": Decade = reader.ExtractText(); break;
                     case "vocal_gender": VocalIsMale = reader.ExtractText() == "male"; break;
@@ -354,38 +357,33 @@ namespace Framework.Serialization.XboxSTFS
                     case "alternate_path": AlternatePath = reader.ReadBoolean(); break;
                     case "real_guitar_tuning":
                         {
-                            realGuitarTuning = new short[6];
-                            while (reader.StartNode())
+                            if (reader.StartNode())
                             {
-                                for (int i = 0; i < 6; i++)
-                                    realGuitarTuning[i] = reader.ReadInt16();
+                                realGuitarTuning = reader.ExtractList_Int16();
                                 reader.EndNode();
                             }
                             break;
                         }
                     case "real_bass_tuning":
                         {
-                            realBassTuning = new short[4];
-                            while (reader.StartNode())
+                            if (reader.StartNode())
                             {
-                                for (int i = 0; i < 4; i++)
-                                    realBassTuning[i] = reader.ReadInt16();
+                                realBassTuning = reader.ExtractList_Int16();
                                 reader.EndNode();
                             }
                             break;
                         }
                     case "video_venues":
                         {
-                            videoVenues = new();
-                            while(reader.StartNode())
+                            if (reader.StartNode())
                             {
-                                videoVenues.Add(reader.ExtractText());
+                                videoVenues = reader.ExtractList_String();
                                 reader.EndNode();
                             }
                             break;
                         }
                     case "extra_authoring":
-                        foreach (string str in reader.ExtractStringList())
+                        foreach (string str in reader.ExtractList_String())
                         {
                             if (str == "disc_update")
                             {
@@ -411,11 +409,29 @@ namespace Framework.Serialization.XboxSTFS
                 {
                     case "name": Location = reader.ExtractText(); break;
                     case "tracks": TracksLoop(ref reader); break;
-                    case "crowd_channels": crowdIndices = reader.ExtractList(); break;
+                    case "crowd_channels": crowdIndices = reader.ExtractList_UInt16(); break;
                     case "vocal_parts": NumVocalParts = reader.ReadUInt16(); break;
-                    case "pans": PanLoop(ref reader); break;
-                    case "vols": VolLoop(ref reader); break;
-                    case "cores": CoreLoop(ref reader); break;
+                    case "pans":
+                        if (reader.StartNode())
+                        {
+                            pan = reader.ExtractList_Float();
+                            reader.EndNode();
+                        }
+                        break;
+                    case "vols":
+                        if (reader.StartNode())
+                        {
+                            volume = reader.ExtractList_Float();
+                            reader.EndNode();
+                        }
+                        break;
+                    case "cores":
+                        if (reader.StartNode())
+                        {
+                            core = reader.ExtractList_Float();
+                            reader.EndNode();
+                        }
+                        break;
                     case "hopo_threshold": Hopo_Threshold = reader.ReadUInt32(); break;
                     case "midi_file": MidiFile = reader.ExtractText(); break;
                 }
@@ -433,45 +449,45 @@ namespace Framework.Serialization.XboxSTFS
                     {
                         case "drum":
                             {
-                                while (reader.StartNode())
+                                if (reader.StartNode())
                                 {
-                                    drumIndices = reader.ExtractList();
+                                    drumIndices = reader.ExtractList_UInt16();
                                     reader.EndNode();
                                 }
                                 break;
                             }
                         case "bass":
                             {
-                                while (reader.StartNode())
+                                if (reader.StartNode())
                                 {
-                                    bassIndices = reader.ExtractList();
+                                    bassIndices = reader.ExtractList_UInt16();
                                     reader.EndNode();
                                 }
                                 break;
                             }
                         case "guitar":
                             {
-                                while (reader.StartNode())
+                                if (reader.StartNode())
                                 {
-                                    guitarIndices = reader.ExtractList();
+                                    guitarIndices = reader.ExtractList_UInt16();
                                     reader.EndNode();
                                 }
                                 break;
                             }
                         case "keys":
                             {
-                                while (reader.StartNode())
+                                if (reader.StartNode())
                                 {
-                                    keysIndices = reader.ExtractList();
+                                    keysIndices = reader.ExtractList_UInt16();
                                     reader.EndNode();
                                 }
                                 break;
                             }
                         case "vocals":
                             {
-                                while (reader.StartNode())
+                                if (reader.StartNode())
                                 {
-                                    vocalsIndices = reader.ExtractList();
+                                    vocalsIndices = reader.ExtractList_UInt16();
                                     reader.EndNode();
                                 }
                                 break;
@@ -483,243 +499,36 @@ namespace Framework.Serialization.XboxSTFS
             }
         }
 
-        private void PanLoop(ref DTAFileReader reader)
-        {
-            while (reader.StartNode())
-            {
-                if (drumIndices != null)
-                {
-                    if (drumIndices.Count > 2)
-                    {
-                        kick.pan[0] = reader.ReadFloat();
-                        if (drumIndices.Count > 5)
-                            kick.pan[1] = reader.ReadFloat();
-                    }
-
-                    if (drumIndices.Count > 1)
-                    {
-                        snare.pan[0] = reader.ReadFloat();
-                        if (drumIndices.Count > 4)
-                            snare.pan[1] = reader.ReadFloat();
-                    }
-
-                    if (drumIndices.Count > 0)
-                    {
-                        cymbals.pan[0] = reader.ReadFloat();
-                        if (drumIndices.Count > 3)
-                            cymbals.pan[1] = reader.ReadFloat();
-                    }
-                }
-
-                if (bassIndices != null)
-                {
-                    bass.pan[0] = reader.ReadFloat();
-                    if (bassIndices.Count > 1)
-                        bass.pan[1] = reader.ReadFloat();
-                }
-
-                if (guitarIndices != null)
-                {
-                    guitar.pan[0] = reader.ReadFloat();
-                    if (guitarIndices.Count > 1)
-                        guitar.pan[1] = reader.ReadFloat();
-                }
-
-                if (keysIndices != null)
-                {
-                    keys.pan[0] = reader.ReadFloat();
-                    if (keysIndices.Count > 1)
-                        keys.pan[1] = reader.ReadFloat();
-                }
-
-                if (vocalsIndices != null)
-                {
-                    vocals.pan[0] = reader.ReadFloat();
-                    if (vocalsIndices.Count > 1)
-                        vocals.pan[1] = reader.ReadFloat();
-                }
-
-                if (reader.ReadFloat(ref tracks.pan[0]) && reader.ReadFloat(ref tracks.pan[1]))
-                {
-                    if (crowdIndices != null)
-                    {
-                        crowd.pan[0] = reader.ReadFloat();
-                        if (crowdIndices.Count > 1)
-                            crowd.pan[1] = reader.ReadFloat();
-                    }
-                }
-                reader.EndNode();
-            }
-        }
-
-        private void VolLoop(ref DTAFileReader reader)
-        {
-            while (reader.StartNode())
-            {
-                if (drumIndices != null)
-                {
-                    if (drumIndices.Count > 2)
-                    {
-                        kick.volume[0] = reader.ReadFloat();
-                        if (drumIndices.Count > 5)
-                            kick.volume[1] = reader.ReadFloat();
-                    }
-
-                    if (drumIndices.Count > 1)
-                    {
-                        snare.volume[0] = reader.ReadFloat();
-                        if (drumIndices.Count > 4)
-                            snare.volume[1] = reader.ReadFloat();
-                    }
-
-                    if (drumIndices.Count > 0)
-                    {
-                        cymbals.volume[0] = reader.ReadFloat();
-                        if (drumIndices.Count > 3)
-                            cymbals.volume[1] = reader.ReadFloat();
-                    }
-                }
-
-                if (bassIndices != null)
-                {
-                    bass.volume[0] = reader.ReadFloat();
-                    if (bassIndices.Count > 1)
-                        bass.volume[1] = reader.ReadFloat();
-                }
-
-                if (guitarIndices != null)
-                {
-                    guitar.volume[0] = reader.ReadFloat();
-                    if (guitarIndices.Count > 1)
-                        guitar.volume[1] = reader.ReadFloat();
-                }
-
-                if (keysIndices != null)
-                {
-                    keys.volume[0] = reader.ReadFloat();
-                    if (keysIndices.Count > 1)
-                        keys.volume[1] = reader.ReadFloat();
-                }
-
-                if (vocalsIndices != null)
-                {
-                    vocals.volume[0] = reader.ReadFloat();
-                    if (vocalsIndices.Count > 1)
-                        vocals.volume[1] = reader.ReadFloat();
-                }
-
-                if (reader.ReadFloat(ref tracks.volume[0]) && reader.ReadFloat(ref tracks.volume[1]))
-                {
-                    if (crowdIndices != null)
-                    {
-                        crowd.volume[0] = reader.ReadFloat();
-                        if (crowdIndices.Count > 1)
-                            crowd.volume[1] = reader.ReadFloat();
-                    }
-                }
-                reader.EndNode();
-            }
-        }
-
-        private void CoreLoop(ref DTAFileReader reader)
-        {
-            while (reader.StartNode())
-            {
-                if (drumIndices != null)
-                {
-                    if (drumIndices.Count > 2)
-                    {
-                        kick.core[0] = reader.ReadFloat();
-                        if (drumIndices.Count > 5)
-                            kick.core[1] = reader.ReadFloat();
-                    }
-
-                    if (drumIndices.Count > 1)
-                    {
-                        snare.core[0] = reader.ReadFloat();
-                        if (drumIndices.Count > 4)
-                            snare.core[1] = reader.ReadFloat();
-                    }
-
-                    if (drumIndices.Count > 0)
-                    {
-                        cymbals.core[0] = reader.ReadFloat();
-                        if (drumIndices.Count > 3)
-                            cymbals.core[1] = reader.ReadFloat();
-                    }
-                }
-
-                if (bassIndices != null && bassIndices.Count > 0)
-                {
-                    bass.core[0] = reader.ReadFloat();
-                    if (bassIndices.Count > 1)
-                        bass.core[1] = reader.ReadFloat();
-                }
-
-                if (guitarIndices != null && guitarIndices.Count > 0)
-                {
-                    guitar.core[0] = reader.ReadFloat();
-                    if (guitarIndices.Count > 1)
-                        guitar.core[1] = reader.ReadFloat();
-                }
-
-                if (keysIndices != null && keysIndices.Count > 0)
-                {
-                    keys.core[0] = reader.ReadFloat();
-                    if (keysIndices.Count > 1)
-                        keys.core[1] = reader.ReadFloat();
-                }
-
-                if (vocalsIndices != null && vocalsIndices.Count > 0)
-                {
-                    vocals.core[0] = reader.ReadFloat();
-                    if (vocalsIndices.Count > 1)
-                        vocals.core[1] = reader.ReadFloat();
-                }
-
-                if (reader.ReadFloat(ref tracks.core[0]) && reader.ReadFloat(ref tracks.core[1]))
-                {
-                    if (crowdIndices != null && crowdIndices.Count > 0)
-                    {
-                        crowd.core[0] = reader.ReadFloat();
-                        if (crowdIndices.Count > 1)
-                            crowd.core[1] = reader.ReadFloat();
-                    }
-                }
-                reader.EndNode();
-            }
-        }
-
         private void RankLoop(ref DTAFileReader reader)
         {
+            Ranks = new();
             while (reader.StartNode())
             {
                 switch (reader.GetNameOfNode())
                 {
                     case "drum":
-                    case "drums": ranks!.drum4_pro = reader.ReadUInt16(); break;
-                    case "guitar": ranks!.guitar5 = reader.ReadUInt16(); break;
-                    case "bass": ranks!.bass5 = reader.ReadUInt16(); break;
-                    case "vocals": ranks!.vocals = reader.ReadUInt16(); break;
-                    case "keys": ranks!.keys = reader.ReadUInt16(); break;
+                    case "drums": Ranks.drum4_pro = reader.ReadUInt16(); break;
+                    case "guitar": Ranks.guitar5 = reader.ReadUInt16(); break;
+                    case "bass": Ranks.bass5 = reader.ReadUInt16(); break;
+                    case "vocals": Ranks.vocals = reader.ReadUInt16(); break;
+                    case "keys": Ranks.keys = reader.ReadUInt16(); break;
                     case "realGuitar":
-                    case "real_guitar": ranks!.real_guitar = reader.ReadUInt16(); break;
+                    case "real_guitar": Ranks.real_guitar = reader.ReadUInt16(); break;
                     case "realBass":
-                    case "real_bass": ranks!.real_bass = reader.ReadUInt16(); break;
+                    case "real_bass": Ranks.real_bass = reader.ReadUInt16(); break;
                     case "realKeys":
-                    case "real_keys": ranks!.real_keys = reader.ReadUInt16(); break;
+                    case "real_keys": Ranks.real_keys = reader.ReadUInt16(); break;
                     case "realDrums":
-                    case "real_drums": ranks!.drum4_pro = reader.ReadUInt16(); break;
+                    case "real_drums": Ranks.drum4_pro = reader.ReadUInt16(); break;
                     case "harmVocals":
-                    case "vocal_harm": ranks!.harmony = reader.ReadUInt16(); break;
-                    case "band": ranks!.band = reader.ReadUInt16(); break;
+                    case "vocal_harm": Ranks.harmony = reader.ReadUInt16(); break;
+                    case "band": Ranks.band = reader.ReadUInt16(); break;
                 }
                 reader.EndNode();
             }
         }
 
-        public string NodeName { get; private set; } = string.Empty;
-
+        public string NodeName { get; private init; }
         public string Name { get; private set; } = string.Empty;
         public string Artist { get; private set; } = string.Empty;
         public string Album { get; private set; } = string.Empty;
@@ -765,51 +574,156 @@ namespace Framework.Serialization.XboxSTFS
         public uint PreviewStart { get; private set; } = uint.MaxValue;
         public uint PreviewEnd { get; private set; } = uint.MaxValue;
 
-        public readonly DTARanks? ranks;
+        public DTARanks? Ranks { get; private set; }
 
         private readonly List<string>? soloes;
         private readonly List<string>? videoVenues;
 
-        private short[] realGuitarTuning = Array.Empty<short>();
-        private short[] realBassTuning = Array.Empty<short>();
+        public string[] Soloes
+        {
+            get
+            {
+                if (soloes == null)
+                    return Array.Empty<string>();
+                return soloes.ToArray();
+            }
+        }
 
-        public short[] RealGuitarTuning { get { return realGuitarTuning; } }
-        public short[] RealBassTuning { get { return realBassTuning; } }
+        public string[] VideoVenues
+        {
+            get
+            {
+                if (videoVenues == null)
+                    return Array.Empty<string>();
+                return videoVenues.ToArray();
+            }
+        }
+
+        private readonly List<short>? realGuitarTuning;
+        private readonly List<short>? realBassTuning;
+
+        public short[] RealGuitarTuning
+        {
+            get
+            {
+                if (realGuitarTuning == null)
+                    return Array.Empty<short>();
+                return realGuitarTuning.ToArray();
+            }
+        }
+
+        public short[] RealBassTuning
+        {
+            get
+            {
+                if (realBassTuning == null)
+                    return Array.Empty<short>();
+                return realBassTuning.ToArray();
+            }
+        }
 
         public string Location { get; private set; } = string.Empty;
-        
-        
-        List<ushort>? drumIndices;
-        List<ushort>? bassIndices;
-        List<ushort>? guitarIndices;
-        List<ushort>? keysIndices;
-        List<ushort>? vocalsIndices;
-        List<ushort>? crowdIndices;
-        
-        public ushort NumVocalParts { get; private set; } = ushort.MaxValue;
 
-        private DTAAudio kick;
-        private DTAAudio snare;
-        private DTAAudio cymbals;
-        private DTAAudio bass;
-        private DTAAudio guitar;
-        private DTAAudio keys;
-        private DTAAudio vocals;
-        private DTAAudio tracks;
-        private DTAAudio crowd;
-        public DTAAudio KickAudio => kick;
-        public DTAAudio SnareAudio => snare;
-        public DTAAudio CymbalsAudio => cymbals;
-        public DTAAudio BassAudio => bass;
-        public DTAAudio GuitarAudio => guitar;
-        public DTAAudio KeysAudio => keys;
-        public DTAAudio VocalAudio => vocals;
-        public DTAAudio TrackAudio => tracks;
-        public DTAAudio CrowdAudio => crowd;
+
+        private List<ushort>? drumIndices;
+        private List<ushort>? bassIndices;
+        private List<ushort>? guitarIndices;
+        private List<ushort>? keysIndices;
+        private List<ushort>? vocalsIndices;
+        private List<ushort>? crowdIndices;
+
+        public ushort[] DrumIndices
+        {
+            get
+            {
+                if (drumIndices == null)
+                    return Array.Empty<ushort>();
+                return drumIndices.ToArray();
+            }
+        }
+        public ushort[] BassIndices
+        {
+            get
+            {
+                if (bassIndices == null)
+                    return Array.Empty<ushort>();
+                return bassIndices.ToArray();
+            }
+        }
+        public ushort[] GuitarIndices
+        {
+            get
+            {
+                if (guitarIndices == null)
+                    return Array.Empty<ushort>();
+                return guitarIndices.ToArray();
+            }
+        }
+        public ushort[] KeysIndices
+        {
+            get
+            {
+                if (keysIndices == null)
+                    return Array.Empty<ushort>();
+                return keysIndices.ToArray();
+            }
+        }
+        public ushort[] VocalsIndices
+        {
+            get
+            {
+                if (vocalsIndices == null)
+                    return Array.Empty<ushort>();
+                return vocalsIndices.ToArray();
+            }
+        }
+        public ushort[] CrowdIndices
+        {
+            get
+            {
+                if (crowdIndices == null)
+                    return Array.Empty<ushort>();
+                return crowdIndices.ToArray();
+            }
+        }
+
+        private List<float>? pan;
+        private List<float>? volume;
+        private List<float>? core;
+
+        public float[] Pan
+        {
+            get
+            {
+                if (pan == null)
+                    return Array.Empty<float>();
+                return pan.ToArray();
+            }
+        }
+        public float[] Volume
+        {
+            get
+            {
+                if (volume == null)
+                    return Array.Empty<float>();
+                return volume.ToArray();
+            }
+        }
+        public float[] Core
+        {
+            get
+            {
+                if (core == null)
+                    return Array.Empty<float>();
+                return core.ToArray();
+            }
+        }
+
+        public ushort NumVocalParts { get; private set; } = ushort.MaxValue;
 
         public string MidiFile { get; private set; } = string.Empty;
         public bool DiscUpdate { get; private set; }
 
-        readonly List<(string, string)> others = new();
+        private readonly List<(string, string)> others = new();
     };
 }
