@@ -197,9 +197,8 @@ namespace Framework.Serialization
 
         public void ExtractMidiNote(ref MidiNote note)
         {
-            ReadOnlySpan<byte> span = m_reader.ReadSpan(2);
-            note.value = span[0];
-            note.velocity = span[1];
+            note.value = m_reader.ReadByte();
+            note.velocity = m_reader.ReadByte();
         }
 
         public MidiNote ExtractMidiNote()
