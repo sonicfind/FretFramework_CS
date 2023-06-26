@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Framework.SongEntry.ConEntry.ProUpgrades
+namespace Framework.SongEntry.CONProUpgrades
 {
     public class SongProUpgrade_Extracted : SongProUpgrade
     {

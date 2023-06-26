@@ -90,7 +90,7 @@ namespace Framework.SongEntry
             return null;
         }
 
-        public override void FinishScan()
+        public void FinishScan()
         {
             MapModifierVariables();
         }

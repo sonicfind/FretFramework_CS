@@ -80,7 +80,6 @@ namespace Framework.SongEntry
             };
         }
 
-        public abstract void FinishScan();
 
         protected void Scan_Midi(FrameworkFile file, DrumType drumType)
         {

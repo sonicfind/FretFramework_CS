@@ -22,7 +22,7 @@ namespace Framework
     {
         static void Main(string[] args)
         {
-            string? directory = string.Empty;
+            string? directory;
             do
             {
                 Console.Write("Drag and drop song directory: ");
@@ -31,9 +31,8 @@ namespace Framework
             while (directory == null);
             directory = directory.Replace("\"", "");
 
-            SongLibrary library = new();
             Stopwatch stopwatch = Stopwatch.StartNew();
-            library.RunFullScan(new() { directory });
+            SongLibrary library = SongCache.ScanDirectories(new() { directory }, true);
             stopwatch.Stop();
             Console.WriteLine($"Time Spent: {stopwatch.ElapsedMilliseconds}ms");
             Console.WriteLine($"Song Count: {library.Count}");
@@ -45,19 +44,18 @@ namespace Framework
     [MemoryDiagnoser]
     public class SongBenchmarks
     {
-        private SongLibrary? library;
+        SongLibrary? library;
         private readonly List<string> directories = new() { "E:\\Documents\\My Games\\Clone Hero\\CH Songs" };
-
-        [IterationSetup]
-        public void Setup()
-        {
-            library = new SongLibrary();
-        }
 
         [Benchmark]
         public void Scan_Directory()
         {
-            library!.RunFullScan(directories);
+            library = SongCache.ScanDirectories(directories, false);
+        }
+
+        [IterationCleanup]
+        public void IterationCleanup() {
+            library = null;
         }
     }
 }

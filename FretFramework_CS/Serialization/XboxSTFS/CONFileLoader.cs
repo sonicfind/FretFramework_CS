@@ -145,7 +145,7 @@ namespace Framework.Serialization.XboxSTFS
             return Load(files[index]);
         }
 
-        public bool IsMoggUnencrypted(int index)
+        public int GetMoggVersion(int index)
         {
             if (index < 0 || index >= files.Count)
                 throw new Exception("Index provided is not valid");
@@ -159,7 +159,7 @@ namespace Framework.Serialization.XboxSTFS
             {
                 if (stream.Seek(blockLocation, SeekOrigin.Begin) != blockLocation)
                     throw new Exception("Seek error in CON-like subfile for Mogg");
-                return stream.ReadInt32LE() == 0xA;
+                return stream.ReadInt32LE();
             }
         }
 
