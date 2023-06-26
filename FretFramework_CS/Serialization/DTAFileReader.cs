@@ -12,23 +12,23 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
-namespace Framework.Serialization.XboxSTFS
+namespace Framework.Serialization
 {
     public unsafe class DTAFileReader : TxtReader_Base
     {
         private readonly List<int> nodeEnds = new();
 
-        public DTAFileReader(FrameworkFile file, bool disposeFile = false) : base(file, disposeFile) { SkipWhiteSpace(); }
+        public DTAFileReader(FrameworkFile file) : base(file) { SkipWhiteSpace(); }
 
-        public DTAFileReader(byte[] data) : this(new FrameworkFile_Handle(data), true) { }
+        public DTAFileReader(byte[] data) : this(new FrameworkFile_Handle(data)) { }
 
-        public DTAFileReader(string path) : this(new FrameworkFile_Alloc(path), true) { }
+        public DTAFileReader(string path) : this(new FrameworkFile_Alloc(path)) { }
 
-        public DTAFileReader(PointerHandler pointer, bool dispose = false) : this(new FrameworkFile_Pointer(pointer, dispose), true) { }
+        public DTAFileReader(PointerHandler pointer, bool disposePointer = false) : this(new FrameworkFile_Pointer(pointer, disposePointer)) { }
 
         public DTAFileReader Clone()
         {
-            return new(file, false)
+            return new(file)
             {
                 _position = _position,
                 _next = _next,

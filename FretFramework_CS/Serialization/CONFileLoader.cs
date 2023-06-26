@@ -8,7 +8,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Framework.Serialization.XboxSTFS
+namespace Framework.Serialization
 {
     public class FileListing
     {
@@ -70,7 +70,7 @@ namespace Framework.Serialization.XboxSTFS
 
             byte shift = 0;
             int entryID = buffer[0] << 24 | buffer[1] << 16 | buffer[2] << 8 | buffer[3];
-            if ((((entryID + 0xFFF) & 0xF000) >> 0xC) != 0xB)
+            if ((entryID + 0xFFF & 0xF000) >> 0xC != 0xB)
                 shift = 1;
 
             stream.Seek(0x37C, SeekOrigin.Begin);
@@ -189,8 +189,8 @@ namespace Framework.Serialization.XboxSTFS
             PointerHandler ptr = new(fileSize);
             byte* data = ptr.GetData();
             long skipVal = BYTES_PER_BLOCK << shift;
-            int threshold = blockNum - (blockNum % NUM_BLOCKS_SQUARED) + NUM_BLOCKS_SQUARED;
-            int numBlocks = BLOCKS_PER_SECTION - (blockNum % BLOCKS_PER_SECTION);
+            int threshold = blockNum - blockNum % NUM_BLOCKS_SQUARED + NUM_BLOCKS_SQUARED;
+            int numBlocks = BLOCKS_PER_SECTION - blockNum % BLOCKS_PER_SECTION;
             int readSize = BYTES_PER_BLOCK * numBlocks;
             int offset = 0;
 
@@ -274,9 +274,9 @@ namespace Framework.Serialization.XboxSTFS
             int blockAdjust = 0;
             if (blocknum >= BLOCKS_PER_SECTION)
             {
-                blockAdjust += ((blocknum / BLOCKS_PER_SECTION) + 1) << shift;
+                blockAdjust += blocknum / BLOCKS_PER_SECTION + 1 << shift;
                 if (blocknum >= NUM_BLOCKS_SQUARED)
-                    blockAdjust += ((blocknum / NUM_BLOCKS_SQUARED) + 1) << shift;
+                    blockAdjust += blocknum / NUM_BLOCKS_SQUARED + 1 << shift;
             }
             return blockAdjust + blocknum;
         }

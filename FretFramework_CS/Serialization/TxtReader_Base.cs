@@ -7,10 +7,9 @@ using System.Threading.Tasks;
 
 namespace Framework.Serialization
 {
-    public unsafe abstract class TxtReader_Base : IDisposable
+    public unsafe abstract class TxtReader_Base
     {
         public readonly FrameworkFile file;
-        private readonly bool disposeFile;
         protected int _position;
 
         public int Position
@@ -34,18 +33,7 @@ namespace Framework.Serialization
 
         public byte* CurrentPtr { get { return file.ptr + _position; } }
 
-        protected TxtReader_Base(FrameworkFile file, bool disposeFile)
-        {
-            this.file = file;
-            this.disposeFile = disposeFile;
-        }
-
-        public void Dispose()
-        {
-            if (disposeFile)
-                file.Dispose();
-            GC.SuppressFinalize(this);
-        }
+        protected TxtReader_Base(FrameworkFile file) { this.file = file; }
 
         public abstract void SkipWhiteSpace();
 

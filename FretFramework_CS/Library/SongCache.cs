@@ -1,6 +1,5 @@
 ﻿using Framework.Hashes;
 using Framework.Serialization;
-using Framework.Serialization.XboxSTFS;
 using Framework.SongEntry;
 using Framework.SongEntry.CONProUpgrades;
 using Framework.Types;

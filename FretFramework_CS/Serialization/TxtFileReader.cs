@@ -11,14 +11,17 @@ using System.Threading.Tasks;
 
 namespace Framework.Serialization
 {
-    public unsafe class TxtFileReader : TxtReader_Base
+    public unsafe class TxtFileReader : TxtReader_Base, IDisposable
     {
         internal static readonly byte[] BOM = { 0xEF, 0xBB, 0xBF };
         internal static readonly UTF8Encoding UTF8 = new(true, true);
         static TxtFileReader() { }
 
-        public TxtFileReader(FrameworkFile file, bool disposeFile = false) : base(file, disposeFile)
+        private readonly bool disposeFile;
+
+        public TxtFileReader(FrameworkFile file, bool disposeFile = false) : base(file)
         {
+            this.disposeFile = disposeFile;
             if (new ReadOnlySpan<byte>(file.ptr, 3).SequenceEqual(BOM))
                 _position += 3;
 
@@ -33,6 +36,13 @@ namespace Framework.Serialization
         public TxtFileReader(string path) : this(new FrameworkFile_Alloc(path), true) { }
 
         public TxtFileReader(PointerHandler pointer, bool dispose = false) : this(new FrameworkFile_Pointer(pointer, dispose), true) { }
+
+        public void Dispose()
+        {
+            if (disposeFile)
+                file.Dispose();
+            GC.SuppressFinalize(this);
+        }
 
         public override void SkipWhiteSpace()
         {

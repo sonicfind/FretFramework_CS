@@ -2,7 +2,6 @@
 using BenchmarkDotNet.Disassemblers;
 using Framework.Hashes;
 using Framework.Serialization;
-using Framework.Serialization.XboxSTFS;
 using Framework.SongEntry.CONProUpgrades;
 using Framework.SongEntry.TrackScan;
 using Framework.Types;
