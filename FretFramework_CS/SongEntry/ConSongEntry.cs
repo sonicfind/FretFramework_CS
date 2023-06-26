@@ -6,7 +6,6 @@ using Framework.Serialization.XboxSTFS;
 using Framework.SongEntry.CONProUpgrades;
 using Framework.SongEntry.TrackScan;
 using Framework.Types;
-using Iced.Intel;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -17,7 +16,6 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace Framework.SongEntry
 {
@@ -58,6 +56,7 @@ namespace Framework.SongEntry
         public string ShortName { get; private set; } = string.Empty;
         public string SongID { get; private set; } = string.Empty;
         public uint AnimTempo { get; private set; }
+        public string DrumBank { get; private set; } = string.Empty;
         public string VocalPercussionBank { get; private set; } = string.Empty;
         public uint VocalSongScrollSpeed { get; private set; }
         public uint SongRating { get; private set; } // 1 = FF; 2 = SR; 3 = M; 4 = NR
@@ -76,9 +75,6 @@ namespace Framework.SongEntry
         // _update.mid info, if it exists
         public CONSongFileInfo? UpdateMidi { get; private set; } = null;
 
-        public short[] RealGuitarTuning { get; private set; } = Array.Empty<short>();
-        public short[] RealBassTuning { get; private set; } = Array.Empty<short>();
-
         // .mogg info
         public CONSongFileInfo? Mogg { get; private set; } = null;
 
@@ -95,24 +91,153 @@ namespace Framework.SongEntry
 
         public override string Directory { get; protected set; } = string.Empty;
 
-        public ushort[] DrumIndices { get; private set; } = Array.Empty<ushort>();
-        public ushort[] BassIndices { get; private set; } = Array.Empty<ushort>();
-        public ushort[] GuitarIndices { get; private set; } = Array.Empty<ushort>();
-        public ushort[] KeysIndices { get; private set; } = Array.Empty<ushort>();
-        public ushort[] VocalsIndices { get; private set; } = Array.Empty<ushort>();
-        public ushort[] CrowdIndices { get; private set; } = Array.Empty<ushort>();
+        private List<string>? soloes;
+        private List<string>? videoVenues;
 
-        public float[] Pan { get; private set; } = Array.Empty<float>();
-        public float[] Volume { get; private set; } = Array.Empty<float>();
-        public float[] Core { get; private set; } = Array.Empty<float>();
-
-        private ConSongEntry(string name, DTAFileNode dta)
+        public string[] Soloes
         {
-            ShortName = name;
-            SetFromDTA(dta);
+            get
+            {
+                if (soloes == null)
+                    return Array.Empty<string>();
+                return soloes.ToArray();
+            }
         }
 
-        public ConSongEntry(string name, CONFile conFile, DTAFileNode dta) : this(name, dta)
+        public string[] VideoVenues
+        {
+            get
+            {
+                if (videoVenues == null)
+                    return Array.Empty<string>();
+                return videoVenues.ToArray();
+            }
+        }
+
+        private List<short>? realGuitarTuning;
+        private List<short>? realBassTuning;
+
+        public short[] RealGuitarTuning
+        {
+            get
+            {
+                if (realGuitarTuning == null)
+                    return Array.Empty<short>();
+                return realGuitarTuning.ToArray();
+            }
+        }
+
+        public short[] RealBassTuning
+        {
+            get
+            {
+                if (realBassTuning == null)
+                    return Array.Empty<short>();
+                return realBassTuning.ToArray();
+            }
+        }
+
+        private List<ushort>? drumIndices;
+        private List<ushort>? bassIndices;
+        private List<ushort>? guitarIndices;
+        private List<ushort>? keysIndices;
+        private List<ushort>? vocalsIndices;
+        private List<ushort>? crowdIndices;
+
+        public ushort[] DrumIndices
+        {
+            get
+            {
+                if (drumIndices == null)
+                    return Array.Empty<ushort>();
+                return drumIndices.ToArray();
+            }
+        }
+        public ushort[] BassIndices
+        {
+            get
+            {
+                if (bassIndices == null)
+                    return Array.Empty<ushort>();
+                return bassIndices.ToArray();
+            }
+        }
+        public ushort[] GuitarIndices
+        {
+            get
+            {
+                if (guitarIndices == null)
+                    return Array.Empty<ushort>();
+                return guitarIndices.ToArray();
+            }
+        }
+        public ushort[] KeysIndices
+        {
+            get
+            {
+                if (keysIndices == null)
+                    return Array.Empty<ushort>();
+                return keysIndices.ToArray();
+            }
+        }
+        public ushort[] VocalsIndices
+        {
+            get
+            {
+                if (vocalsIndices == null)
+                    return Array.Empty<ushort>();
+                return vocalsIndices.ToArray();
+            }
+        }
+        public ushort[] CrowdIndices
+        {
+            get
+            {
+                if (crowdIndices == null)
+                    return Array.Empty<ushort>();
+                return crowdIndices.ToArray();
+            }
+        }
+
+        private List<float>? pan;
+        private List<float>? volume;
+        private List<float>? core;
+
+        public float[] Pan
+        {
+            get
+            {
+                if (pan == null)
+                    return Array.Empty<float>();
+                return pan.ToArray();
+            }
+        }
+        public float[] Volume
+        {
+            get
+            {
+                if (volume == null)
+                    return Array.Empty<float>();
+                return volume.ToArray();
+            }
+        }
+        public float[] Core
+        {
+            get
+            {
+                if (core == null)
+                    return Array.Empty<float>();
+                return core.ToArray();
+            }
+        }
+
+        private ConSongEntry(string name, DTAFileReader reader)
+        {
+            ShortName = name;
+            SetFromDTA(reader);
+        }
+
+        public ConSongEntry(string name, CONFile conFile, DTAFileReader reader) : this(name, reader)
         {
             this.conFile = conFile;
             if (MidiFile == string.Empty)
@@ -131,7 +256,7 @@ namespace Framework.SongEntry
             Directory = conFile.Filename;
         }
 
-        public ConSongEntry(string name, string folder, DTAFileNode dta) : this(name, dta)
+        public ConSongEntry(string name, string folder, DTAFileReader reader) : this(name, reader)
         {
             Directory = folder;
             string dir = Path.Combine(folder, location);
@@ -150,137 +275,304 @@ namespace Framework.SongEntry
             location = dir;
         }
 
-        public void SetFromDTA(DTAFileNode dta)
+        public (bool, bool) SetFromDTA(DTAFileReader reader)
         {
-            if (dta.Name != string.Empty)
-                m_name = dta.Name;
-
-            if (dta.Artist != string.Empty)
-                m_artist = dta.Artist;
-
-            if (dta.Album != string.Empty)
-                m_album = dta.Album;
-
-            if (dta.AlbumTrack != ushort.MaxValue)
-                m_album_track = dta.AlbumTrack;
-
-            if (dta.Year_Recorded != ushort.MaxValue)
-                m_year = dta.Year_Recorded.ToString();
-            else if (dta.Year_Released != ushort.MaxValue)
-                m_year = dta.Year_Released.ToString();
-
-            if (dta.Charter != string.Empty)
-                m_charter = dta.Charter;
-
-            if (dta.Genre != string.Empty)
-                m_genre = dta.Genre;
-
-            if (dta.Source != string.Empty)
+            bool alternatePath = false;
+            bool discUpdate = false;
+            while (reader.StartNode())
             {
-                string src = dta.Source;
-                if (!ShortName.StartsWith("UGC_") && (src == "ugc" || src == "ugc_plus"))
-                    m_source = "customs";
-                else
-                    m_source = src;
+                string name = reader.GetNameOfNode();
+                switch (name)
+                {
+                    case "name": m_name = reader.ExtractText(); break;
+                    case "artist": m_artist = reader.ExtractText(); break;
+                    case "master": IsMaster = reader.ReadBoolean(); break;
+                    case "context": /*Context = reader.ReadUInt32();*/ break;
+                    case "song": SongLoop(ref reader); break;
+                    case "song_vocals": while (reader.StartNode()) reader.EndNode(); break;
+                    case "song_scroll_speed": VocalSongScrollSpeed = reader.ReadUInt32(); break;
+                    case "tuning_offset_cents": TuningOffsetCents = reader.ReadInt32(); break;
+                    case "bank": VocalPercussionBank = reader.ExtractText(); break;
+                    case "anim_tempo":
+                        {
+                            string val = reader.ExtractText();
+                            AnimTempo = val switch
+                            {
+                                "kTempoSlow" => 16,
+                                "kTempoMedium" => 32,
+                                "kTempoFast" => 64,
+                                _ => uint.Parse(val)
+                            };
+                            break;
+                        }
+                    case "preview":
+                        m_previewStart = reader.ReadUInt32();
+                        m_previewEnd = reader.ReadUInt32();
+                        break;
+                    case "rank": RankLoop(ref reader); break;
+                    case "solo": soloes = reader.ExtractList_String(); break;
+                    case "genre": m_genre = reader.ExtractText(); break;
+                    case "decade": /*Decade = reader.ExtractText();*/ break;
+                    case "vocal_gender": VocalGender = reader.ExtractText() == "male"; break;
+                    case "format": /*Format = reader.ReadUInt32();*/ break;
+                    case "version": VenueVersion = reader.ReadUInt32(); break;
+                    case "fake": /*IsFake = reader.ExtractText();*/ break;
+                    case "downloaded": /*Downloaded = reader.ExtractText();*/ break;
+                    case "game_origin":
+                        {
+                            m_source = reader.ExtractText();
+                            if ((m_source == "ugc" || m_source == "ugc_plus"))
+                            {
+                                if (!ShortName.StartsWith("UGC_"))
+                                    m_source = "customs";
+                            }
+                            else if (m_source == "rb1" || m_source == "rb1_dlc" || m_source == "rb1dlc" ||
+                                m_source == "gdrb" || m_source == "greenday" || m_source == "beatles" ||
+                                m_source == "tbrb" || m_source == "lego" || m_source == "lrb" ||
+                                m_source == "rb2" || m_source == "rb3" || m_source == "rb3_dlc" || m_source == "rb3dlc")
+                            {
+                                m_source = "Harmonix";
+                            }
+                            break;
+                        }
+                    case "song_id": SongID = reader.ExtractText(); break;
+                    case "rating": SongRating = reader.ReadUInt32(); break;
+                    case "short_version": /*ShortVersion = reader.ReadUInt32();*/ break;
+                    case "album_art": HasAlbumArt = reader.ReadBoolean(); break;
+                    case "year_released": m_year = reader.ReadUInt32().ToString(); break;
+                    case "year_recorded": m_year = reader.ReadUInt32().ToString(); break;
+                    case "album_name": m_album = reader.ExtractText(); break;
+                    case "album_track_number": m_album_track = reader.ReadUInt16(); break;
+                    case "pack_name": /*Packname = reader.ExtractText();*/ break;
+                    case "base_points": /*BasePoints = reader.ReadUInt32();*/ break;
+                    case "band_fail_cue": /*BandFailCue = reader.ExtractText();*/ break;
+                    case "drum_bank": DrumBank = reader.ExtractText(); break;
+                    case "song_length": m_song_length = reader.ReadUInt32(); break;
+                    case "sub_genre": /*Subgenre = reader.ExtractText();*/ break;
+                    case "author": m_charter = reader.ExtractText(); break;
+                    case "guide_pitch_volume": /*GuidePitchVolume = reader.ReadFloat();*/ break;
+                    case "encoding":
+                        MidiEncoding = reader.ExtractText() switch
+                        {
+                            "Latin1" => Encoding.Latin1,
+                            "UTF8" => Encoding.UTF8,
+                            _ => MidiEncoding
+                        };
+                        break;
+                    case "vocal_tonic_note": VocalTonicNote = reader.ReadUInt32(); break;
+                    case "song_tonality": SongTonality = reader.ReadBoolean(); break;
+                    case "alternate_path": alternatePath = reader.ReadBoolean(); break;
+                    case "real_guitar_tuning":
+                        {
+                            if (reader.StartNode())
+                            {
+                                realGuitarTuning = reader.ExtractList_Int16();
+                                reader.EndNode();
+                            }
+                            break;
+                        }
+                    case "real_bass_tuning":
+                        {
+                            if (reader.StartNode())
+                            {
+                                realBassTuning = reader.ExtractList_Int16();
+                                reader.EndNode();
+                            }
+                            break;
+                        }
+                    case "video_venues":
+                        {
+                            if (reader.StartNode())
+                            {
+                                videoVenues = reader.ExtractList_String();
+                                reader.EndNode();
+                            }
+                            break;
+                        }
+                    case "extra_authoring":
+                        foreach (string str in reader.ExtractList_String())
+                        {
+                            if (str == "disc_update")
+                            {
+                                discUpdate = true;
+                                break;
+                            }
+                        }
+                        break;
+                }
+                reader.EndNode();
             }
 
-            if (dta.Hopo_Threshold != uint.MaxValue)
-                m_hopo_frequency = dta.Hopo_Threshold;
+            return new(discUpdate, alternatePath);
+        }
 
-            if (dta.AnimTempo != uint.MaxValue)
-                AnimTempo = dta.AnimTempo;
-
-            if (dta.NumVocalParts != ushort.MaxValue)
-                VocalParts = dta.NumVocalParts;
-
-            if (dta.SongID != string.Empty)
-                SongID = dta.SongID;
-
-            if (dta.Location != string.Empty)
-                location = dta.Location;
-
-            if (dta.PreviewStart != uint.MaxValue)
+        private void SongLoop(ref DTAFileReader reader)
+        {
+            while (reader.StartNode())
             {
-                m_previewStart = dta.PreviewStart;
-                m_previewEnd = dta.PreviewEnd;
+                string descriptor = reader.GetNameOfNode();
+                switch (descriptor)
+                {
+                    case "name": location = reader.ExtractText(); break;
+                    case "tracks": TracksLoop(ref reader); break;
+                    case "crowd_channels": crowdIndices = reader.ExtractList_UInt16(); break;
+                    case "vocal_parts": VocalParts = reader.ReadUInt16(); break;
+                    case "pans":
+                        if (reader.StartNode())
+                        {
+                            pan = reader.ExtractList_Float();
+                            reader.EndNode();
+                        }
+                        break;
+                    case "vols":
+                        if (reader.StartNode())
+                        {
+                            volume = reader.ExtractList_Float();
+                            reader.EndNode();
+                        }
+                        break;
+                    case "cores":
+                        if (reader.StartNode())
+                        {
+                            core = reader.ExtractList_Float();
+                            reader.EndNode();
+                        }
+                        break;
+                    case "hopo_threshold": m_hopo_frequency = reader.ReadUInt32(); break;
+                    case "midi_file": MidiFile = reader.ExtractText(); break;
+                }
+                reader.EndNode();
             }
+        }
 
-            if (dta.VocalPercBank != string.Empty)
-                VocalPercussionBank = dta.VocalPercBank;
+        private void TracksLoop(ref DTAFileReader reader)
+        {
+            while (reader.StartNode())
+            {
+                while (reader.StartNode())
+                {
+                    switch (reader.GetNameOfNode())
+                    {
+                        case "drum":
+                            {
+                                if (reader.StartNode())
+                                {
+                                    drumIndices = reader.ExtractList_UInt16();
+                                    reader.EndNode();
+                                }
+                                break;
+                            }
+                        case "bass":
+                            {
+                                if (reader.StartNode())
+                                {
+                                    bassIndices = reader.ExtractList_UInt16();
+                                    reader.EndNode();
+                                }
+                                break;
+                            }
+                        case "guitar":
+                            {
+                                if (reader.StartNode())
+                                {
+                                    guitarIndices = reader.ExtractList_UInt16();
+                                    reader.EndNode();
+                                }
+                                break;
+                            }
+                        case "keys":
+                            {
+                                if (reader.StartNode())
+                                {
+                                    keysIndices = reader.ExtractList_UInt16();
+                                    reader.EndNode();
+                                }
+                                break;
+                            }
+                        case "vocals":
+                            {
+                                if (reader.StartNode())
+                                {
+                                    vocalsIndices = reader.ExtractList_UInt16();
+                                    reader.EndNode();
+                                }
+                                break;
+                            }
+                    }
+                    reader.EndNode();
+                }
+                reader.EndNode();
+            }
+        }
 
-            if (dta.ScrollSpeed != uint.MaxValue)
-                VocalSongScrollSpeed = dta.ScrollSpeed;
+        private static readonly int[] BandDiffMap = { 163, 215, 243, 267, 292, 345 };
+        private static readonly int[] GuitarDiffMap = { 139, 176, 221, 267, 333, 409 };
+        private static readonly int[] BassDiffMap = { 135, 181, 228, 293, 364, 436 };
+        private static readonly int[] DrumDiffMap = { 124, 151, 178, 242, 345, 448 };
+        private static readonly int[] KeysDiffMap = { 153, 211, 269, 327, 385, 443 };
+        private static readonly int[] VocalsDiffMap = { 132, 175, 218, 279, 353, 427 };
+        private static readonly int[] RealGuitarDiffMap = { 150, 205, 264, 323, 382, 442 };
+        private static readonly int[] RealBassDiffMap = { 150, 208, 267, 325, 384, 442 };
+        private static readonly int[] RealDrumsDiffMap = { 124, 151, 178, 242, 345, 448 };
+        private static readonly int[] RealKeysDiffMap = { 153, 211, 269, 327, 385, 443 };
+        private static readonly int[] HarmonyDiffMap = { 132, 175, 218, 279, 353, 427 };
 
-            if (dta.MidiFile != string.Empty)
-                MidiFile = dta.MidiFile;
+        private void RankLoop(ref DTAFileReader reader)
+        {
+            while (reader.StartNode())
+            {
+                switch (reader.GetNameOfNode())
+                {
+                    case "drum":
+                    case "drums":
+                        {
+                            SetRank(ref m_scans.drums_4, reader.ReadUInt16(), DrumDiffMap);
+                            if (m_scans.drums_4pro.intensity == -1)
+                                m_scans.drums_4pro.intensity = m_scans.drums_4.intensity;
+                            break;
+                        }
+                    case "guitar": SetRank(ref m_scans.lead_5, reader.ReadUInt16(), GuitarDiffMap); break;
+                    case "bass": SetRank(ref m_scans.bass_5, reader.ReadUInt16(), BassDiffMap); break;
+                    case "vocals": SetRank(ref m_scans.leadVocals, reader.ReadUInt16(), VocalsDiffMap); break;
+                    case "keys": SetRank(ref m_scans.keys, reader.ReadUInt16(), KeysDiffMap); break;
+                    case "realGuitar":
+                    case "real_guitar":
+                        {
+                            SetRank(ref m_scans.proguitar_17, reader.ReadUInt16(), RealGuitarDiffMap);
+                            m_scans.proguitar_22.intensity = m_scans.proguitar_17.intensity;
+                            break;
+                        }
+                    case "realBass":
+                    case "real_bass":
+                        {
+                            SetRank(ref m_scans.probass_17, reader.ReadUInt16(), RealBassDiffMap);
+                            m_scans.probass_22.intensity = m_scans.probass_17.intensity;
+                            break;
+                        }
+                    case "realKeys":
+                    case "real_keys": SetRank(ref m_scans.proKeys, reader.ReadUInt16(), RealKeysDiffMap); break;
+                    case "realDrums":
+                    case "real_drums":
+                        {
+                            SetRank(ref m_scans.drums_4pro, reader.ReadUInt16(), RealDrumsDiffMap);
+                            if (m_scans.drums_4.intensity == -1)
+                                m_scans.drums_4.intensity = m_scans.drums_4pro.intensity;
+                            break;
+                        }
+                    case "harmVocals":
+                    case "vocal_harm": SetRank(ref m_scans.harmonyVocals, reader.ReadUInt16(), HarmonyDiffMap); break;
+                    //case "band": SetRank(ref m_scans.drums_4pro, reader.ReadUInt16(), DrumDiffMap); break;
+                }
+                reader.EndNode();
+            }
+        }
 
-            if (dta.Ranks != null)
-                SetRanks(dta.Ranks);
-
-            IsMaster = IsMaster || dta.IsMaster;
-
-            if (dta.Length != uint.MaxValue)
-                m_song_length = dta.Length;
-
-            if (dta.Rating != uint.MaxValue)
-                SongRating = dta.Rating;
-
-            if (VocalGender)
-                VocalGender = dta.VocalIsMale;
-
-            if (dta.VocalTonic != uint.MaxValue)
-                VocalTonicNote = dta.VocalTonic;
-
-            if (!SongTonality)
-                SongTonality = dta.Tonality;
-
-            if (dta.TuningOffsetCents != int.MaxValue)
-                TuningOffsetCents = dta.TuningOffsetCents;
-
-            if (dta.RealGuitarTuning != Array.Empty<short>())
-                RealGuitarTuning = dta.RealGuitarTuning;
-
-            if (dta.RealBassTuning != Array.Empty<short>())
-                RealBassTuning = dta.RealBassTuning;
-
-            if (dta.Version != uint.MaxValue)
-                VenueVersion = dta.Version;
-
-            ushort[] indices = dta.DrumIndices;
-            if (indices != Array.Empty<ushort>())
-                DrumIndices = dta.DrumIndices;
-
-            indices = dta.BassIndices;
-            if (indices != Array.Empty<ushort>())
-                BassIndices = indices;
-
-            indices = dta.GuitarIndices;
-            if (indices != Array.Empty<ushort>())
-                GuitarIndices = indices;
-
-            indices = dta.KeysIndices;
-            if (indices != Array.Empty<ushort>())
-                KeysIndices = indices;
-
-            indices = dta.VocalsIndices;
-            if (indices != Array.Empty<ushort>())
-                VocalsIndices = indices;
-
-            indices = dta.CrowdIndices;
-            if (indices != Array.Empty<ushort>())
-                CrowdIndices = indices;
-
-            float[] values = dta.Pan;
-            if (values != Array.Empty<float>())
-                Pan = values;
-
-            values = dta.Volume;
-            if (values != Array.Empty<float>())
-                Volume = values;
-
-            values = dta.Core;
-            if (values != Array.Empty<float>())
-                Core = values;
+        private static void SetRank(ref ScanValues scan, ushort rank, int[] values)
+        {
+            sbyte i = 6;
+            while (i > 0 && rank < values[i - 1])
+                --i;
+            scan.intensity = i;
         }
 
         public bool Scan(out byte[] hash)
@@ -313,12 +605,13 @@ namespace Framework.SongEntry
             return true;
         }
 
-        public void Update(string folder, DTAFileNode dta)
+        public void Update(string folder, DTAFileReader reader)
         {
-            SetFromDTA(dta);
+            var results = SetFromDTA(reader);
+
             string dir = Path.Combine(folder, ShortName);
             FileInfo info;
-            if (dta.DiscUpdate)
+            if (results.Item1)
             {
                 string path = Path.Combine(dir, $"{ShortName}_update.mid");
                 info = new(path);
@@ -349,7 +642,7 @@ namespace Framework.SongEntry
                     miloIndex = -1;
             }
 
-            if (HasAlbumArt && dta.AlternatePath)
+            if (HasAlbumArt && results.Item2)
             {
                 info = new(Path.Combine(dir, $"{ShortName}_keep.png_xbox"));
                 if (info.Exists && (Image == null || Image.LastWriteTime < info.LastWriteTime))
@@ -512,61 +805,6 @@ namespace Framework.SongEntry
             }
             else
                 return conFile!.GetMoggVersion(moggIndex) == 0xA;
-        }
-
-        private static readonly int[] BandDiffMap = { 163, 215, 243, 267, 292, 345 };
-        private static readonly int[] GuitarDiffMap = { 139, 176, 221, 267, 333, 409 };
-        private static readonly int[] BassDiffMap = { 135, 181, 228, 293, 364, 436 };
-        private static readonly int[] DrumDiffMap = { 124, 151, 178, 242, 345, 448 };
-        private static readonly int[] KeysDiffMap = { 153, 211, 269, 327, 385, 443 };
-        private static readonly int[] VocalsDiffMap = { 132, 175, 218, 279, 353, 427 };
-        private static readonly int[] RealGuitarDiffMap = { 150, 205, 264, 323, 382, 442 };
-        private static readonly int[] RealBassDiffMap = { 150, 208, 267, 325, 384, 442 };
-        private static readonly int[] RealDrumsDiffMap = { 124, 151, 178, 242, 345, 448 };
-        private static readonly int[] RealKeysDiffMap = { 153, 211, 269, 327, 385, 443 };
-        private static readonly int[] HarmonyDiffMap = { 132, 175, 218, 279, 353, 427 };
-
-        private void SetRanks(DTARanks ranks)
-        {
-            SetRank(ref m_scans.lead_5, ranks.guitar5, GuitarDiffMap);
-            SetRank(ref m_scans.bass_5, ranks.bass5, BassDiffMap);
-            SetRank(ref m_scans.drums_4, ranks.drum4, DrumDiffMap);
-            SetRank(ref m_scans.keys, ranks.keys, KeysDiffMap);
-            SetRank(ref m_scans.leadVocals, ranks.vocals, VocalsDiffMap);
-            if (SetRank(ref m_scans.proguitar_17, ranks.real_guitar, RealGuitarDiffMap))
-                m_scans.proguitar_22.intensity = m_scans.proguitar_17.intensity;
-
-            if (SetRank(ref m_scans.probass_17, ranks.real_bass, RealBassDiffMap))
-                m_scans.probass_22.intensity = m_scans.probass_17.intensity;
-
-            if (SetRank(ref m_scans.drums_4pro, ranks.drum4_pro, RealDrumsDiffMap))
-            {
-                if (m_scans.drums_4.intensity == -1)
-                    m_scans.drums_4.intensity = m_scans.drums_4pro.intensity;
-            }
-            else if (m_scans.drums_4.intensity != -1)
-                m_scans.drums_4pro.intensity = m_scans.drums_4.intensity;
-
-            SetRank(ref m_scans.proKeys, ranks.real_keys, RealKeysDiffMap);
-            if (SetRank(ref m_scans.harmonyVocals, ranks.harmony, HarmonyDiffMap))
-            {
-                if (m_scans.leadVocals.intensity == -1)
-                    m_scans.leadVocals.intensity = m_scans.harmonyVocals.intensity;
-            }
-            else if (m_scans.leadVocals.intensity != -1)
-                m_scans.harmonyVocals.intensity = m_scans.leadVocals.intensity;
-        }
-
-        private static bool SetRank(ref ScanValues scan, ushort rank, int[] values)
-        {
-            if (rank == ushort.MaxValue)
-                return false;
-
-            sbyte i = 6;
-            while (i > 0 && rank < values[i - 1])
-                --i;
-            scan.intensity = i;
-            return true;
         }
 
         private bool IsMoggDefined()
