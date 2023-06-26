@@ -361,6 +361,103 @@ namespace Framework.SongEntry
             }
         }
 
+        public override byte[] FormatCacheData()
+        {
+            using MemoryStream ms = new();
+            using BinaryWriter writer = new(ms);
+
+            writer.Write(ShortName);
+            if (conFile != null)
+            {
+                writer.Write(midiIndex);
+                writer.Write(conFile[midiIndex].LastWrite);
+                writer.Write(moggIndex);
+                if (moggIndex == -1)
+                    writer.Write(Mogg!.FullName);
+
+                writer.Write(miloIndex);
+                if (miloIndex == -1)
+                    WriteFileInfo(Milo, writer);
+
+                writer.Write(imgIndex);
+                if (imgIndex == -1)
+                    WriteFileInfo(Image, writer);
+            }
+            else
+            {
+                writer.Write(MidiFile);
+                writer.Write(Mogg!.FullName);
+                WriteFileInfo(Milo, writer);
+                WriteFileInfo(Image, writer);
+            }
+
+            if (UpdateMidi != null)
+            {
+                writer.Write(true);
+                writer.Write(UpdateMidi.FullName);
+                writer.Write(UpdateMidi.LastWriteTime.ToBinary());
+            }
+
+            FormatCacheData(writer);
+
+            writer.Write(AnimTempo);
+            writer.Write(SongID);
+            writer.Write(VocalPercussionBank);
+            writer.Write(VocalSongScrollSpeed);
+            writer.Write(SongRating);
+            writer.Write(VocalGender);
+            writer.Write(VocalTonicNote);
+            writer.Write(SongTonality);
+            writer.Write(TuningOffsetCents);
+            writer.Write(VenueVersion);
+
+            WriteArray(RealGuitarTuning, writer);
+            WriteArray(RealBassTuning, writer);
+            WriteArray(Pan, writer);
+            WriteArray(Volume, writer);
+            WriteArray(Core, writer);
+            WriteArray(DrumIndices, writer);
+            WriteArray(BassIndices, writer);
+            WriteArray(GuitarIndices, writer);
+            WriteArray(KeysIndices, writer);
+            WriteArray(VocalsIndices, writer);
+            WriteArray(CrowdIndices, writer);
+
+            return ms.ToArray();
+        }
+
+        private static void WriteFileInfo(CONSongFileInfo? info, BinaryWriter writer)
+        {
+            if (info != null)
+                writer.Write(info.FullName);
+            else
+                writer.Write(string.Empty);
+        }
+
+        private static void WriteArray(short[] array, BinaryWriter writer)
+        {
+            int length = array.Length;
+            writer.Write(length);
+            for (int i = 0; i < length; ++i)
+                writer.Write(array[i]);
+        }
+
+        private static void WriteArray(ushort[] array, BinaryWriter writer)
+        {
+            int length = array.Length;
+            writer.Write(length);
+            for (int i = 0; i < length; ++i)
+                writer.Write(array[i]);
+        }
+
+        private static void WriteArray(float[] array, BinaryWriter writer)
+        {
+            int length = array.Length;
+            writer.Write(length);
+            for (int i = 0; i < length; ++i)
+                writer.Write(array[i]);
+        }
+
         public FrameworkFile LoadMidiFile()
         {
             if (conFile != null)

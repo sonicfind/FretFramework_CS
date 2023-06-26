@@ -80,6 +80,31 @@ namespace Framework.SongEntry
             };
         }
 
+        public abstract byte[] FormatCacheData();
+
+        protected void FormatCacheData(BinaryWriter writer)
+        {
+            m_scans.WriteToCache(writer);
+
+            writer.Write(m_name.Str);
+            writer.Write(m_artist.Str);
+            writer.Write(m_album.Str);
+            writer.Write(m_genre.Str);
+            writer.Write(m_year.Str);
+            writer.Write(m_charter.Str);
+            writer.Write(m_playlist.Str);
+
+            writer.Write(m_previewStart);
+            writer.Write(m_previewEnd);
+            writer.Write(m_album_track);
+            writer.Write(m_playlist_track);
+            writer.Write(m_song_length);
+            writer.Write(m_icon);
+            writer.Write(m_source);
+            writer.Write(m_hopo_frequency);
+            writer.Write(VocalParts);
+            writer.Write(IsMaster);
+        }
 
         protected void Scan_Midi(FrameworkFile file, DrumType drumType)
         {

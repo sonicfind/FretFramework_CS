@@ -337,6 +337,25 @@ namespace Framework.SongEntry
                 VocalParts = 1;
         }
 
+        public override byte[] FormatCacheData()
+        {
+            using MemoryStream ms = new();
+            using BinaryWriter writer = new(ms);
+
+            writer.Write(Directory);
+            writer.Write(Path.GetFileName(m_chartFile.Item1));
+            writer.Write(m_chartWriteTime.Ticks);
+            writer.Write(m_iniWriteTime.Ticks);
+
+            FormatCacheData(writer);
+
+            writer.Write(m_sustain_cutoff_threshold);
+            writer.Write(m_hopofreq_Old);
+            writer.Write(m_eighthnote_hopo);
+            writer.Write(m_multiplier_note);
+            return ms.ToArray();
+        }
+
         private DrumType GetDrumTypeFromModifier()
         {
             if (m_modifiers.TryGetValue("five_lane_drums", out List<Modifier>? fivelanes))

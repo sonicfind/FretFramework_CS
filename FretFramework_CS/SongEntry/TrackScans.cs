@@ -233,5 +233,17 @@ namespace Framework.SongEntry
                 }
             }
         }
+
+        public void WriteToCache(BinaryWriter writer)
+        {
+            unsafe
+            {
+                fixed (ScanValues* scans = &lead_5)
+                {
+                    byte* yay = (byte*)scans;
+                    writer.Write(new ReadOnlySpan<byte>(yay, 17 * sizeof(ScanValues)));
+                }
+            }
+        }
     }
 }

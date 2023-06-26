@@ -69,6 +69,40 @@ namespace Framework.Library
             }
             return true;
         }
+
+        public byte[] FormatUpgradesForCache()
+        {
+            using MemoryStream ms = new();
+            using BinaryWriter writer = new(ms);
+
+            writer.Write(file.Filename);
+            writer.Write(info.LastWriteTime.Ticks);
+            writer.Write(upgradeDtaIndex);
+            writer.Write(file[upgradeDtaIndex].LastWrite);
+            writer.Write(upgrades.Count);
+            foreach (var upgrade in upgrades)
+                upgrade.Value.WriteToCache(writer);
+            return ms.ToArray();
+        }
+
+        public byte[] FormatEntriesForCache()
+        {
+            using MemoryStream ms = new();
+            using BinaryWriter writer = new(ms);
+
+            writer.Write(file.Filename);
+            writer.Write(info.LastWriteTime.Ticks);
+            writer.Write(songDtaIndex);
+            writer.Write(file[songDtaIndex].LastWrite);
+            writer.Write(entries.Count);
+            foreach (var entry in entries)
+            {
+                byte[] data = entry.FormatCacheData();
+                writer.Write(data.Length);
+                writer.Write(data);
+            }
+            return ms.ToArray();
+        }
     }
 
     public class ExtractedConGroup
@@ -87,6 +121,23 @@ namespace Framework.Library
         }
 
         public void AddEntry(ConSongEntry entry) { lock (entryLock) entries.Add(entry); }
+
+        public byte[] FormatEntriesForCache()
+        {
+            using MemoryStream ms = new();
+            using BinaryWriter writer = new(ms);
+
+            writer.Write(directory);
+            writer.Write(dtaLastWrite.ToBinary());
+            writer.Write(entries.Count);
+            foreach (var entry in entries)
+            {
+                byte[] data = entry.FormatCacheData();
+                writer.Write(data.Length);
+                writer.Write(data);
+            }
+            return ms.ToArray();
+        }
     }
 
     internal class UpdateGroup
@@ -100,6 +151,22 @@ namespace Framework.Library
             this.directory = directory;
             this.dtaLastWrite = dtaLastWrite;
         }
+
+        public byte[] FormatForCache()
+        {
+            using MemoryStream ms = new();
+            using BinaryWriter writer = new(ms);
+
+            writer.Write(directory);
+            writer.Write(dtaLastWrite.ToBinary());
+            writer.Write(updates.Count);
+            foreach (var update in updates)
+            {   
+                writer.Write(update.Key);
+                writer.Write(update.Value.Item2.ToBinary());
+            }
+            return ms.ToArray();
+        }
     }
 
     internal class UpgradeGroup
@@ -112,6 +179,22 @@ namespace Framework.Library
         {
             this.directory = directory;
             this.dtaLastWrite = dtaLastWrite;
+        }
+
+        public byte[] FormatForCache()
+        {
+            using MemoryStream ms = new();
+            using BinaryWriter writer = new(ms);
+
+            writer.Write(directory);
+            writer.Write(dtaLastWrite.ToBinary());
+            writer.Write(upgrades.Count);
+            foreach (var upgrade in upgrades)
+            {
+                writer.Write(upgrade.Key);
+                upgrade.Value.Item2.WriteToCache(writer);
+            }
+            return ms.ToArray();
         }
     }
 
@@ -539,6 +622,72 @@ namespace Framework.Library
 
                 preScannedDirectories.Add(directory);
                 return true;
+            }
+        }
+
+        private void SaveToFile(string fileName)
+        {
+            using FileStream fs = new(fileName, FileMode.Create, FileAccess.Write, FileShare.None);
+            using var writer = new BinaryWriter(fs, Encoding.UTF8, false);
+
+            writer.Write(CACHE_VERSION);
+            writer.Write(updateGroups.Count);
+            foreach (var group in updateGroups)
+            {
+                byte[] buffer = group.FormatForCache();
+                writer.Write(buffer.Length);
+                writer.Write(buffer);
+            }
+
+            writer.Write(upgradeGroups.Count);
+            foreach (var group in upgradeGroups)
+            {
+                byte[] buffer = group.FormatForCache();
+                writer.Write(buffer.Length);
+                writer.Write(buffer);
+            }
+
+            List<CONGroup> upgradeCons = new();
+            List<CONGroup> entryCons = new();
+            foreach (var group in conGroups)
+            {
+                if (group.UpgradeCount > 0)
+                    upgradeCons.Add(group);
+
+                if (group.EntryCount > 0)
+                    entryCons.Add(group);
+            }
+
+            writer.Write(upgradeCons.Count);
+            foreach (var group in upgradeCons)
+            {
+                byte[] buffer = group.FormatUpgradesForCache();
+                writer.Write(buffer.Length);
+                writer.Write(buffer);
+            }
+
+            writer.Write(entryCons.Count);
+            foreach (var group in entryCons)
+            {
+                byte[] buffer = group.FormatEntriesForCache();
+                writer.Write(buffer.Length);
+                writer.Write(buffer);
+            }
+
+            writer.Write(extractedConGroups.Count);
+            foreach (var group in extractedConGroups)
+            {
+                byte[] buffer = group.FormatEntriesForCache();
+                writer.Write(buffer.Length);
+                writer.Write(buffer);
+            }
+
+            writer.Write(iniEntries.Count);
+            foreach (IniSongEntry entry in iniEntries)
+            {
+                byte[] buffer = entry.FormatCacheData();
+                writer.Write(buffer.Length);
+                writer.Write(buffer);
             }
         }
     }
