@@ -1,7 +1,6 @@
 ﻿using Framework.Hashes;
 using Framework.Serialization;
 using Framework.SongEntry;
-using Framework.SongEntry.CONProUpgrades;
 using Framework.Types;
 using System.Diagnostics;
 using System.Text;
@@ -222,10 +221,9 @@ namespace Framework.Library
                     {
                         if (AddToUpgradeGroup(name, ref lastWrite))
                         {
-                            SongProUpgrade_Extracted upgrade = new(directory, name);
-                            DTAFileReader clone = reader.Clone();
-                            group!.upgrades[name] = (clone, upgrade);
-                            upgrades[name] = new(clone, upgrade);
+                            SongProUpgrade upgrade = new(file);
+                            group!.upgrades[name] = upgrade;
+                            upgrades[name] = new(reader.Clone(), upgrade);
                         }
                     }
                 }
@@ -256,7 +254,7 @@ namespace Framework.Library
                         DateTime lastWrite = DateTime.FromBinary(file[index].LastWrite);
                         if (AddUpgradeToCONGroup(name, ref lastWrite))
                         {
-                            SongProUpgrade_CON upgrade = new(file, name);
+                            SongProUpgrade upgrade = new(file, index, lastWrite);
                             group.upgrades[name] = upgrade;
 
                             DTAFileReader clone = reader.Clone();
@@ -534,9 +532,9 @@ namespace Framework.Library
     {
         public readonly CONFile file;
         private readonly List<ConSongEntry> entries = new();
-        public readonly Dictionary<string, SongProUpgrade_CON> upgrades = new();
 
         public int EntryCount => entries.Count;
+        public readonly Dictionary<string, SongProUpgrade> upgrades = new();
         public int UpgradeCount => upgrades.Count;
 
         private readonly CONSongFileInfo info;
@@ -684,7 +682,7 @@ namespace Framework.Library
     {
         public readonly string directory;
         private readonly DateTime dtaLastWrite;
-        public readonly Dictionary<string, (DTAFileReader?, SongProUpgrade_Extracted)> upgrades = new();
+        public readonly Dictionary<string, SongProUpgrade> upgrades = new();
 
         public UpgradeGroup(string directory, DateTime dtaLastWrite)
         {
