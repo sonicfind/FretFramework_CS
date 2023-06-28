@@ -1,5 +1,6 @@
 ﻿using Framework.FlatMaps;
 using Framework.Types;
+using Iced.Intel;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,85 +9,80 @@ using System.Threading.Tasks;
 
 namespace Framework.Hashes
 {
-    public unsafe struct SHA1Wrapper : IComparable<SHA1Wrapper>, IEquatable<SHA1Wrapper>
+    public abstract class HashWrapper
     {
-        private fixed byte _hash[20];
+        protected readonly int[] hash;
+        private readonly int hashCode;
+        protected HashWrapper(int length) { hash = new int[length]; }
 
-        public SHA1Wrapper() { }
-        public SHA1Wrapper(byte[] hash)
+        protected HashWrapper(byte[] hash, int length) : this(length)
         {
-            fixed(byte* src = hash, dst = _hash)
+            int byteSize = sizeof(int) * length;
+            if (hash.Length != byteSize)
+                throw new Exception("Hash incompatible");
+
+            unsafe
             {
-                Copier.MemCpy(dst, src, 20);
+                fixed (byte* src = hash)
+                fixed (int* dst = this.hash)
+                    Copier.MemCpy(dst, src, (nuint)byteSize);
             }
+
+            for (int i = 0; i < hash.Length; i++)
+                hashCode ^= hash[i];
+        }
+
+        protected HashWrapper(BinaryReader reader, int length) : this(length)
+        {
+            for (int i = 0; i < hash.Length; i++)
+                hash[i] = reader.ReadInt32();
+        }
+
+        public void Write(BinaryWriter writer)
+        {
+            for (int i = 0; i < hash.Length; i++)
+                writer.Write(hash[i]);
         }
 
         public byte[] ToArray()
         {
-            byte[] bytes = new byte[20];
-            fixed (byte* src = _hash, dst = bytes)
+            int byteCount = sizeof(int) * hash.Length;
+            byte[] bytes = new byte[byteCount];
+            unsafe
             {
-                Copier.MemCpy(dst, src, 20);
+                fixed (int* src = hash)
+                fixed (byte* dst = bytes)
+                    Copier.MemCpy(dst, src, (nuint)byteCount);
             }
             return bytes;
         }
 
-        public int CompareTo(SHA1Wrapper other)
+        public bool Equals(HashWrapper other)
         {
-            for (int i = 0; i < 20; ++i)
-                if (_hash[i] < other._hash[i])
-                    return -1;
-                else if (_hash[i] > other._hash[i])
-                    return 1;
-            return 0;
+            for (int i = 0; i < hash.Length; ++i)
+                if (other.hash[i] != hash[i])
+                    return false;
+            return true;
         }
 
-        public bool Equals(SHA1Wrapper other)
+        public override int GetHashCode()
         {
-            for (int i = 0; i < 20; ++i)
-                if (other._hash[i] != _hash[i]) return false;
-            return true;
+            return hashCode;
         }
     }
 
-    public unsafe struct MD5Wrapper : IComparable<MD5Wrapper>, IEquatable<MD5Wrapper>
+    public class SHA1Wrapper : HashWrapper
     {
-        private fixed byte _hash[16];
+        public SHA1Wrapper() : base(5) { }
+        public SHA1Wrapper(byte[] hash) : base(hash, 5) { }
+        public SHA1Wrapper(BinaryReader reader) : base(reader, 5) { }
+    }
 
-        public MD5Wrapper() { }
-        public MD5Wrapper(byte[] hash)
-        {
-            fixed (byte* src = hash, dst = _hash)
-            {
-                Copier.MemCpy(dst, src, 16);
-            }
-        }
+    public class MD5Wrapper : HashWrapper
+    {
+        public MD5Wrapper() : base(4) { }
+        public MD5Wrapper(byte[] hash) : base(hash, 4) { }
 
-        public byte[] ToArray()
-        {
-            byte[] bytes = new byte[16];
-            fixed (byte* src = _hash, dst = bytes)
-            {
-                Copier.MemCpy(dst, src, 20);
-            }
-            return bytes;
-        }
-
-        public int CompareTo(MD5Wrapper other)
-        {
-            for (int i = 0; i < 16; ++i)
-                if (_hash[i] < other._hash[i])
-                    return -1;
-                else if (_hash[i] > other._hash[i])
-                    return 1;
-            return 0;
-        }
-
-        public bool Equals(MD5Wrapper other)
-        {
-            for (int i = 0; i < 16; ++i)
-                if (other._hash[i] != _hash[i]) return false;
-            return true;
-        }
+        public MD5Wrapper(BinaryReader reader) : base(reader, 4) { }
     }
 }
