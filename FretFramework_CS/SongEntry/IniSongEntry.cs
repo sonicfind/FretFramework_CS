@@ -41,47 +41,41 @@ namespace Framework.SongEntry
         public bool EightNoteHopo => m_eighthnote_hopo;
 
         private SortString m_directory_playlist;
-        public override string Directory { get; protected set; } = string.Empty;
+        public string Directory { get; protected set; } = string.Empty;
 
         private Dictionary<string, List<Modifier>> m_modifiers = new();
 
-        private DateTime m_iniWriteTime;
-        private (string, ChartType) m_chartFile;
-        private DateTime m_chartWriteTime;
+        private (string, ChartType) m_chartType;
+        private FileInfo? m_chartFile;
+        private FileInfo? m_iniFile;
 
-        public void Load_Ini(ref FileInfo info)
+        public IniSongEntry(FrameworkFile file, FileInfo chartFile, FileInfo? iniFile, ref (string, ChartType) type)
         {
-            m_modifiers = IniHandler.ReadSongIniFile(info.FullName);
-            m_iniWriteTime = info.LastWriteTime;
+            if (iniFile != null)
+            {
+                m_modifiers = IniHandler.ReadSongIniFile(iniFile.FullName);
+                m_iniFile = iniFile;
+            }
+
+            if (type.Item2 == ChartType.CHART)
+                Scan_Chart(file);
+
+            if (GetModifier("name") == null)
+                return;
+
+            if (type.Item2 == ChartType.MID || type.Item2 == ChartType.MIDI)
+                Scan_Midi(file, GetDrumTypeFromModifier());
+
+            if (!m_scans.CheckForValidScans())
+                return;
+
+            m_chartType = type;
+            m_chartFile = chartFile;
+            Directory = chartFile.DirectoryName!;
+            m_directory_playlist.Str = Path.GetDirectoryName(Directory)!;
         }
 
-        public bool Scan(FrameworkFile file, ref (FileInfo?, ChartType) chart)
-        {
-            try
-            {
-                if (chart.Item2 == ChartType.CHART)
-                    Scan_Chart(file);
-
-                if (GetModifier("name") == null)
-                    return false;
-
-                if (chart.Item2 == ChartType.MID)
-                    Scan_Midi(file, GetDrumTypeFromModifier());
-
-                if (!m_scans.CheckForValidScans())
-                    return false;
-
-                m_chartFile = new(chart.Item1!.FullName, chart.Item2);
-                m_chartWriteTime = chart.Item1!.LastWriteTime;
-                Directory = Path.GetDirectoryName(m_chartFile.Item1)!;
-                m_directory_playlist.Str = Path.GetDirectoryName(Directory)!;
-                return true;
-            }
-            catch (Exception)
-            {
-                return false;
-            }
-        }
+        public bool ScannedSuccessfully() { return m_chartFile != null; }
 
         public Modifier? GetModifier(string name)
         {

@@ -8,8 +8,9 @@ namespace Framework.Types
 {
     public enum ChartType
     {
+        MID,
+        MIDI,
         CHART,
-        MID
     };
 
     public enum NoteTrackType

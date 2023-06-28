@@ -88,7 +88,6 @@ namespace Framework.SongEntry
 
         public SongProUpgrade? Upgrade { get; set; }
 
-        public override string Directory { get; protected set; } = string.Empty;
 
         private List<string>? soloes;
         private List<string>? videoVenues;

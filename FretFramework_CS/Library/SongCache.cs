@@ -48,7 +48,7 @@ namespace Framework.Library
         internal readonly (string, ChartType)[] CHARTTYPES =
         {
             new("notes.mid",   ChartType.MID),
-            new("notes.midi",  ChartType.MID),
+            new("notes.midi",  ChartType.MIDI),
             new("notes.chart", ChartType.CHART),
         };
 
@@ -57,7 +57,7 @@ namespace Framework.Library
             if (!FindOrMarkDirectory(directory.FullName))
                 return;
 
-            (FileInfo?, ChartType)[] charts = { new(null, ChartType.MID), new(null, ChartType.MID), new(null, ChartType.CHART) };
+            FileInfo?[] charts = new FileInfo?[3];
             FileInfo? ini = null;
             List<DirectoryInfo> subDirectories = new();
             DirectoryInfo? songs = null;
@@ -68,7 +68,7 @@ namespace Framework.Library
             {
                 foreach (FileSystemInfo info in directory.EnumerateFileSystemInfos())
                 {
-                    string filename = info.Name;
+                    string filename = info.Name.ToLower();
                     if ((info.Attributes & FileAttributes.Directory) > 0)
                     {
                         DirectoryInfo dir = (info as DirectoryInfo)!;
@@ -95,7 +95,7 @@ namespace Framework.Library
                     {
                         if (filename == CHARTTYPES[i].Item1)
                         {
-                            charts[i].Item1 = file;
+                            charts[i] = file;
                             found = true;
                             break;
                         }
@@ -114,53 +114,58 @@ namespace Framework.Library
 
             if (ini == null)
             {
-                charts[0].Item1 = null;
-                charts[1].Item1 = null;
+                charts[0] = null;
+                charts[1] = null;
             }
 
-            for (int i = 0; i < 3; ++i)
-            {
-                ref var chart = ref charts[i];
-                if (chart.Item1 != null)
-                {
-                    IniSongEntry entry = new();
-                    if (ini != null)
-                    {
-                        try
-                        {
-                            entry.Load_Ini(ref ini);
-                        }
-                        catch (Exception e)
-                        {
-                            Console.WriteLine(e.Message);
-                            Console.WriteLine(ini.FullName);
-                            return;
-                        }
-                    }
-
-                    try
-                    {
-                        using FrameworkFile_Alloc file = new(chart.Item1!.FullName);
-                        if (entry.Scan(file, ref chart))
-                        {
-                            if (AddEntry(new SHA1Wrapper(file.CalcSHA1()), entry))
-                                lock (iniLock) iniEntries.Add(entry);
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        Console.WriteLine(e.Message);
-                        Console.WriteLine(chart.Item1!.FullName);
-                    }
-                    return;
-                }
-            }
+            if (ScanIniEntry(charts, ini))
+                return;
 
             if (songs != null && AddExtractedCONDirectory(songs.FullName))
                 return;
 
             Parallel.For(0, files.Count, i => AddPossibleCON(files[i]));
             Parallel.For(0, subDirectories.Count, i => ScanDirectory(subDirectories[i]));
+        }
+
+        private bool ScanIniEntry(FileInfo?[] charts, FileInfo? ini)
+        {
+            for (int i = 0; i < 3; ++i)
+            {
+                var chart = charts[i];
+                if (chart != null)
+                {
+                    try
+                    {
+                        using FrameworkFile_Alloc file = new(chart.FullName);
+                        IniSongEntry entry = new(file, chart, ini, ref CHARTTYPES[i]);
+                        if (entry.ScannedSuccessfully())
+                        {
+                            SHA1Wrapper hash = new(file.CalcSHA1());
+                            if (AddEntry(hash, entry))
+                                AddIniEntry(hash, entry);
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e.Message);
+                        Console.WriteLine(chart.FullName);
+                    }
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private void AddIniEntry(SHA1Wrapper hash, IniSongEntry entry)
+        {
+            lock (iniLock)
+            {
+                if (iniEntries.TryGetValue(hash, out var list))
+                    list.Add(entry);
+                else
+                    iniEntries.Add(hash, new() { entry });
+            }
         }
 
         private void AddUpdateDirectory(string directory)
