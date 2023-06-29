@@ -86,7 +86,8 @@ namespace Framework.SongEntry
 
         public void FinishScan()
         {
-            MapModifierVariables();
+            if (m_modifiers.Count > 0)
+                MapModifierVariables();
         }
 
         private void Scan_Chart(FrameworkFile file)
