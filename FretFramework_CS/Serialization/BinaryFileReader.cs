@@ -52,7 +52,7 @@ namespace Framework.Serialization
 
         public BinaryFileReader(PointerHandler handler, bool dispose = false) : this(new FrameworkFile_Pointer(handler, dispose), true) { }
 
-        protected virtual void Dispose(bool disposing)
+        protected void Dispose(bool disposing)
         {
             if (!disposedValue)
             {
