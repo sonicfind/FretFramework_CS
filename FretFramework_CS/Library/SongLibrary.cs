@@ -3,7 +3,7 @@ namespace Framework.Library
 {
     public class SongLibrary
     {
-        public SortedDictionary<SHA1Wrapper, List<SongEntry.SongEntry>> entries = new();
+        public Dictionary<SHA1Wrapper, List<SongEntry.SongEntry>> entries = new();
 
         public int Count
         {
@@ -16,6 +16,6 @@ namespace Framework.Library
             }
         }
 
-        public SortedDictionary<SHA1Wrapper, List<SongEntry.SongEntry>>.Enumerator GetEnumerator() => entries.GetEnumerator();
+        public Dictionary<SHA1Wrapper, List<SongEntry.SongEntry>>.Enumerator GetEnumerator() => entries.GetEnumerator();
     }
 }
