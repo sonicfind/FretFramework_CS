@@ -181,7 +181,7 @@ namespace Framework.Library
                         for (int i = 0; i < count; i++)
                         {
                             string name = cacheReader.ReadString();
-                            if (group.upgrades[name].UpgradeLastWrite != DateTime.FromBinary(cacheReader.ReadInt32()))
+                            if (group.upgrades[name].UpgradeLastWrite != DateTime.FromBinary(cacheReader.ReadInt64()))
                                 AddInvalidSong(name);
                         }
                         return;
@@ -203,7 +203,6 @@ namespace Framework.Library
 
             string filename = cacheReader.ReadString();
             DateTime conLastWrite = DateTime.FromBinary(cacheReader.ReadInt64());
-            int dtaIndex = cacheReader.ReadInt32();
             int dtaLastWrite = cacheReader.ReadInt32();
             int count = cacheReader.ReadInt32();
 
@@ -232,7 +231,7 @@ namespace Framework.Library
                                 for (int i = 0; i < count; i++)
                                 {
                                     string name = cacheReader.ReadString();
-                                    if (group.upgrades[name].UpgradeLastWrite != DateTime.FromBinary(cacheReader.ReadInt32()))
+                                    if (group.upgrades[name].UpgradeLastWrite != DateTime.FromBinary(cacheReader.ReadInt64()))
                                         AddInvalidSong(name);
                                 }
                             }
