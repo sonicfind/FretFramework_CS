@@ -75,6 +75,19 @@ namespace Framework.SongEntry
             m_directory_playlist.Str = Path.GetDirectoryName(Directory)!;
         }
 
+        public IniSongEntry(string directory, FileInfo chartFile, FileInfo? iniFile, ref (string, ChartType) type, BinaryReader reader) : base(reader)
+        {
+            Directory = directory;
+            m_chartType = type;
+            m_chartFile = chartFile;
+            m_iniFile = iniFile;
+
+            m_sustain_cutoff_threshold = reader.ReadUInt64();
+            m_hopofreq_Old = reader.ReadUInt16();
+            m_eighthnote_hopo = reader.ReadBoolean();
+            m_multiplier_note = reader.ReadByte();
+        }
+
         public bool ScannedSuccessfully() { return m_chartFile != null; }
 
         public Modifier? GetModifier(string name)
@@ -332,15 +345,17 @@ namespace Framework.SongEntry
                 VocalParts = 1;
         }
 
-        public override byte[] FormatCacheData()
+        public byte[] FormatCacheData()
         {
             using MemoryStream ms = new();
             using BinaryWriter writer = new(ms);
 
             writer.Write(Directory);
-            writer.Write(Path.GetFileName(m_chartFile.Item1));
-            writer.Write(m_chartWriteTime.Ticks);
-            writer.Write(m_iniWriteTime.Ticks);
+            writer.Write((byte)m_chartType.Item2);
+            writer.Write(m_chartFile!.LastWriteTime.ToBinary());
+            writer.Write(m_iniFile != null);
+            if (m_iniFile != null)
+                writer.Write(m_iniFile.LastWriteTime.ToBinary());
 
             FormatCacheData(writer);
 

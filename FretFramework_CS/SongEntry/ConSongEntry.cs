@@ -2,7 +2,6 @@
 using BenchmarkDotNet.Disassemblers;
 using Framework.Hashes;
 using Framework.Serialization;
-using Framework.SongEntry.CONProUpgrades;
 using Framework.SongEntry.TrackScan;
 using Framework.Types;
 using System;
@@ -22,23 +21,22 @@ namespace Framework.SongEntry
     {
         private readonly string _fullname;
         private readonly DateTime _lastWrite;
+        private readonly bool _exists;
 
-        public CONSongFileInfo(string file)
-        {
-            _fullname = file;
-            _lastWrite = File.GetLastWriteTime(file);
-        }
+        public CONSongFileInfo(string file) : this(new FileInfo(file)) {}
 
         public CONSongFileInfo(FileInfo info)
         {
             _fullname = info.FullName;
             _lastWrite = info.LastWriteTime;
+            _exists = info.Exists;
         }
 
         public static implicit operator CONSongFileInfo(FileInfo info) => new(info);
 
         public string FullName => _fullname;
         public DateTime LastWriteTime => _lastWrite;
+        public bool Exists => _exists;
     }
 
     public class ConSongEntry : SongEntry
@@ -47,12 +45,10 @@ namespace Framework.SongEntry
         static ConSongEntry() { }
 
         private CONFile? conFile;
-        private readonly int midiIndex = -1;
-        private int moggIndex = -1;
-        private int miloIndex = -1;
-        private int imgIndex = -1;
-
-        public string ShortName { get; private set; } = string.Empty;
+        private readonly FileListing? midiListing;
+        private FileListing? moggListing;
+        private FileListing? miloListing;
+        private FileListing? imgListing;
         public string SongID { get; private set; } = string.Empty;
         public uint AnimTempo { get; private set; }
         public string DrumBank { get; private set; } = string.Empty;
@@ -66,10 +62,10 @@ namespace Framework.SongEntry
         public bool SongTonality { get; private set; } // 0 = major, 1 = minor
         public int TuningOffsetCents { get; private set; }
 
-        public string MidiFile { get; private set; } = string.Empty;
-        public DateTime MidiFileLastWrite { get; private set; }
-
         public Encoding MidiEncoding { get; private set; } = Encoding.Latin1;
+
+        public string MidiPath { get; private set; } = string.Empty;
+        public DateTime MidiLastWrite { get; private set; }
 
         // _update.mid info, if it exists
         public CONSongFileInfo? UpdateMidi { get; private set; } = null;
@@ -86,194 +82,187 @@ namespace Framework.SongEntry
 
         private string location = string.Empty;
 
+
         public SongProUpgrade? Upgrade { get; set; }
 
+        public string[] Soloes { get; private set; } = Array.Empty<string>();
+        public string[] VideoVenues { get; private set; } = Array.Empty<string>();
 
-        private List<string>? soloes;
-        private List<string>? videoVenues;
+        public short[] RealGuitarTuning { get; private set; } = Array.Empty<short>();
+        public short[] RealBassTuning { get; private set; } = Array.Empty<short>();
 
-        public string[] Soloes
-        {
-            get
-            {
-                if (soloes == null)
-                    return Array.Empty<string>();
-                return soloes.ToArray();
-            }
-        }
+        public ushort[] DrumIndices { get; private set; } = Array.Empty<ushort>();
+        public ushort[] BassIndices { get; private set; } = Array.Empty<ushort>();
+        public ushort[] GuitarIndices { get; private set; } = Array.Empty<ushort>();
+        public ushort[] KeysIndices { get; private set; } = Array.Empty<ushort>();
+        public ushort[] VocalsIndices { get; private set; } = Array.Empty<ushort>();
+        public ushort[] CrowdIndices { get; private set; } = Array.Empty<ushort>();
 
-        public string[] VideoVenues
-        {
-            get
-            {
-                if (videoVenues == null)
-                    return Array.Empty<string>();
-                return videoVenues.ToArray();
-            }
-        }
+        public float[] Pan { get; private set; } = Array.Empty<float>();
+        public float[] Volume { get; private set; } = Array.Empty<float>();
+        public float[] Core { get; private set; } = Array.Empty<float>();
 
-        private List<short>? realGuitarTuning;
-        private List<short>? realBassTuning;
+        public ConSongEntry(CONFile file, string nodeName, FileListing midi, FileListing? moggListing, FileInfo? moggInfo, FileInfo? updateInfo, BinaryReader reader) : base(reader)
+        {
+            conFile = file;
+            midiListing = midi;
+            if (moggListing != null)
+                this.moggListing = moggListing;
+            else
+                Mogg = moggInfo!;
 
-        public short[] RealGuitarTuning
-        {
-            get
-            {
-                if (realGuitarTuning == null)
-                    return Array.Empty<short>();
-                return realGuitarTuning.ToArray();
-            }
-        }
+            if (updateInfo != null)
+                UpdateMidi = updateInfo;
 
-        public short[] RealBassTuning
-        {
-            get
+            string genPAth = $"songs/{nodeName}/gen/{nodeName}";
+            if (reader.ReadBoolean())
+                miloListing = conFile[genPAth + ".milo_xbox"];
+            else
             {
-                if (realBassTuning == null)
-                    return Array.Empty<short>();
-                return realBassTuning.ToArray();
+                string milopath = reader.ReadString();
+                if (milopath != string.Empty)
+                {
+                    CONSongFileInfo info = new(milopath);
+                    if (info.Exists)
+                        Milo = info;
+                }
             }
-        }
 
-        private List<ushort>? drumIndices;
-        private List<ushort>? bassIndices;
-        private List<ushort>? guitarIndices;
-        private List<ushort>? keysIndices;
-        private List<ushort>? vocalsIndices;
-        private List<ushort>? crowdIndices;
+            if (reader.ReadBoolean())
+                imgListing = conFile[genPAth + "_keep.png_xbox"];
+            else
+            {
+                string imgpath = reader.ReadString();
+                if (imgpath != string.Empty)
+                {
+                    CONSongFileInfo info = new(imgpath);
+                    if (info.Exists)
+                        Image = info;
+                }
+            }
 
-        public ushort[] DrumIndices
-        {
-            get
-            {
-                if (drumIndices == null)
-                    return Array.Empty<ushort>();
-                return drumIndices.ToArray();
-            }
-        }
-        public ushort[] BassIndices
-        {
-            get
-            {
-                if (bassIndices == null)
-                    return Array.Empty<ushort>();
-                return bassIndices.ToArray();
-            }
-        }
-        public ushort[] GuitarIndices
-        {
-            get
-            {
-                if (guitarIndices == null)
-                    return Array.Empty<ushort>();
-                return guitarIndices.ToArray();
-            }
-        }
-        public ushort[] KeysIndices
-        {
-            get
-            {
-                if (keysIndices == null)
-                    return Array.Empty<ushort>();
-                return keysIndices.ToArray();
-            }
-        }
-        public ushort[] VocalsIndices
-        {
-            get
-            {
-                if (vocalsIndices == null)
-                    return Array.Empty<ushort>();
-                return vocalsIndices.ToArray();
-            }
-        }
-        public ushort[] CrowdIndices
-        {
-            get
-            {
-                if (crowdIndices == null)
-                    return Array.Empty<ushort>();
-                return crowdIndices.ToArray();
-            }
+            FinishCacheRead(reader);
         }
 
-        private List<float>? pan;
-        private List<float>? volume;
-        private List<float>? core;
+        public ConSongEntry(string nodeName, FileInfo midi, FileInfo mogg, FileInfo? updateInfo, BinaryReader reader) : base(reader)
+        {
+            MidiPath = midi.FullName;
+            MidiLastWrite = midi.LastWriteTime;
 
-        public float[] Pan
-        {
-            get
-            {
-                if (pan == null)
-                    return Array.Empty<float>();
-                return pan.ToArray();
-            }
-        }
-        public float[] Volume
-        {
-            get
-            {
-                if (volume == null)
-                    return Array.Empty<float>();
-                return volume.ToArray();
-            }
-        }
-        public float[] Core
-        {
-            get
-            {
-                if (core == null)
-                    return Array.Empty<float>();
-                return core.ToArray();
-            }
+            Mogg = mogg;
+
+            if (updateInfo != null)
+                UpdateMidi = updateInfo;
+
+            Milo = new(reader.ReadString());
+            Image = new(reader.ReadString());
+            FinishCacheRead(reader);
         }
 
-        private ConSongEntry(string name, DTAFileReader reader)
+        private void FinishCacheRead(BinaryReader reader)
         {
-            ShortName = name;
-            SetFromDTA(reader);
+            AnimTempo = reader.ReadUInt32();
+            SongID = reader.ReadString();
+            VocalPercussionBank = reader.ReadString();
+            VocalSongScrollSpeed = reader.ReadUInt32();
+            SongRating = reader.ReadUInt32();
+            VocalGender = reader.ReadBoolean();
+            VocalTonicNote = reader.ReadUInt32();
+            SongTonality = reader.ReadBoolean();
+            TuningOffsetCents = reader.ReadInt32();
+            VenueVersion = reader.ReadUInt32();
+
+            RealGuitarTuning =  ReadShortArray(reader);
+            RealBassTuning = ReadShortArray(reader);
+
+            Pan = ReadFloatArray(reader);
+            Volume = ReadFloatArray(reader);
+            Core = ReadFloatArray(reader);
+
+            DrumIndices = ReadUShortArray(reader);
+            BassIndices = ReadUShortArray(reader);
+            GuitarIndices = ReadUShortArray(reader);
+            KeysIndices = ReadUShortArray(reader);
+            VocalsIndices = ReadUShortArray(reader);
+            CrowdIndices = ReadUShortArray(reader);
         }
 
-        public ConSongEntry(string name, CONFile conFile, DTAFileReader reader) : this(name, reader)
+        private static short[] ReadShortArray(BinaryReader reader)
+        {
+            int length = reader.ReadInt32();
+            if (length == 0)
+                return Array.Empty<short>();
+
+            short[] values = new short[length];
+            for (int i = 0; i < length; ++i)
+                values[i] = reader.ReadInt16();
+            return values;
+        }
+
+        private static ushort[] ReadUShortArray(BinaryReader reader)
+        {
+            int length = reader.ReadInt32();
+            if (length == 0)
+                return Array.Empty<ushort>();
+
+            ushort[] values = new ushort[length];
+            for (int i = 0; i < length; ++i)
+                values[i] = reader.ReadUInt16();
+            return values;
+        }
+
+        private static float[] ReadFloatArray(BinaryReader reader)
+        {
+            int length = reader.ReadInt32();
+            if (length == 0)
+                return Array.Empty<float>();
+
+            float[] values = new float[length];
+            for (int i = 0; i < length; ++i)
+                values[i] = reader.ReadSingle();
+            return values;
+        }
+
+        public ConSongEntry(CONFile conFile, string nodeName, DTAFileReader reader)
         {
             this.conFile = conFile;
-            if (MidiFile == string.Empty)
-                MidiFile = location + ".mid";
+            SetFromDTA(nodeName, reader);
 
-            midiIndex = conFile.GetFileIndex(MidiFile);
-            if (midiIndex == -1)
-                throw new Exception($"Required midi file '{MidiFile}' was not located");
-            MidiFileLastWrite = DateTime.FromBinary(conFile[midiIndex].LastWrite);
+            if (MidiPath == string.Empty)
+                MidiPath = location + ".mid";
 
-            moggIndex = conFile.GetFileIndex(location + ".mogg");
+            midiListing = conFile[MidiPath];
+            if (midiListing == null)
+                throw new Exception($"Required midi file '{MidiPath}' was not located");
 
-            string genPAth = $"songs/{ShortName}/gen/{ShortName}";
-            miloIndex = conFile.GetFileIndex(genPAth + ".milo_xbox");
-            imgIndex = conFile.GetFileIndex(genPAth + "_keep.png_xbox");
-            Directory = conFile.Filename;
+            moggListing = conFile[location + ".mogg"];
+
+            string genPAth = $"songs/{nodeName}/gen/{nodeName}";
+            miloListing = conFile[genPAth + ".milo_xbox"];
+            imgListing =  conFile[genPAth + "_keep.png_xbox"];
         }
 
-        public ConSongEntry(string name, string folder, DTAFileReader reader) : this(name, reader)
+        public ConSongEntry(string folder, string nodeName, DTAFileReader reader)
         {
-            Directory = folder;
+            SetFromDTA(nodeName, reader);
+
             string dir = Path.Combine(folder, location);
             string file = Path.Combine(dir, location);
-            MidiFile = file + ".mid";
+            MidiPath = file + ".mid";
 
-            FileInfo midiInfo = new(MidiFile);
+            FileInfo midiInfo = new(MidiPath);
             if (!midiInfo.Exists)
-                throw new Exception($"Required midi file '{MidiFile}' was not located");
-            MidiFileLastWrite = midiInfo.LastWriteTime;
+                throw new Exception($"Required midi file '{MidiPath}' was not located");
+            MidiLastWrite = midiInfo.LastWriteTime;
 
             Mogg = new(file + ".mogg");
-            file = Path.Combine(dir, $"gen{location}");
+            file = Path.Combine(dir, "gen", location);
             Milo = new(file + ".milo_xbox");
             Image = new(file + "_keep.png_xbox");
             location = dir;
         }
 
-        public (bool, bool) SetFromDTA(DTAFileReader reader)
+        public (bool, bool) SetFromDTA(string nodeName, DTAFileReader reader)
         {
             bool alternatePath = false;
             bool discUpdate = false;
@@ -308,7 +297,7 @@ namespace Framework.SongEntry
                         m_previewEnd = reader.ReadUInt32();
                         break;
                     case "rank": RankLoop(ref reader); break;
-                    case "solo": soloes = reader.ExtractList_String(); break;
+                    case "solo": Soloes = reader.ExtractList_String().ToArray(); break;
                     case "genre": m_genre = reader.ExtractText(); break;
                     case "decade": /*Decade = reader.ExtractText();*/ break;
                     case "vocal_gender": VocalGender = reader.ExtractText() == "male"; break;
@@ -321,7 +310,7 @@ namespace Framework.SongEntry
                             m_source = reader.ExtractText();
                             if ((m_source == "ugc" || m_source == "ugc_plus"))
                             {
-                                if (!ShortName.StartsWith("UGC_"))
+                                if (!nodeName.StartsWith("UGC_"))
                                     m_source = "customs";
                             }
                             else if (m_source == "rb1" || m_source == "rb1_dlc" || m_source == "rb1dlc" ||
@@ -364,7 +353,7 @@ namespace Framework.SongEntry
                         {
                             if (reader.StartNode())
                             {
-                                realGuitarTuning = reader.ExtractList_Int16();
+                                RealGuitarTuning = reader.ExtractList_Int16().ToArray();
                                 reader.EndNode();
                             }
                             break;
@@ -373,7 +362,7 @@ namespace Framework.SongEntry
                         {
                             if (reader.StartNode())
                             {
-                                realBassTuning = reader.ExtractList_Int16();
+                                RealBassTuning = reader.ExtractList_Int16().ToArray();
                                 reader.EndNode();
                             }
                             break;
@@ -382,7 +371,7 @@ namespace Framework.SongEntry
                         {
                             if (reader.StartNode())
                             {
-                                videoVenues = reader.ExtractList_String();
+                                VideoVenues = reader.ExtractList_String().ToArray();
                                 reader.EndNode();
                             }
                             break;
@@ -413,31 +402,31 @@ namespace Framework.SongEntry
                 {
                     case "name": location = reader.ExtractText(); break;
                     case "tracks": TracksLoop(ref reader); break;
-                    case "crowd_channels": crowdIndices = reader.ExtractList_UInt16(); break;
+                    case "crowd_channels": CrowdIndices = reader.ExtractList_UInt16().ToArray(); break;
                     case "vocal_parts": VocalParts = reader.ReadUInt16(); break;
                     case "pans":
                         if (reader.StartNode())
                         {
-                            pan = reader.ExtractList_Float();
+                            Pan = reader.ExtractList_Float().ToArray();
                             reader.EndNode();
                         }
                         break;
                     case "vols":
                         if (reader.StartNode())
                         {
-                            volume = reader.ExtractList_Float();
+                            Volume = reader.ExtractList_Float().ToArray();
                             reader.EndNode();
                         }
                         break;
                     case "cores":
                         if (reader.StartNode())
                         {
-                            core = reader.ExtractList_Float();
+                            Core = reader.ExtractList_Float().ToArray();
                             reader.EndNode();
                         }
                         break;
                     case "hopo_threshold": m_hopo_frequency = reader.ReadUInt32(); break;
-                    case "midi_file": MidiFile = reader.ExtractText(); break;
+                    case "midi_file": MidiPath = reader.ExtractText(); break;
                 }
                 reader.EndNode();
             }
@@ -455,7 +444,7 @@ namespace Framework.SongEntry
                             {
                                 if (reader.StartNode())
                                 {
-                                    drumIndices = reader.ExtractList_UInt16();
+                                    DrumIndices = reader.ExtractList_UInt16().ToArray();
                                     reader.EndNode();
                                 }
                                 break;
@@ -464,7 +453,7 @@ namespace Framework.SongEntry
                             {
                                 if (reader.StartNode())
                                 {
-                                    bassIndices = reader.ExtractList_UInt16();
+                                    BassIndices = reader.ExtractList_UInt16().ToArray();
                                     reader.EndNode();
                                 }
                                 break;
@@ -473,7 +462,7 @@ namespace Framework.SongEntry
                             {
                                 if (reader.StartNode())
                                 {
-                                    guitarIndices = reader.ExtractList_UInt16();
+                                    GuitarIndices = reader.ExtractList_UInt16().ToArray();
                                     reader.EndNode();
                                 }
                                 break;
@@ -482,7 +471,7 @@ namespace Framework.SongEntry
                             {
                                 if (reader.StartNode())
                                 {
-                                    keysIndices = reader.ExtractList_UInt16();
+                                    KeysIndices = reader.ExtractList_UInt16().ToArray();
                                     reader.EndNode();
                                 }
                                 break;
@@ -491,7 +480,7 @@ namespace Framework.SongEntry
                             {
                                 if (reader.StartNode())
                                 {
-                                    vocalsIndices = reader.ExtractList_UInt16();
+                                    VocalsIndices = reader.ExtractList_UInt16().ToArray();
                                     reader.EndNode();
                                 }
                                 break;
@@ -573,13 +562,19 @@ namespace Framework.SongEntry
             scan.intensity = i;
         }
 
-        public bool Scan(out byte[] hash)
+        public bool Scan(out SHA1Wrapper? hash, string nodeName)
         {
-            hash = Array.Empty<byte>();
+            hash = null;
+
+            if (Mogg == null && moggListing == null)
+            {
+                Debug.WriteLine($"{nodeName} - Mogg not defined");
+                return false;
+            }
 
             if (!IsMoggUnencrypted())
             {
-                Debug.WriteLine($"{ShortName} - Mogg encrypted");
+                Debug.WriteLine($"{nodeName} - Mogg encrypted");
                 return false;
             }
 
@@ -598,20 +593,20 @@ namespace Framework.SongEntry
             if (!m_scans.CheckForValidScans())
                 return false;
 
-            hash = hashBuffer.CalcSHA1();
+            hash = new(hashBuffer.CalcSHA1());
             hashBuffer.Dispose();
             return true;
         }
 
-        public void Update(string folder, DTAFileReader reader)
+        public void Update(string folder, string nodeName, DTAFileReader reader)
         {
-            var results = SetFromDTA(reader);
+            var results = SetFromDTA(nodeName, reader);
 
-            string dir = Path.Combine(folder, ShortName);
+            string dir = Path.Combine(folder, nodeName);
             FileInfo info;
             if (results.Item1)
             {
-                string path = Path.Combine(dir, $"{ShortName}_update.mid");
+                string path = Path.Combine(dir, $"{nodeName}_update.mid");
                 info = new(path);
                 if (info.Exists)
                 {
@@ -619,67 +614,65 @@ namespace Framework.SongEntry
                         UpdateMidi = info;
                 }
                 else if (UpdateMidi == null)
-                    Debug.WriteLine($"Couldn't update song {ShortName} - update file {path} not found!");
+                    Debug.WriteLine($"Couldn't update song {nodeName} - update file {path} not found!");
             }
 
-            info = new(Path.Combine(dir, $"{ShortName}_update.mogg"));
+            info = new(Path.Combine(dir, $"{nodeName}_update.mogg"));
             if (info.Exists && (Mogg == null || Mogg.LastWriteTime < info.LastWriteTime))
             {
                 Mogg = info;
-                if (conFile != null)
-                    moggIndex = -1;
+                moggListing = null;
             }
 
             dir = Path.Combine(dir, "gen");
 
-            info = new(Path.Combine(dir, $"{ShortName}.milo_xbox"));
+            info = new(Path.Combine(dir, $"{nodeName}.milo_xbox"));
             if (info.Exists && (Milo == null || Milo.LastWriteTime < info.LastWriteTime))
             {
                 Milo = info;
-                if (conFile != null)
-                    miloIndex = -1;
+                miloListing = null;
             }
 
             if (HasAlbumArt && results.Item2)
             {
-                info = new(Path.Combine(dir, $"{ShortName}_keep.png_xbox"));
+                info = new(Path.Combine(dir, $"{nodeName}_keep.png_xbox"));
                 if (info.Exists && (Image == null || Image.LastWriteTime < info.LastWriteTime))
                 {
                     Image = info;
-                    if (conFile != null)
-                        imgIndex = -1;
+                    imgListing = null;
                 }
             }
         }
 
-        public override byte[] FormatCacheData()
+        public byte[] FormatCacheData()
         {
             using MemoryStream ms = new();
             using BinaryWriter writer = new(ms);
 
-            writer.Write(ShortName);
             if (conFile != null)
             {
-                writer.Write(midiIndex);
-                writer.Write(conFile[midiIndex].LastWrite);
-                writer.Write(moggIndex);
-                if (moggIndex == -1)
+                writer.Write(midiListing!.Filename);
+                writer.Write(midiListing.LastWrite);
+
+                if (moggListing != null)
+                {
+                    writer.Write(true);
+                    writer.Write(moggListing.Filename);
+                    writer.Write(moggListing.LastWrite);
+                }
+                else
+                {
+                    writer.Write(false);
                     writer.Write(Mogg!.FullName);
-
-                writer.Write(miloIndex);
-                if (miloIndex == -1)
-                    WriteFileInfo(Milo, writer);
-
-                writer.Write(imgIndex);
-                if (imgIndex == -1)
-                    WriteFileInfo(Image, writer);
+                    writer.Write(Mogg.LastWriteTime.ToBinary());
+                }
             }
             else
             {
-                writer.Write(MidiFile);
+                writer.Write(MidiPath);
+                writer.Write(MidiLastWrite.ToBinary());
                 writer.Write(Mogg!.FullName);
-                WriteFileInfo(Milo, writer);
-                WriteFileInfo(Image, writer);
+                writer.Write(Mogg.LastWriteTime.ToBinary());
             }
 
             if (UpdateMidi != null)
@@ -688,8 +681,26 @@ namespace Framework.SongEntry
                 writer.Write(UpdateMidi.FullName);
                 writer.Write(UpdateMidi.LastWriteTime.ToBinary());
             }
+            else
+                writer.Write(false);
 
             FormatCacheData(writer);
+
+            if (conFile != null)
+            {
+                writer.Write(miloListing != null);
+                if (miloListing == null)
+                    WriteFileInfo(Milo, writer);
+
+                writer.Write(imgListing != null);
+                if (imgListing == null)
+                    WriteFileInfo(Image, writer);
+            }
+            else
+            {
+                WriteFileInfo(Milo, writer);
+                WriteFileInfo(Image, writer);
+            }
 
             writer.Write(AnimTempo);
             writer.Write(SongID);
@@ -725,35 +736,35 @@ namespace Framework.SongEntry
                 writer.Write(string.Empty);
         }
 
-        private static void WriteArray(short[] array, BinaryWriter writer)
+        private static void WriteArray(short[] values, BinaryWriter writer)
         {
-            int length = array.Length;
+            int length = values.Length;
             writer.Write(length);
             for (int i = 0; i < length; ++i)
-                writer.Write(array[i]);
+                writer.Write(values[i]);
         }
 
-        private static void WriteArray(ushort[] array, BinaryWriter writer)
+        private static void WriteArray(ushort[] values, BinaryWriter writer)
         {
-            int length = array.Length;
+            int length = values.Length;
             writer.Write(length);
             for (int i = 0; i < length; ++i)
-                writer.Write(array[i]);
+                writer.Write(values[i]);
         }
 
-        private static void WriteArray(float[] array, BinaryWriter writer)
+        private static void WriteArray(float[] values, BinaryWriter writer)
         {
-            int length = array.Length;
+            int length = values.Length;
             writer.Write(length);
             for (int i = 0; i < length; ++i)
-                writer.Write(array[i]);
+                writer.Write(values[i]);
         }
 
         public FrameworkFile LoadMidiFile()
         {
             if (conFile != null)
-                return new FrameworkFile_Pointer(conFile.LoadSubFile(midiIndex)!, true);
-            return new FrameworkFile_Alloc(MidiFile);
+                return new FrameworkFile_Pointer(conFile.LoadSubFile(midiListing!)!, true);
+            return new FrameworkFile_Alloc(MidiPath);
         }
 
         public FrameworkFile_Alloc LoadMidiUpdateFile()
@@ -766,8 +777,8 @@ namespace Framework.SongEntry
             if (Mogg != null)
                 return new FrameworkFile_Alloc(Mogg.FullName);
 
-            if (moggIndex != -1)
-                return new FrameworkFile_Pointer(conFile!.LoadSubFile(moggIndex)!, true);
+            if (moggListing != null)
+                return new FrameworkFile_Pointer(conFile!.LoadSubFile(moggListing)!, true);
 
             return null;
         }
@@ -777,8 +788,8 @@ namespace Framework.SongEntry
             if (Milo != null)
                 return new FrameworkFile_Alloc(Milo.FullName);
 
-            if (miloIndex != -1)
-                return new FrameworkFile_Pointer(conFile!.LoadSubFile(miloIndex)!, true);
+            if (miloListing != null)
+                return new FrameworkFile_Pointer(conFile!.LoadSubFile(miloListing)!, true);
 
             return null;
         }
@@ -788,8 +799,8 @@ namespace Framework.SongEntry
             if (Image != null)
                 return new FrameworkFile_Alloc(Image.FullName);
 
-            if (imgIndex != -1)
-                return new FrameworkFile_Pointer(conFile!.LoadSubFile(imgIndex)!, true);
+            if (imgListing != null)
+                return new FrameworkFile_Pointer(conFile!.LoadSubFile(imgListing)!, true);
 
             return null;
         }
@@ -802,12 +813,7 @@ namespace Framework.SongEntry
                 return fs.ReadInt32LE() == 0xA;
             }
             else
-                return conFile!.GetMoggVersion(moggIndex) == 0xA;
-        }
-
-        private bool IsMoggDefined()
-        {
-            return Mogg != null || conFile != null && moggIndex != -1;
+                return conFile!.GetMoggVersion(moggListing!) == 0xA;
         }
 
         private PointerHandler ScanExtraMidi(FrameworkFile file, PointerHandler hashBuffer)

@@ -78,7 +78,30 @@ namespace Framework.SongEntry
             };
         }
 
-        public abstract byte[] FormatCacheData();
+        protected SongEntry() { }
+
+        protected SongEntry(BinaryReader reader)
+        {
+            m_scans.ReadFromCache(reader);
+            m_name.Str = reader.ReadString();
+            m_artist.Str = reader.ReadString();
+            m_album.Str = reader.ReadString();
+            m_genre.Str = reader.ReadString();
+            m_year.Str = reader.ReadString();
+            m_charter.Str = reader.ReadString();
+            m_playlist.Str = reader.ReadString();
+            
+            m_previewStart   = reader.ReadSingle();
+            m_previewEnd     = reader.ReadSingle();
+            m_album_track    = reader.ReadUInt16();
+            m_playlist_track = reader.ReadUInt16();
+            m_song_length    = reader.ReadUInt64();
+            m_icon           = reader.ReadString();
+            m_source         = reader.ReadString();
+            m_hopo_frequency = reader.ReadUInt64();
+            VocalParts       = reader.ReadInt32();
+            IsMaster         = reader.ReadBoolean();
+        }
 
         protected void FormatCacheData(BinaryWriter writer)
         {

@@ -124,39 +124,23 @@ namespace Framework.Serialization
             }
         }
 
-        public int GetFileIndex(string filename)
-        {
-            for (int i = 0; i < files.Count; ++i)
-                if (filename == files[i].Filename)
-                    return i;
-            return -1;
-        }
-
         public FileListing this[int index] { get { return files[index]; } }
-
-        public PointerHandler? LoadSubFile(string filename)
+        public FileListing? this[string filename]
         {
-            for (int i = 0; i < files.Count; ++i)
-                if (filename == files[i].Filename)
-                    return Load(files[i]);
-            Debug.WriteLine("File " + filename + " does not exist in CON and thus could not be loaded");
-            return null;
-        }
-
-        public PointerHandler? LoadSubFile(int index)
-        {
-            if (index < 0 || index >= files.Count)
+            get
+            {
+                for (int i = 0; i < files.Count; ++i)
+                {
+                    FileListing listing = files[i];
+                    if (filename == listing.Filename)
+                        return listing;
+                }
                 return null;
-
-            return Load(files[index]);
+            }
         }
 
-        public int GetMoggVersion(int index)
+        public int GetMoggVersion(FileListing listing)
         {
-            if (index < 0 || index >= files.Count)
-                throw new Exception("Index provided is not valid");
-
-            var listing = files[index];
             Debug.Assert(!listing.IsDirectory(), "Directory listing cannot be loaded as a file");
 
             long blockLocation = 0xC000 + (long)CalculateBlockNum(listing.FirstBlock) * 0x1000;
@@ -169,7 +153,7 @@ namespace Framework.Serialization
             }
         }
 
-        private PointerHandler Load(FileListing listing)
+        public PointerHandler LoadSubFile(FileListing listing)
         {
             Debug.Assert(!listing.IsDirectory(), "Directory listing cannot be loaded as a file");
             try

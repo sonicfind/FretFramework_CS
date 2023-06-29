@@ -31,8 +31,17 @@ namespace Framework
             while (directory == null);
             directory = directory.Replace("\"", "");
 
+            string? cacheFileDirectory;
+            do
+            {
+                Console.Write("Drag and drop a cache file directory: ");
+                cacheFileDirectory = Console.ReadLine();
+            }
+            while (cacheFileDirectory == null);
+            cacheFileDirectory = cacheFileDirectory.Replace("\"", "");
+
             Stopwatch stopwatch = Stopwatch.StartNew();
-            SongLibrary library = SongCache.ScanDirectories(new() { directory }, true);
+            SongLibrary library = SongCache.ScanDirectories(new() { directory }, cacheFileDirectory, true);
             stopwatch.Stop();
             Console.WriteLine($"Time Spent: {stopwatch.ElapsedMilliseconds}ms");
             Console.WriteLine($"Song Count: {library.Count}");
@@ -50,7 +59,7 @@ namespace Framework
         [Benchmark]
         public void Scan_Directory()
         {
-            library = SongCache.ScanDirectories(directories, false);
+            library = SongCache.ScanDirectories(directories, "E:\\Documents\\My Games\\Clone Hero\\CH Songs", false);
         }
 
         [IterationCleanup]

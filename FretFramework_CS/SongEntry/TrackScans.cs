@@ -234,6 +234,18 @@ namespace Framework.SongEntry
             }
         }
 
+        public void ReadFromCache(BinaryReader reader)
+        {
+            unsafe
+            {
+                fixed (ScanValues* scans = &lead_5)
+                {
+                    byte* yay = (byte*)scans;
+                    reader.Read(new Span<byte>(yay, 17 * sizeof(ScanValues)));
+                }
+            }
+        }
+
         public void WriteToCache(BinaryWriter writer)
         {
             unsafe
