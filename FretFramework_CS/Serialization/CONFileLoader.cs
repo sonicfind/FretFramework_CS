@@ -46,7 +46,7 @@ namespace Framework.Serialization
 
     public unsafe class CONFile
     {
-        public string Filename { get { return stream.Name; } }
+        public string Filename { get; init; }
         private readonly FileStream stream;
         private readonly byte shift = 0;
         private readonly List<FileListing> files = new();
@@ -55,7 +55,7 @@ namespace Framework.Serialization
         static public CONFile? LoadCON(string filename)
         {
             byte[] buffer = new byte[4];
-            FileStream stream = new(filename, FileMode.Open, FileAccess.Read);
+            using FileStream stream = new(filename, FileMode.Open, FileAccess.Read, FileShare.Read);
 
             if (stream.Read(buffer) != 4)
                 return null;
@@ -86,9 +86,8 @@ namespace Framework.Serialization
             int firstBlock = buffer[0] << 16 | buffer[1] << 8 | buffer[2];
             try
             {
-                CONFile con = new(stream, shift);
-                con.ParseFileList(firstBlock, length);
-                return con;
+                
+                return new(filename, shift, firstBlock, length);
             }
             catch
             {
@@ -96,10 +95,17 @@ namespace Framework.Serialization
             }
         }
 
-        private CONFile(FileStream stream, byte shift)
+        private CONFile(string filename, byte shift, int firstBlock, int length)
         {
-            this.stream = stream;
+            Filename = filename;
+            stream = new(filename, FileMode.Open, FileAccess.Read);
             this.shift = shift;
+            ParseFileList(firstBlock, length);
+        }
+
+        ~CONFile()
+        {
+            stream.Dispose();
         }
 
         private void ParseFileList(int firstBlock, int length)
