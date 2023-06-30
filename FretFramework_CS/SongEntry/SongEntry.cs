@@ -40,6 +40,7 @@ namespace Framework.SongEntry
 
         protected ulong m_hopo_frequency = 0;
 
+        protected sbyte m_bandIntensity = -1;
         protected TrackScans m_scans = new();
 
         public SortString Artist => m_artist;

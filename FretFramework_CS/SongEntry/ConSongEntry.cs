@@ -519,53 +519,53 @@ namespace Framework.SongEntry
                     case "drum":
                     case "drums":
                         {
-                            SetRank(ref m_scans.drums_4, reader.ReadUInt16(), DrumDiffMap);
+                            SetRank(ref m_scans.drums_4.intensity, reader.ReadUInt16(), DrumDiffMap);
                             if (m_scans.drums_4pro.intensity == -1)
                                 m_scans.drums_4pro.intensity = m_scans.drums_4.intensity;
                             break;
                         }
-                    case "guitar": SetRank(ref m_scans.lead_5, reader.ReadUInt16(), GuitarDiffMap); break;
-                    case "bass": SetRank(ref m_scans.bass_5, reader.ReadUInt16(), BassDiffMap); break;
-                    case "vocals": SetRank(ref m_scans.leadVocals, reader.ReadUInt16(), VocalsDiffMap); break;
-                    case "keys": SetRank(ref m_scans.keys, reader.ReadUInt16(), KeysDiffMap); break;
+                    case "guitar": SetRank(ref m_scans.lead_5.intensity, reader.ReadUInt16(), GuitarDiffMap); break;
+                    case "bass": SetRank(ref m_scans.bass_5.intensity, reader.ReadUInt16(), BassDiffMap); break;
+                    case "vocals": SetRank(ref m_scans.leadVocals.intensity, reader.ReadUInt16(), VocalsDiffMap); break;
+                    case "keys": SetRank(ref m_scans.keys.intensity, reader.ReadUInt16(), KeysDiffMap); break;
                     case "realGuitar":
                     case "real_guitar":
                         {
-                            SetRank(ref m_scans.proguitar_17, reader.ReadUInt16(), RealGuitarDiffMap);
+                            SetRank(ref m_scans.proguitar_17.intensity, reader.ReadUInt16(), RealGuitarDiffMap);
                             m_scans.proguitar_22.intensity = m_scans.proguitar_17.intensity;
                             break;
                         }
                     case "realBass":
                     case "real_bass":
                         {
-                            SetRank(ref m_scans.probass_17, reader.ReadUInt16(), RealBassDiffMap);
+                            SetRank(ref m_scans.probass_17.intensity, reader.ReadUInt16(), RealBassDiffMap);
                             m_scans.probass_22.intensity = m_scans.probass_17.intensity;
                             break;
                         }
                     case "realKeys":
-                    case "real_keys": SetRank(ref m_scans.proKeys, reader.ReadUInt16(), RealKeysDiffMap); break;
+                    case "real_keys": SetRank(ref m_scans.proKeys.intensity, reader.ReadUInt16(), RealKeysDiffMap); break;
                     case "realDrums":
                     case "real_drums":
                         {
-                            SetRank(ref m_scans.drums_4pro, reader.ReadUInt16(), RealDrumsDiffMap);
+                            SetRank(ref m_scans.drums_4pro.intensity, reader.ReadUInt16(), RealDrumsDiffMap);
                             if (m_scans.drums_4.intensity == -1)
                                 m_scans.drums_4.intensity = m_scans.drums_4pro.intensity;
                             break;
                         }
                     case "harmVocals":
-                    case "vocal_harm": SetRank(ref m_scans.harmonyVocals, reader.ReadUInt16(), HarmonyDiffMap); break;
-                    //case "band": SetRank(ref m_scans.drums_4pro, reader.ReadUInt16(), DrumDiffMap); break;
+                    case "vocal_harm": SetRank(ref m_scans.harmonyVocals.intensity, reader.ReadUInt16(), HarmonyDiffMap); break;
+                    case "band": SetRank(ref m_bandIntensity, reader.ReadUInt16(), BandDiffMap); break;
                 }
                 reader.EndNode();
             }
         }
 
-        private static void SetRank(ref ScanValues scan, ushort rank, int[] values)
+        private static void SetRank(ref sbyte intensity, ushort rank, int[] values)
         {
             sbyte i = 6;
             while (i > 0 && rank < values[i - 1])
                 --i;
-            scan.intensity = i;
+            intensity = i;
         }
 
         public unsafe bool Scan(out SHA1Wrapper? hash, string nodeName)

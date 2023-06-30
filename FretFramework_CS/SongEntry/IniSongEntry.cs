@@ -268,6 +268,11 @@ namespace Framework.SongEntry
                 m_hopofreq_Old = hopofreq_old[0].UINT16;
 
             {
+                if (m_modifiers.TryGetValue("diff_band", out List<Modifier>? intensities))
+                    m_bandIntensity = (sbyte)intensities[0].INT32;
+            }
+
+            {
                 if (m_modifiers.TryGetValue("diff_guitar", out List<Modifier>? intensities))
                     m_scans.lead_5.intensity = (sbyte)intensities[0].INT32;
             }
