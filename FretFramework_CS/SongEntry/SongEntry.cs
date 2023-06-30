@@ -55,6 +55,8 @@ namespace Framework.SongEntry
         public bool IsMaster { get; protected set; }
         public int VocalParts { get; protected set; }
 
+        public string Directory { get; protected set; } = string.Empty;
+
         public ScanValues GetValues(NoteTrackType track)
         {
             return track switch

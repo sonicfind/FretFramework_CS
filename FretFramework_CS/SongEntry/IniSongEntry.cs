@@ -42,7 +42,6 @@ namespace Framework.SongEntry
         public bool EightNoteHopo => m_eighthnote_hopo;
 
         private SortString m_directory_playlist;
-        public string Directory { get; protected set; } = string.Empty;
 
         private Dictionary<string, List<Modifier>> m_modifiers = new();
 

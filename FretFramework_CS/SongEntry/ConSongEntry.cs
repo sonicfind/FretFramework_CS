@@ -236,8 +236,10 @@ namespace Framework.SongEntry
                 throw new Exception($"Required midi file '{MidiPath}' was not located");
             moggListing = conFile[location + ".mogg"];
 
+            string midiDirectory = conFile[midiListing.PathIndex].Filename;
+
             if (!location.StartsWith($"songs/{nodeName}"))
-                nodeName = conFile[midiListing.PathIndex].Filename.Split('/')[1];
+                nodeName = midiDirectory.Split('/')[1];
 
             string genPAth = $"songs/{nodeName}/gen/{nodeName}";
             miloListing = conFile[genPAth + ".milo_xbox"];
@@ -246,6 +248,8 @@ namespace Framework.SongEntry
             if (m_playlist.Str == string.Empty)
                 m_playlist = conFile.Filename;
             m_playlist_track = nodeIndex;
+
+            Directory = Path.Combine(conFile.Filename, midiDirectory);
         }
 
         public ConSongEntry(string folder, string nodeName, DTAFileReader reader, ushort nodeIndex)
@@ -274,6 +278,8 @@ namespace Framework.SongEntry
             if (m_playlist.Str == string.Empty)
                 m_playlist = folder;
             m_playlist_track = nodeIndex;
+
+            Directory = Path.GetDirectoryName(MidiPath)!;
         }
 
         public (bool, bool) SetFromDTA(string nodeName, DTAFileReader reader)
