@@ -45,8 +45,15 @@ namespace Framework
             stopwatch.Stop();
             Console.WriteLine($"Time Spent: {stopwatch.ElapsedMilliseconds}ms");
             Console.WriteLine($"Song Count: {library.Count}");
+            Console.WriteLine();
 
-            //BenchmarkRunner.Run<SongBenchmarks>(); // Song directory MUST be hardcoded to run properly
+            stopwatch.Restart();
+            SongLibrary library2 = SongCache.QuickScan(cacheFileDirectory);
+            stopwatch.Stop();
+            Console.WriteLine($"Time Spent: {stopwatch.ElapsedMilliseconds}ms");
+            Console.WriteLine($"Song Count: {library2.Count}");
+
+            BenchmarkRunner.Run<SongBenchmarks>(); // Song directory MUST be hardcoded to run properly
         }
     }
 
@@ -60,6 +67,12 @@ namespace Framework
         public void Scan_Directory()
         {
             library = SongCache.ScanDirectories(directories, "E:\\Documents\\My Games\\Clone Hero\\CH Songs", false);
+        }
+
+        [Benchmark]
+        public void Quick_Read()
+        {
+            library = SongCache.QuickScan("E:\\Documents\\My Games\\Clone Hero\\CH Songs");
         }
 
         [IterationCleanup]
