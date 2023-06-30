@@ -13,21 +13,30 @@ namespace Framework.Types
     {
         private byte* data = null;
         private bool disposedValue;
-        public readonly int length;
+        private int length;
 
         public PointerHandler(int length)
         {
             this.length = length;
             data = (byte*)Marshal.AllocHGlobal(length);
         }
+
+        public PointerHandler(byte* ptr, int length)
+        {
+            this.length = length;
+            data = (byte*)Marshal.AllocHGlobal(length);
+            Copier.MemCpy(data, ptr, (nuint)length);
+        }
+
         public PointerHandler(PointerHandler handler)
         {
-            this.length = handler.length;
+            length = handler.length;
             data = (byte*)Marshal.AllocHGlobal(length);
             Copier.MemCpy(data, handler.data, (nuint)length);
         }
 
-        public byte* GetData() { return data; }
+        public byte* Data => data;
+        public int Length => length;
 
         public ReadOnlySpan<byte> AsReadOnlySpan() { return new(data, length); }
         public Span<byte> AsSpan() { return new(data, length); }
@@ -40,6 +49,20 @@ namespace Framework.Types
             byte* ptr = data;
             data = null;
             return ptr;
+        }
+
+        public void Append(byte* ptr, int length)
+        {
+            int newLength = this.length + length;
+            byte* newData = (byte*)Marshal.AllocHGlobal(newLength);
+            unsafe
+            {
+                Copier.MemCpy(newData, data, (nuint)this.length);
+                Copier.MemCpy(newData + this.length, ptr, (nuint)length);
+            }
+            Marshal.FreeHGlobal((IntPtr)data);
+            this.length = newLength;
+            data = newData;
         }
 
         protected virtual void Dispose(bool disposing)

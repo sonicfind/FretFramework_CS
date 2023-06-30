@@ -10,10 +10,10 @@ namespace Framework.Library
     {
         private void SaveToFile(string fileName)
         {
-            using var writer = new BinaryWriter(new FileStream(fileName, FileMode.Create, FileAccess.Write), Encoding.UTF8, false);
+            using var writer = new BinaryWriter(new FileStream(fileName, FileMode.Create, FileAccess.Write));
 
             writer.Write(CACHE_VERSION);
-            writer.Write(iniEntries.Count);
+            writer.Write(IniCount);
             foreach (var entryList in iniEntries)
             {
                 foreach (var entry in entryList.Value)

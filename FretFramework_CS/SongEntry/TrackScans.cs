@@ -221,12 +221,13 @@ namespace Framework.SongEntry
             return true;
         }
 
-        public void Update(ref TrackScans update)
+        public void Update(TrackScans update)
         {
             unsafe
             {
-                fixed (ScanValues* scans = &lead_5, updatedScans = &update.lead_5)
+                fixed (ScanValues* scans = &lead_5)
                 {
+                    ScanValues* updatedScans = &update.lead_5;
                     for (int i = 0; i < 17; ++i)
                         if (updatedScans[i].subTracks > 0)
                             scans[i] = updatedScans[i];

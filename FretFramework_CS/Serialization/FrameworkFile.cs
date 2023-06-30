@@ -84,8 +84,8 @@ namespace Framework.Serialization
         public FrameworkFile_Pointer(PointerHandler handler, bool dispose = false)
         {
             this.handler = handler;
-            this.ptr = handler.GetData();
-            Length = handler.length;
+            ptr = handler.Data;
+            Length = handler.Length;
             disposedValue= !dispose;
         }
 

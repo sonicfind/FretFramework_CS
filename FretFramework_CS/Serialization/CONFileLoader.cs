@@ -111,7 +111,7 @@ namespace Framework.Serialization
         private void ParseFileList(int firstBlock, int length)
         {
             using PointerHandler fileListingBuffer = ReadContiguousBlocks(firstBlock, length);
-            byte* ptr = fileListingBuffer.GetData();
+            byte* ptr = fileListingBuffer.Data;
             for (int i = 0; i < length; i += 0x40)
             {
                 FileListing listing = new(ptr + i);
@@ -177,7 +177,7 @@ namespace Framework.Serialization
         private PointerHandler ReadContiguousBlocks(int blockNum, int fileSize)
         {
             PointerHandler ptr = new(fileSize);
-            byte* data = ptr.GetData();
+            byte* data = ptr.Data;
             long skipVal = BYTES_PER_BLOCK << shift;
             int threshold = blockNum - blockNum % NUM_BLOCKS_SQUARED + NUM_BLOCKS_SQUARED;
             int numBlocks = BLOCKS_PER_SECTION - blockNum % BLOCKS_PER_SECTION;
@@ -223,7 +223,7 @@ namespace Framework.Serialization
         private PointerHandler ReadSplitBlocks(int blockNum, int fileSize)
         {
             PointerHandler ptr = new(fileSize);
-            byte* data = ptr.GetData();
+            byte* data = ptr.Data;
             byte[] buffer = new byte[3];
 
             int offset = 0;

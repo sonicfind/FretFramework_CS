@@ -15,9 +15,7 @@ namespace Framework.Library
             SongCache cache = new();
             cache.LoadCacheFile(cacheFile, baseDirectories);
             Parallel.For(0, baseDirectories.Count, i => cache!.ScanDirectory(new(baseDirectories[i])));
-            Task cons = Task.Run(cache.LoadCONSongs);
-            Task extractedCons = Task.Run(cache.LoadExtractedCONSongs);
-            Task.WaitAll(cons, extractedCons);
+            Task.WaitAll(Task.Run(cache.LoadCONSongs), Task.Run(cache.LoadExtractedCONSongs));
             cache.FinalizeIniEntries();
 
             if (writeCache)
@@ -26,7 +24,7 @@ namespace Framework.Library
             return cache.library;
         }
 
-        private const int CACHE_VERSION = 23_06_28_02;
+        private const int CACHE_VERSION = 23_06_30_02;
         private static readonly object dirLock = new();
         private static readonly object fileLock = new();
         private static readonly object iniLock = new();
@@ -45,9 +43,20 @@ namespace Framework.Library
         private readonly List<UpgradeGroup> upgradeGroups = new();
         
         private readonly Dictionary<string, PackedCONGroup> conGroups = new();
-        private readonly Dictionary<string, (DTAFileReader, SongProUpgrade)> upgrades = new();
+        private readonly Dictionary<string, (DTAFileReader?, SongProUpgrade)> upgrades = new();
         private readonly Dictionary<string, ExtractedConGroup> extractedConGroups = new();
         private readonly Dictionary<SHA1Wrapper, List<IniSongEntry>> iniEntries = new();
+
+        private int IniCount
+        {
+            get
+            {
+                int count = 0;
+                foreach (var node in iniEntries)
+                    count += node.Value.Count;
+                return count;
+            }
+        }
 
         private readonly SongLibrary library = new();
         private readonly HashSet<string> preScannedDirectories = new();
@@ -59,6 +68,24 @@ namespace Framework.Library
             new("notes.midi",  ChartType.MIDI),
             new("notes.chart", ChartType.CHART),
         };
+
+        private bool CreateCONGroup(string filename, out PackedCONGroup? group)
+        {
+            group = null;
+
+            FileInfo info = new(filename);
+            if (!info.Exists)
+                return false;
+
+            MarkFile(filename);
+
+            CONFile? file = CONFile.LoadCON(filename);
+            if (file == null)
+                return false;
+
+            group = new(file, info.LastWriteTime);
+            return true;
+        }
 
         private void AddCONGroup(string filename, PackedCONGroup group)
         {
@@ -124,7 +151,7 @@ namespace Framework.Library
                     DateTime lastWrite = file.LastWriteTime;
                     if (CanAddUpgrade(name, ref lastWrite))
                     {
-                        SongProUpgrade upgrade = new(file);
+                        SongProUpgrade upgrade = new(file.FullName, file.LastWriteTime);
                         group!.upgrades[name] = upgrade;
                         AddUpgrade(name, reader.Clone(), upgrade);
 
@@ -145,7 +172,7 @@ namespace Framework.Library
             return null;
         }
 
-        private void AddUpgrade(string name, DTAFileReader reader, SongProUpgrade upgrade)
+        private void AddUpgrade(string name, DTAFileReader? reader, SongProUpgrade upgrade)
         {
             lock (upgradeLock)
                 upgrades[name] = new(reader, upgrade);
@@ -186,7 +213,7 @@ namespace Framework.Library
             if (upgrades.TryGetValue(name, out var upgrade))
             {
                 currentSong.Upgrade = upgrade.Item2;
-                currentSong.SetFromDTA(name, upgrade.Item1.Clone());
+                currentSong.SetFromDTA(name, upgrade.Item1!.Clone());
             }
 
             return currentSong.Scan(out hash, name);
@@ -237,7 +264,7 @@ namespace Framework.Library
                 List<string> entriesToRemove = new();
                 foreach (var group in conGroups)
                 {
-                    group.Value.RemoveEntry(shortname);
+                    group.Value.RemoveEntries(shortname);
                     if (group.Value.EntryCount == 0)
                         entriesToRemove.Add(group.Key);
                 }
@@ -251,7 +278,7 @@ namespace Framework.Library
                 List<string> entriesToRemove = new();
                 foreach (var group in extractedConGroups)
                 {
-                    group.Value.RemoveEntry(shortname);
+                    group.Value.RemoveEntries(shortname);
                     if (group.Value.EntryCount == 0)
                         entriesToRemove.Add(group.Key);
                 }
@@ -272,6 +299,22 @@ namespace Framework.Library
             }
             return true;
         }
+
+        private bool FindCONGroup(string filename, out PackedCONGroup? group)
+        {
+            lock (conLock)
+                return conGroups.TryGetValue(filename, out group);
+        }
+
+        private void MarkDirectory(string directory)
+        {
+            lock (dirLock) preScannedDirectories.Add(directory);
+        }
+
+        private void MarkFile(string file)
+        {
+            lock (fileLock) preScannedFiles.Add(file);
+        }
     }
 
     internal abstract class CONGroup
@@ -287,27 +330,56 @@ namespace Framework.Library
             }
         }
 
-        protected readonly Dictionary<string, EntryNode> entries = new();
+        protected readonly Dictionary<string, SortedDictionary<int, EntryNode>> entries = new();
         protected readonly object entryLock = new();
-        public int EntryCount => entries.Count;
-        public void AddEntry(string name, ConSongEntry entry, SHA1Wrapper hash) { lock (entryLock) entries.Add(name, new(entry, hash)); }
+        public int EntryCount
+        {
+            get
+            {
+                int count = 0;
+                foreach (var node in entries)
+                    count += node.Value.Count;
+                return count;
+            }
+        }
+        public void AddEntry(string name, int index, ConSongEntry entry, SHA1Wrapper hash)
+        {
+            EntryNode node = new(entry, hash);
+            lock (entryLock)
+            {
+                if (entries.TryGetValue(name, out SortedDictionary<int, EntryNode>? dict))
+                    dict.Add(index, node);
+                else
+                    entries.Add(name, new() { { index, node } });
+            }
+        }
 
-        public void RemoveEntry(string name) { lock (entryLock) entries.Remove(name); }
+        public void RemoveEntries(string name) { lock (entryLock) entries.Remove(name); }
 
-        public bool TryGetEntry(string name, out EntryNode? entry) { return entries.TryGetValue(name, out entry); }
+        public void RemoveEntry(string name, int index) { lock (entryLock) entries[name].Remove(index); }
+
+        public bool TryGetEntry(string name, int index, out EntryNode? entry)
+        {
+            entry = null;
+            return entries.TryGetValue(name, out SortedDictionary<int, EntryNode>? dict) && dict.TryGetValue(index, out entry);
+        }
 
         protected void WriteEntriesToCache(BinaryWriter writer)
         {
-            writer.Write(entries.Count);
-            foreach (var entry in entries)
+            writer.Write(EntryCount);
+            foreach (var entryList in entries)
             {
-                writer.Write(entry.Key);
+                foreach (var entry in entryList.Value)
+                {
+                    writer.Write(entryList.Key);
+                    writer.Write(entry.Key);
 
-                byte[] data = entry.Value.entry.FormatCacheData();
-                writer.Write(data.Length + 20);
-                writer.Write(data);
+                    byte[] data = entry.Value.entry.FormatCacheData();
+                    writer.Write(data.Length + 20);
+                    writer.Write(data);
 
-                entry.Value.hash.Write(writer);
+                    entry.Value.hash.Write(writer);
+                }
             }
         }
     }
@@ -416,18 +488,20 @@ namespace Framework.Library
 
     internal class ExtractedConGroup : CONGroup
     {
-        private readonly FileInfo info;
+        private readonly string dtaPath;
+        private readonly DateTime lastWrite;
 
-        public ExtractedConGroup(FileInfo info)
+        public ExtractedConGroup(string dtaPath, DateTime lastWrite)
         {
-            this.info = info;
+            this.dtaPath = dtaPath;
+            this.lastWrite = lastWrite;
         }
 
         public DTAFileReader? LoadDTA()
         {
             try
             {
-                return new(info.FullName);
+                return new(dtaPath);
             }
             catch
             {
@@ -441,7 +515,7 @@ namespace Framework.Library
             using BinaryWriter writer = new(ms);
 
             writer.Write(directory);
-            writer.Write(info.LastWriteTime.ToBinary());
+            writer.Write(lastWrite.ToBinary());
             WriteEntriesToCache(writer);
             return ms.ToArray();
         }

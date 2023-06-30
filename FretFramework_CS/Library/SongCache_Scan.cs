@@ -14,16 +14,18 @@ namespace Framework.Library
     {
         private void ScanDirectory(DirectoryInfo directory)
         {
-            if (!FindOrMarkDirectory(directory.FullName))
+            string dirName = directory.FullName;
+            if (!FindOrMarkDirectory(dirName))
+                return;
+
+            if (TryAddUpdateDirectory(directory) || TryAddUpgradeDirectory(directory))
                 return;
 
             FileInfo?[] charts = new FileInfo?[3];
             FileInfo? ini = null;
             List<DirectoryInfo> subDirectories = new();
-            DirectoryInfo? songs = null;
-
             List<FileInfo> files = new();
-
+            
             try
             {
                 foreach (FileSystemInfo info in directory.EnumerateFileSystemInfos())
@@ -31,15 +33,7 @@ namespace Framework.Library
                     string filename = info.Name.ToLower();
                     if ((info.Attributes & FileAttributes.Directory) > 0)
                     {
-                        DirectoryInfo dir = (info as DirectoryInfo)!;
-                        if (filename == "songs_updates")
-                            AddUpdateDirectory(dir.FullName);
-                        else if (filename == "song_upgrades")
-                            AddUpgradeDirectory(dir.FullName);
-                        else if (filename == "songs")
-                            songs = dir;
-                        else
-                            subDirectories.Add((info as DirectoryInfo)!);
+                        subDirectories.Add((info as DirectoryInfo)!);
                         continue;
                     }
 
@@ -72,16 +66,10 @@ namespace Framework.Library
                 return;
             }
 
-            if (ini == null)
-            {
-                charts[0] = null;
-                charts[1] = null;
-            }
-
             if (ScanIniEntry(charts, ini))
                 return;
 
-            if (songs != null && AddExtractedCONDirectory(songs.FullName))
+            if (AddExtractedCONDirectory(dirName))
                 return;
 
             Parallel.For(0, files.Count, i => AddPossibleCON(files[i]));
@@ -90,7 +78,7 @@ namespace Framework.Library
 
         private bool ScanIniEntry(FileInfo?[] charts, FileInfo? ini)
         {
-            for (int i = 0; i < 3; ++i)
+            for (int i = ini != null ? 0 : 2; i < 3; ++i)
             {
                 var chart = charts[i];
                 if (chart != null)
@@ -117,40 +105,45 @@ namespace Framework.Library
             return false;
         }
 
-        private void AddUpdateDirectory(string directory)
+        private bool TryAddUpdateDirectory(DirectoryInfo directory)
         {
-            if (!FindOrMarkDirectory(directory))
-                return;
-
-            FileInfo dta = new(Path.Combine(directory, "songs_updates.dta"));
-            if (!dta.Exists)
-                return;
-
-            UpdateGroupAdd(directory, dta);
+            if (directory.Name == "songs_updates")
+            {
+                string dirName = directory.FullName;
+                FileInfo dta = new(Path.Combine(dirName, "songs_updates.dta"));
+                if (dta.Exists)
+                {
+                    UpdateGroupAdd(dirName, dta);
+                    return true;
+                }
+            }
+            return false;
         }
 
-        private void AddUpgradeDirectory(string directory)
+        private bool TryAddUpgradeDirectory(DirectoryInfo directory)
         {
-            if (!FindOrMarkDirectory(directory))
-                return;
-
-            FileInfo dta = new(Path.Combine(directory, "upgrades.dta"));
-            if (!dta.Exists)
-                return;
-
-            UpgradeGroupAdd(directory, dta, true);
+            if (directory.Name == "song_upgrades")
+            {
+                string dirName = directory.FullName;
+                FileInfo dta = new(Path.Combine(dirName, "upgrades.dta"));
+                if (dta.Exists)
+                {
+                    UpgradeGroupAdd(dirName, dta);
+                    return true;
+                }
+            }
+            return false;
         }
 
-        private bool AddExtractedCONDirectory(string dir)
+        private bool AddExtractedCONDirectory(string directory)
         {
-            if (!FindOrMarkDirectory(dir))
-                return false;
-
-            FileInfo dta = new(Path.Combine(dir, "songs.dta"));
+            string songPath = Path.Combine(directory, "songs");
+            FileInfo dta = new(Path.Combine(songPath, "songs.dta"));
             if (!dta.Exists)
                 return false;
 
-            AddExtractedCONGroup(dir, new(dta));
+            MarkDirectory(songPath);
+            AddExtractedCONGroup(directory, new(dta.FullName, dta.LastWriteTime));
             return true;
         }
 
@@ -176,13 +169,20 @@ namespace Framework.Library
                 var group = node.Value;
                 if (group.LoadSongs(out var reader))
                 {
+                    Dictionary<string, int> indices = new();
                     while (reader!.StartNode())
                     {
                         string name = reader.GetNameOfNode();
-                        if (group.TryGetEntry(name, out var entryNode))
+                        int index;
+                        if (indices.ContainsKey(name))
+                            index = ++indices[name];
+                        else
+                            index = indices[name] = 0;
+
+                        if (group.TryGetEntry(name, index, out var entryNode))
                         {
                             if (!AddEntry(entryNode!.hash, entryNode.entry))
-                                group.RemoveEntry(name);
+                                group.RemoveEntry(name, index);
                         }
                         else
                         {
@@ -192,7 +192,7 @@ namespace Framework.Library
                                 if (ProcessCONEntry(name, currentSong, out SHA1Wrapper? hash))
                                 {
                                     if (AddEntry(hash!, currentSong))
-                                        group.AddEntry(name, currentSong, hash!);
+                                        group.AddEntry(name, index, currentSong, hash!);
                                 }
                             }
                             catch (Exception e)
@@ -218,13 +218,20 @@ namespace Framework.Library
                 if (reader == null)
                     return;
 
+                Dictionary<string, int> indices = new();
                 while (reader.StartNode())
                 {
                     string name = reader.GetNameOfNode();
-                    if (group.TryGetEntry(name, out var entryNode))
+                    int index;
+                    if (indices.ContainsKey(name))
+                        index = indices[name]++;
+                    else
+                        index = indices[name] = 0;
+
+                    if (group.TryGetEntry(name, index, out var entryNode))
                     {
                         if (!AddEntry(entryNode!.hash, entryNode.entry))
-                            group.RemoveEntry(name);
+                            group.RemoveEntry(name, index);
                     }
                     else
                     {
@@ -234,7 +241,7 @@ namespace Framework.Library
                             if (ProcessCONEntry(name, currentSong, out SHA1Wrapper? hash))
                             {
                                 if (AddEntry(hash!, currentSong))
-                                    group.AddEntry(name, currentSong, hash!);
+                                    group.AddEntry(name, index, currentSong, hash!);
                             }
                         }
                         catch (Exception e)

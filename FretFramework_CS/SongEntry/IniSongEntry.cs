@@ -3,6 +3,7 @@ using Framework.Modifiers;
 using Framework.Serialization;
 using Framework.SongEntry.TrackScan.Instrument.Drums;
 using Framework.Types;
+using System.Text;
 
 namespace Framework.SongEntry
 {
@@ -64,7 +65,7 @@ namespace Framework.SongEntry
                 return;
 
             if (type.Item2 == ChartType.MID || type.Item2 == ChartType.MIDI)
-                Scan_Midi(file, GetDrumTypeFromModifier());
+                Scan_Midi(file);
 
             if (!m_scans.CheckForValidScans())
                 return;
@@ -128,6 +129,21 @@ namespace Framework.SongEntry
                 m_scans.drums_5 |= legacy.Values;
             else
                 m_scans.drums_4pro |= legacy.Values;
+        }
+
+        private void Scan_Midi(FrameworkFile file)
+        {
+            using MidiFileReader reader = new(file);
+            DrumType drumType = GetDrumTypeFromModifier();
+            while (reader.StartTrack())
+            {
+                if (reader.GetTrackNumber() > 1 && reader.GetEvent().type == MidiEventType.Text_TrackName)
+                {
+                    string name = Encoding.ASCII.GetString(reader.ExtractTextOrSysEx());
+                    if (MidiFileReader.TRACKNAMES.TryGetValue(name, out MidiTrackType type) && type != MidiTrackType.Events && type != MidiTrackType.Beats)
+                        m_scans.ScanFromMidi(type, drumType, reader);
+                }
+            }
         }
 
         private void MapModifierVariables()
