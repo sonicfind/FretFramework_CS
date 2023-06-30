@@ -170,6 +170,7 @@ namespace Framework.Library
                 if (group.LoadSongs(out var reader))
                 {
                     Dictionary<string, int> indices = new();
+                    ushort nodeIndex = 0;
                     while (reader!.StartNode())
                     {
                         string name = reader.GetNameOfNode();
@@ -188,7 +189,7 @@ namespace Framework.Library
                         {
                             try
                             {
-                                ConSongEntry currentSong = new(group.file, name, reader);
+                                ConSongEntry currentSong = new(group.file, name, reader, nodeIndex);
                                 if (ProcessCONEntry(name, currentSong, out SHA1Wrapper? hash))
                                 {
                                     if (AddEntry(hash!, currentSong))
@@ -203,6 +204,7 @@ namespace Framework.Library
                             }
                         }
                         reader.EndNode();
+                        ++nodeIndex;
                     }
                 }
             });
@@ -219,6 +221,7 @@ namespace Framework.Library
                     return;
 
                 Dictionary<string, int> indices = new();
+                ushort nodeIndex = 0;
                 while (reader.StartNode())
                 {
                     string name = reader.GetNameOfNode();
@@ -237,7 +240,7 @@ namespace Framework.Library
                     {
                         try
                         {
-                            ConSongEntry currentSong = new(directory, name, reader);
+                            ConSongEntry currentSong = new(directory, name, reader, nodeIndex);
                             if (ProcessCONEntry(name, currentSong, out SHA1Wrapper? hash))
                             {
                                 if (AddEntry(hash!, currentSong))
@@ -252,6 +255,7 @@ namespace Framework.Library
                         }
                     }
                     reader.EndNode();
+                    ++nodeIndex;
                 }
             });
         }

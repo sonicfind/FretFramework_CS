@@ -223,7 +223,7 @@ namespace Framework.SongEntry
             return values;
         }
 
-        public ConSongEntry(CONFile conFile, string nodeName, DTAFileReader reader)
+        public ConSongEntry(CONFile conFile, string nodeName, DTAFileReader reader, ushort nodeIndex)
         {
             this.conFile = conFile;
             SetFromDTA(nodeName, reader);
@@ -242,9 +242,13 @@ namespace Framework.SongEntry
             string genPAth = $"songs/{nodeName}/gen/{nodeName}";
             miloListing = conFile[genPAth + ".milo_xbox"];
             imgListing =  conFile[genPAth + "_keep.png_xbox"];
+
+            if (m_playlist.Str == string.Empty)
+                m_playlist = conFile.Filename;
+            m_playlist_track = nodeIndex;
         }
 
-        public ConSongEntry(string folder, string nodeName, DTAFileReader reader)
+        public ConSongEntry(string folder, string nodeName, DTAFileReader reader, ushort nodeIndex)
         {
             SetFromDTA(nodeName, reader);
             
@@ -266,6 +270,10 @@ namespace Framework.SongEntry
             file = Path.Combine(folder, $"songs/{nodeName}/gen/{nodeName}");
             Milo = new(file + ".milo_xbox");
             Image = new(file + "_keep.png_xbox");
+
+            if (m_playlist.Str == string.Empty)
+                m_playlist = folder;
+            m_playlist_track = nodeIndex;
         }
 
         public (bool, bool) SetFromDTA(string nodeName, DTAFileReader reader)
@@ -336,7 +344,7 @@ namespace Framework.SongEntry
                     case "year_recorded": m_year = reader.ReadUInt32().ToString(); break;
                     case "album_name": m_album = reader.ExtractText(); break;
                     case "album_track_number": m_album_track = reader.ReadUInt16(); break;
-                    case "pack_name": /*Packname = reader.ExtractText();*/ break;
+                    case "pack_name": m_playlist = reader.ExtractText(); break;
                     case "base_points": /*BasePoints = reader.ReadUInt32();*/ break;
                     case "band_fail_cue": /*BandFailCue = reader.ExtractText();*/ break;
                     case "drum_bank": DrumBank = reader.ExtractText(); break;
