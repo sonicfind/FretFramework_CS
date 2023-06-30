@@ -192,6 +192,13 @@ namespace Framework.Library
                 string name = reader.ReadString();
                 reader.BaseStream.Position += 4;
                 int length = reader.ReadInt32();
+
+                if (invalidSongsInCache.Contains(name))
+                {
+                    reader.BaseStream.Position += length;
+                    continue;
+                }
+
                 byte[] entryData = reader.ReadBytes(length);
                 entryTasks.Add(Task.Run(() => QuickReadCONEntry(group!.file, name, entryData)));
             }
@@ -249,6 +256,12 @@ namespace Framework.Library
                 string name = reader.ReadString();
                 reader.BaseStream.Position += 4;
                 int length = reader.ReadInt32();
+
+                if (invalidSongsInCache.Contains(name))
+                {
+                    reader.BaseStream.Position += length;
+                    continue;
+                }
 
                 byte[] entryData = reader.ReadBytes(length);
                 entryTasks.Add(Task.Run(() => QuickReadExtractedCONEntry(name, entryData)));
