@@ -7,12 +7,12 @@ using System.Text;
 
 namespace Framework.Library
 {
-    public partial class SongCache
+    public partial class SongCache : IDisposable
     {
         public static SongLibrary ScanDirectories(List<string> baseDirectories, string cacheFileDirectory, bool writeCache)
         {
             string cacheFile = Path.Combine(cacheFileDirectory, "songcache_CS.bin");
-            SongCache cache = new();
+            using SongCache cache = new();
             cache.LoadCacheFile(cacheFile, baseDirectories);
             Parallel.For(0, baseDirectories.Count, i => cache!.ScanDirectory(new(baseDirectories[i])));
             Task.WaitAll(Task.Run(cache.LoadCONSongs), Task.Run(cache.LoadExtractedCONSongs));
@@ -68,6 +68,45 @@ namespace Framework.Library
             new("notes.midi",  ChartType.MIDI),
             new("notes.chart", ChartType.CHART),
         };
+        private bool disposedValue;
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    updateGroups.Clear();
+                    upgradeGroups.Capacity = 0;
+                    foreach(var update in updates)
+                    {
+                        update.Value.Clear();
+                        update.Value.Capacity = 0;
+                    }
+                    updates.Clear();
+                    upgradeGroups.Clear();
+                    upgradeGroups.Capacity = 0;
+                    conGroups.Clear();
+                    upgrades.Clear();
+                    extractedConGroups.Clear();
+                    foreach (var entry in iniEntries)
+                    {
+                        entry.Value.Clear();
+                        entry.Value.Capacity = 0;
+                    }
+                    iniEntries.Clear();
+                    preScannedDirectories.Clear();
+                    preScannedFiles.Clear();
+                }
+                disposedValue = true;
+            }
+        }
+
+        public void Dispose()
+        {
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
+        }
 
         private bool CreateCONGroup(string filename, out PackedCONGroup? group)
         {
