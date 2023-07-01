@@ -19,6 +19,20 @@ using System.Diagnostics;
 
 namespace Framework.SongEntry
 {
+    public enum SongAttribute
+    {
+        UNSPECIFIED,
+        TITLE,
+        ARTIST,
+        ALBUM,
+        GENRE,
+        YEAR,
+        CHARTER,
+        PLAYLIST,
+        SONG_LENGTH,
+        SOURCE,
+    };
+
     [DebuggerDisplay($"{{{nameof(GetDebuggerDisplay)}(),nq}}")]
     public abstract class SongEntry
     {
@@ -130,9 +144,41 @@ namespace Framework.SongEntry
             writer.Write(IsMaster);
         }
 
+        public bool IsBelow(SongEntry rhs, SongAttribute attribute)
+        {
+            if (attribute == SongAttribute.ALBUM)
+            {
+                if (m_album_track != rhs.m_album_track)
+                    return m_album_track < rhs.m_album_track;
+            }
+            else if (attribute == SongAttribute.PLAYLIST)
+            {
+                if (m_playlist_track != rhs.m_playlist_track)
+                    return m_playlist_track < rhs.m_playlist_track;
+            }
+
+            int strCmp;
+            if ((strCmp = m_name.CompareTo(rhs.m_name)) != 0 ||
+                (strCmp = m_artist.CompareTo(rhs.m_artist)) != 0 ||
+                (strCmp = m_album.CompareTo(rhs.m_album)) != 0 ||
+                (strCmp = m_charter.CompareTo(rhs.m_charter)) != 0)
+                return strCmp < 0;
+            else
+                return Directory.CompareTo(rhs.Directory) < 0;
+        }
+
         private string GetDebuggerDisplay()
         {
             return $"{Artist.Str} | {Name.Str}";
         }
+    }
+
+    public class EntryComparer : IComparer<SongEntry>
+    {
+        private readonly SongAttribute attribute;
+
+        public EntryComparer(SongAttribute attribute) { this.attribute = attribute; }
+
+        public int Compare(SongEntry? x, SongEntry? y)  { return x!.IsBelow(y!, attribute) ? -1 : 1; }
     }
 }

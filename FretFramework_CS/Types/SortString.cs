@@ -30,6 +30,11 @@ namespace Framework.Types
             Str = str;
         }
 
+        public int CompareTo(SortString other)
+        {
+            return _sortStr.CompareTo(other._sortStr);
+        }
+
         public static implicit operator SortString(string str) => new(str);
     }
 }
