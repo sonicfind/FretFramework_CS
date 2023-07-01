@@ -12,6 +12,22 @@ namespace Framework.Library
 {
     public partial class SongCache
     {
+        public static SongLibrary ScanDirectories(List<string> baseDirectories, string cacheFileDirectory, bool writeCache)
+        {
+            string cacheFile = Path.Combine(cacheFileDirectory, "songcache_CS.bin");
+            using SongCache cache = new();
+            cache.LoadCacheFile(cacheFile, baseDirectories);
+            Parallel.For(0, baseDirectories.Count, i => cache!.ScanDirectory(new(baseDirectories[i])));
+            Task.WaitAll(Task.Run(cache.LoadCONSongs), Task.Run(cache.LoadExtractedCONSongs));
+            cache.FinalizeIniEntries();
+            cache.MapCategories();
+
+            if (writeCache)
+                cache.SaveToFile(cacheFile);
+
+            return cache.library;
+        }
+
         private void ScanDirectory(DirectoryInfo directory)
         {
             string dirName = directory.FullName;

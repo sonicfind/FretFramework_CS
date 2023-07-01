@@ -9,22 +9,6 @@ namespace Framework.Library
 {
     public partial class SongCache : IDisposable
     {
-        public static SongLibrary ScanDirectories(List<string> baseDirectories, string cacheFileDirectory, bool writeCache)
-        {
-            string cacheFile = Path.Combine(cacheFileDirectory, "songcache_CS.bin");
-            using SongCache cache = new();
-            cache.LoadCacheFile(cacheFile, baseDirectories);
-            Parallel.For(0, baseDirectories.Count, i => cache!.ScanDirectory(new(baseDirectories[i])));
-            Task.WaitAll(Task.Run(cache.LoadCONSongs), Task.Run(cache.LoadExtractedCONSongs));
-            cache.FinalizeIniEntries();
-            cache.MapCategories();
-
-            if (writeCache)
-                cache.SaveToFile(cacheFile);
-
-            return cache.library;
-        }
-
         private const int CACHE_VERSION = 23_06_30_03;
         private static readonly object dirLock = new();
         private static readonly object fileLock = new();
