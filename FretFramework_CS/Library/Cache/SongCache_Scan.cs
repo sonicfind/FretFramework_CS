@@ -12,15 +12,24 @@ namespace Framework.Library
 {
     public partial class SongCache
     {
-        public static SongLibrary ScanDirectories(List<string> baseDirectories, string cacheFileDirectory, bool writeCache)
+        public static SongLibrary ScanDirectories(List<string> baseDirectories, string cacheFileDirectory, bool writeCache, bool multithreaded = true)
         {
             string cacheFile = Path.Combine(cacheFileDirectory, "songcache_CS.bin");
+
             using SongCache cache = new();
-            cache.LoadCacheFile(cacheFile, baseDirectories);
+            if (multithreaded)
+                cache.LoadCacheFile(cacheFile, baseDirectories);
+            else
+                cache.LoadCacheFile_Serial(cacheFile, baseDirectories);
+
             Parallel.For(0, baseDirectories.Count, i => cache!.ScanDirectory(new(baseDirectories[i])));
             Task.WaitAll(Task.Run(cache.LoadCONSongs), Task.Run(cache.LoadExtractedCONSongs));
             cache.FinalizeIniEntries();
-            cache.MapCategories();
+
+            if (multithreaded)
+                cache.MapCategories();
+            else
+                cache.MapCategories_Serial();
 
             if (writeCache)
                 cache.SaveToFile(cacheFile);

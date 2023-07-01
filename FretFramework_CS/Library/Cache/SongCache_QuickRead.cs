@@ -13,12 +13,20 @@ namespace Framework.Library
 {
     public partial class SongCache
     {
-        public static SongLibrary QuickScan(string cacheFileDirectory)
+        public static SongLibrary QuickScan(string cacheFileDirectory, bool multithreaded = true)
         {
             using SongCache cache = new();
-            cache.LoadCacheFile_Quick(Path.Combine(cacheFileDirectory, "songcache_CS.bin"));
-            cache.MapCategories();
 
+            string cacheFile = Path.Combine(cacheFileDirectory, "songcache_CS.bin");
+            if (multithreaded)
+                cache.LoadCacheFile_Quick(cacheFile);
+            else
+                cache.LoadCacheFile_Quick_Serial(cacheFile);
+
+            if (multithreaded)
+                cache.MapCategories();
+            else
+                cache.MapCategories_Serial();
             return cache.library;
         }
 
@@ -108,6 +116,68 @@ namespace Framework.Library
             }
 
             Task.WaitAll(entryTasks.ToArray());
+        }
+
+        private void LoadCacheFile_Quick_Serial(string cacheFile)
+        {
+            {
+                FileInfo info = new(cacheFile);
+                if (!info.Exists || info.Length < 28)
+                    return;
+            }
+
+            using FileStream fs = new(cacheFile, FileMode.Open, FileAccess.Read);
+            if (fs.ReadInt32LE() != CACHE_VERSION)
+                return;
+
+            using BinaryFileReader reader = new(fs.ReadBytes((int)fs.Length - 4));
+
+            int count = reader.ReadInt32();
+            for (int i = 0; i < count; ++i)
+            {
+                int length = reader.ReadInt32();
+                using BinaryFileReader sectionReader = reader.CreateReaderFromCurrentPosition(length);
+                QuickReadIniEntry(sectionReader);
+            }
+
+            count = reader.ReadInt32();
+            for (int i = 0; i < count; ++i)
+            {
+                int length = reader.ReadInt32();
+                reader.Position += length;
+            }
+
+            count = reader.ReadInt32();
+            for (int i = 0; i < count; ++i)
+            {
+                int length = reader.ReadInt32();
+                using BinaryFileReader sectionReader = reader.CreateReaderFromCurrentPosition(length);
+                QuickReadUpgradeDirectory(sectionReader);
+            }
+
+            count = reader.ReadInt32();
+            for (int i = 0; i < count; ++i)
+            {
+                int length = reader.ReadInt32();
+                using BinaryFileReader sectionReader = reader.CreateReaderFromCurrentPosition(length);
+                QuickReadUpgradeCON(sectionReader);
+            }
+
+            count = reader.ReadInt32();
+            for (int i = 0; i < count; ++i)
+            {
+                int length = reader.ReadInt32();
+                using BinaryFileReader sectionReader = reader.CreateReaderFromCurrentPosition(length);
+                QuickReadCONGroup_Serial(sectionReader);
+            }
+
+            count = reader.ReadInt32();
+            for (int i = 0; i < count; ++i)
+            {
+                int length = reader.ReadInt32();
+                using BinaryFileReader sectionReader = reader.CreateReaderFromCurrentPosition(length);
+                QuickReadExtractedCONGroup_Serial(sectionReader);
+            }
         }
 
         private void QuickReadIniEntry(BinaryFileReader reader)
@@ -209,10 +279,37 @@ namespace Framework.Library
                 int length = reader.ReadInt32();
 
                 BinaryFileReader entryReader = reader.CreateReaderFromCurrentPosition(length);
-                entryTasks.Add(Task.Run(() => QuickReadCONEntry(group!.file, name, entryReader)));
+                entryTasks.Add(Task.Run(() =>
+                {
+                    QuickReadCONEntry(group!.file, name, entryReader);
+                    entryReader.Dispose();
+                }));
             }
 
             Task.WaitAll(entryTasks.ToArray());
+        }
+
+        private void QuickReadCONGroup_Serial(BinaryFileReader reader)
+        {
+            string filename = reader.ReadLEBString();
+            reader.Position += 4;
+            if (!FindCONGroup(filename, out PackedCONGroup? group))
+            {
+                if (!CreateCONGroup(filename, out group))
+                    return;
+                AddCONGroup(filename, group!);
+            }
+
+            int count = reader.ReadInt32();
+            for (int i = 0; i < count; ++i)
+            {
+                string name = reader.ReadLEBString();
+                reader.Position += 4;
+                int length = reader.ReadInt32();
+
+                using BinaryFileReader entryReader = reader.CreateReaderFromCurrentPosition(length);
+                QuickReadCONEntry(group!.file, name, entryReader);
+            }
         }
 
         private void QuickReadCONEntry(CONFile file, string nodeName, BinaryFileReader reader)
@@ -261,10 +358,30 @@ namespace Framework.Library
                 int length = reader.ReadInt32();
 
                 BinaryFileReader entryReader = reader.CreateReaderFromCurrentPosition(length);
-                entryTasks.Add(Task.Run(() => QuickReadExtractedCONEntry(name, entryReader)));
+                entryTasks.Add(Task.Run(() =>
+                {
+                    QuickReadExtractedCONEntry(name, entryReader);
+                    entryReader.Dispose();
+                }));
             }
 
             Task.WaitAll(entryTasks.ToArray());
+        }
+
+        private void QuickReadExtractedCONGroup_Serial(BinaryFileReader reader)
+        {
+            string directory = reader.ReadLEBString();
+            reader.Position += 8;
+            int count = reader.ReadInt32();
+            for (int i = 0; i < count; ++i)
+            {
+                string name = reader.ReadLEBString();
+                reader.Position += 4;
+                int length = reader.ReadInt32();
+
+                using BinaryFileReader entryReader = reader.CreateReaderFromCurrentPosition(length);
+                QuickReadExtractedCONEntry(name, entryReader);
+            }
         }
 
         private void QuickReadExtractedCONEntry(string nodeName, BinaryFileReader reader)

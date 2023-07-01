@@ -106,6 +106,69 @@ namespace Framework.Library
             Task.WaitAll(entryTasks.ToArray());
         }
 
+        private void LoadCacheFile_Serial(string cacheFile, List<string> baseDirectories)
+        {
+            {
+                FileInfo info = new(cacheFile);
+                if (!info.Exists || info.Length < 28)
+                    return;
+            }
+
+            using FileStream fs = new(cacheFile, FileMode.Open, FileAccess.Read);
+            if (fs.ReadInt32LE() != CACHE_VERSION)
+                return;
+
+            using BinaryFileReader reader = new(fs.ReadBytes((int)fs.Length - 4));
+
+            int count = reader.ReadInt32();
+            for (int i = 0; i < count; ++i)
+            {
+                int length = reader.ReadInt32();
+                using BinaryFileReader sectionReader = reader.CreateReaderFromCurrentPosition(length);
+                ReadIniEntry(sectionReader, baseDirectories);
+            }
+
+            count = reader.ReadInt32();
+            for (int i = 0; i < count; ++i)
+            {
+                int length = reader.ReadInt32();
+                using BinaryFileReader sectionReader = reader.CreateReaderFromCurrentPosition(length);
+                ReadUpdateDirectory(sectionReader, baseDirectories);
+            }
+
+            count = reader.ReadInt32();
+            for (int i = 0; i < count; ++i)
+            {
+                int length = reader.ReadInt32();
+                using BinaryFileReader sectionReader = reader.CreateReaderFromCurrentPosition(length);
+                ReadUpgradeDirectory(sectionReader, baseDirectories);
+            }
+
+            count = reader.ReadInt32();
+            for (int i = 0; i < count; ++i)
+            {
+                int length = reader.ReadInt32();
+                using BinaryFileReader sectionReader = reader.CreateReaderFromCurrentPosition(length);
+                ReadUpgradeCON(sectionReader, baseDirectories);
+            }
+
+            count = reader.ReadInt32();
+            for (int i = 0; i < count; ++i)
+            {
+                int length = reader.ReadInt32();
+                using BinaryFileReader sectionReader = reader.CreateReaderFromCurrentPosition(length);
+                ReadCONGroup_Serial(sectionReader, baseDirectories);
+            }
+
+            count = reader.ReadInt32();
+            for (int i = 0; i < count; ++i)
+            {
+                int length = reader.ReadInt32();
+                using BinaryFileReader sectionReader = reader.CreateReaderFromCurrentPosition(length);
+                ReadExtractedCONGroup_Serial(sectionReader, baseDirectories);
+            }
+        }
+
         private static bool StartsWithBaseDirectory(string path, List<string> baseDirectories)
         {
             for (int i = 0; i != baseDirectories.Count; ++i)
@@ -304,6 +367,49 @@ namespace Framework.Library
             Task.WaitAll(entryTasks.ToArray());
         }
 
+        private void ReadCONGroup_Serial(BinaryFileReader reader, List<string> baseDirectories)
+        {
+            string filename = reader.ReadLEBString();
+            if (!StartsWithBaseDirectory(filename, baseDirectories))
+                return;
+
+            int dtaLastWrite = reader.ReadInt32();
+            if (!FindCONGroup(filename, out PackedCONGroup? group))
+            {
+                FileInfo info = new(filename);
+                if (!info.Exists)
+                    return;
+
+                MarkFile(filename);
+
+                CONFile? file = CONFile.LoadCON(info.FullName);
+                if (file == null)
+                    return;
+
+                group = new(file, info.LastWriteTime);
+                AddCONGroup(filename, group);
+            }
+
+            if (!group!.SetSongDTA() || group.DTALastWrite != dtaLastWrite)
+                return;
+
+            int count = reader.ReadInt32();
+            for (int i = 0; i < count; ++i)
+            {
+                string name = reader.ReadLEBString();
+                int index = reader.ReadInt32();
+                int length = reader.ReadInt32();
+                if (invalidSongsInCache.Contains(name))
+                {
+                    reader.Position += length;
+                    continue;
+                }
+
+                using BinaryFileReader entryReader = reader.CreateReaderFromCurrentPosition(length);
+                ReadCONEntry(group, name, index, entryReader);
+            }
+        }
+
         private static void ReadCONEntry(PackedCONGroup group, string nodeName, int index, BinaryFileReader reader)
         {
             FileListing? midiListing = group.file[reader.ReadLEBString()];
@@ -375,6 +481,44 @@ namespace Framework.Library
                     ReadExtractedCONEntry(group, name, index, entryReader);
                     entryReader.Dispose();
                 }));
+            }
+
+            Task.WaitAll(entryTasks.ToArray());
+        }
+
+        private void ReadExtractedCONGroup_Serial(BinaryFileReader reader, List<string> baseDirectories)
+        {
+            string directory = reader.ReadLEBString();
+            if (!StartsWithBaseDirectory(directory, baseDirectories))
+                return;
+
+            FileInfo dtaInfo = new(Path.Combine(directory, "songs.dta"));
+            if (!dtaInfo.Exists)
+                return;
+
+            ExtractedConGroup group = new(dtaInfo.FullName, dtaInfo.LastWriteTime);
+            MarkDirectory(directory);
+            AddExtractedCONGroup(directory, group);
+
+            if (dtaInfo.LastWriteTime != DateTime.FromBinary(reader.ReadInt64()))
+                return;
+
+            int count = reader.ReadInt32();
+            List<Task> entryTasks = new();
+            for (int i = 0; i < count; ++i)
+            {
+                string name = reader.ReadLEBString();
+                int index = reader.ReadInt32();
+                int length = reader.ReadInt32();
+
+                if (invalidSongsInCache.Contains(name))
+                {
+                    reader.Position += length;
+                    continue;
+                }
+
+                using BinaryFileReader entryReader = reader.CreateReaderFromCurrentPosition(length);
+                ReadExtractedCONEntry(group, name, index, entryReader);
             }
 
             Task.WaitAll(entryTasks.ToArray());

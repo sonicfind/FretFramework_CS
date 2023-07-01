@@ -41,14 +41,14 @@ namespace Framework
             cacheFileDirectory = cacheFileDirectory.Replace("\"", "");
 
             Stopwatch stopwatch = Stopwatch.StartNew();
-            SongLibrary library = SongCache.ScanDirectories(new() { directory }, cacheFileDirectory, true);
+            SongLibrary library = SongCache.ScanDirectories(new() { directory }, cacheFileDirectory, true, false);
             stopwatch.Stop();
             Console.WriteLine($"Time Spent: {stopwatch.ElapsedMilliseconds}ms");
             Console.WriteLine($"Song Count: {library.Count}");
             Console.WriteLine();
 
             stopwatch.Restart();
-            SongLibrary library2 = SongCache.QuickScan(cacheFileDirectory);
+            SongLibrary library2 = SongCache.QuickScan(cacheFileDirectory, false);
             stopwatch.Stop();
             Console.WriteLine($"Time Spent: {stopwatch.ElapsedMilliseconds}ms");
             Console.WriteLine($"Song Count: {library2.Count}");
@@ -66,13 +66,13 @@ namespace Framework
         [Benchmark]
         public void Scan_Directory()
         {
-            library = SongCache.ScanDirectories(directories, "E:\\Documents\\My Games\\Clone Hero\\CH Songs", false);
+            library = SongCache.ScanDirectories(directories, "E:\\Documents\\My Games\\Clone Hero\\CH Songs", false, false);
         }
 
         [Benchmark]
         public void Quick_Read()
         {
-            library = SongCache.QuickScan("E:\\Documents\\My Games\\Clone Hero\\CH Songs");
+            library = SongCache.QuickScan("E:\\Documents\\My Games\\Clone Hero\\CH Songs", false);
         }
 
         [IterationCleanup]

@@ -119,6 +119,25 @@ namespace Framework.Library
             });
         }
 
+        private void MapCategories_Serial()
+        {
+            foreach (var entryList in library)
+            {
+                foreach (var entry in entryList.Value)
+                {
+                    library.titles.Add(entry);
+                    library.artists.Add(entry);
+                    library.albums.Add(entry);
+                    library.genres.Add(entry);
+                    library.years.Add(entry);
+                    library.charters.Add(entry);
+                    library.playlists.Add(entry);
+                    library.sources.Add(entry);
+                    library.artistAlbums.Add(entry);
+                }
+            }
+        }
+
         private bool CreateCONGroup(string filename, out PackedCONGroup? group)
         {
             group = null;
