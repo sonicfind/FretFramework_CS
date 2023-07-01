@@ -75,7 +75,7 @@ namespace Framework.SongEntry
             m_directory_playlist.Str = Path.GetDirectoryName(Directory)!;
         }
 
-        public IniSongEntry(string directory, FileInfo chartFile, FileInfo? iniFile, ref (string, ChartType) type, BinaryReader reader) : base(reader)
+        public IniSongEntry(string directory, FileInfo chartFile, FileInfo? iniFile, ref (string, ChartType) type, BinaryFileReader reader) : base(reader)
         {
             Directory = directory;
             m_chartType = type;

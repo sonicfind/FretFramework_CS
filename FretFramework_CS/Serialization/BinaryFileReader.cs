@@ -415,5 +415,16 @@ namespace Framework.Serialization
             _position = endPos;
             return span;
         }
+
+        public BinaryFileReader CreateReaderFromCurrentPosition(int length)
+        {
+            int endPos = _position + length;
+            if (endPos > currentBoundary)
+                throw new Exception("Failed to create reader");
+
+            BinaryFileReader reader = new(new FrameworkFile(file.ptr + _position, length));
+            _position = endPos;
+            return reader;
+        }
     }
 }

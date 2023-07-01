@@ -4,6 +4,7 @@ using Framework.SongEntry;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Reflection.PortableExecutable;
 using System.Text;
 using System.Threading.Tasks;
@@ -29,7 +30,7 @@ namespace Framework.Library
                     return;
             }
 
-            using BinaryReader reader = new(new FileStream(cacheFile, FileMode.Open, FileAccess.Read), Encoding.UTF8, false);
+            using BinaryFileReader reader = new(cacheFile);
 
             if (reader.ReadInt32() != CACHE_VERSION)
                 return;
@@ -39,15 +40,19 @@ namespace Framework.Library
             for (int i = 0; i < count; ++i)
             {
                 int length = reader.ReadInt32();
-                byte[] buffer = reader.ReadBytes(length);
-                entryTasks.Add(Task.Run(() => QuickReadIniEntry(buffer)));
+                BinaryFileReader sectionReader = reader.CreateReaderFromCurrentPosition(length);
+                entryTasks.Add(Task.Run(() =>
+                {
+                    QuickReadIniEntry(sectionReader);
+                    sectionReader.Dispose();
+                }));
             }
 
             count = reader.ReadInt32();
             for (int i = 0; i < count; ++i)
             {
                 int length = reader.ReadInt32();
-                reader.BaseStream.Position += length;
+                reader.Position += length;
             }
 
             List<Task> conTasks = new();
@@ -55,16 +60,20 @@ namespace Framework.Library
             for (int i = 0; i < count; ++i)
             {
                 int length = reader.ReadInt32();
-                byte[] buffer = reader.ReadBytes(length);
-                conTasks.Add(Task.Run(() => QuickReadUpgradeDirectory(buffer)));
+                BinaryFileReader sectionReader = reader.CreateReaderFromCurrentPosition(length);
+                conTasks.Add(Task.Run(() =>
+                {
+                    QuickReadUpgradeDirectory(sectionReader);
+                    sectionReader.Dispose();
+                }));
             }
 
             count = reader.ReadInt32();
             for (int i = 0; i < count; ++i)
             {
                 int length = reader.ReadInt32();
-                byte[] buffer = reader.ReadBytes(length);
-                conTasks.Add(Task.Run(() => QuickReadUpgradeCON(buffer)));
+                BinaryFileReader sectionReader = reader.CreateReaderFromCurrentPosition(length);
+                conTasks.Add(Task.Run(() => { QuickReadUpgradeCON(sectionReader); sectionReader.Dispose(); }));
             }
 
             Task.WaitAll(conTasks.ToArray());
@@ -73,31 +82,28 @@ namespace Framework.Library
             for (int i = 0; i < count; ++i)
             {
                 int length = reader.ReadInt32();
-                byte[] buffer = reader.ReadBytes(length);
-                entryTasks.Add(Task.Run(() => QuickReadCONGroup(buffer)));
+                BinaryFileReader sectionReader = reader.CreateReaderFromCurrentPosition(length);
+                entryTasks.Add(Task.Run(() => { QuickReadCONGroup(sectionReader); sectionReader.Dispose(); }));
             }
 
             count = reader.ReadInt32();
             for (int i = 0; i < count; ++i)
             {
                 int length = reader.ReadInt32();
-                byte[] buffer = reader.ReadBytes(length);
-                entryTasks.Add(Task.Run(() => QuickReadExtractedCONGroup(buffer)));
+                BinaryFileReader sectionReader = reader.CreateReaderFromCurrentPosition(length);
+                entryTasks.Add(Task.Run(() => { QuickReadExtractedCONGroup(sectionReader); sectionReader.Dispose(); }));
             }
 
             Task.WaitAll(entryTasks.ToArray());
         }
 
-        private void QuickReadIniEntry(byte[] buffer)
+        private void QuickReadIniEntry(BinaryFileReader reader)
         {
-            using MemoryStream ms = new(buffer);
-            using BinaryReader reader = new(ms, Encoding.UTF8, false);
-
-            string directory = reader.ReadString();
+            string directory = reader.ReadLEBString();
             byte chartTypeIndex = reader.ReadByte();
             if (chartTypeIndex >= CHARTTYPES.Length)
                 return;
-            reader.BaseStream.Position += 8;
+            reader.Position += 8;
 
             ref var chartType = ref CHARTTYPES[chartTypeIndex];
             FileInfo chartFile = new(Path.Combine(directory, chartType.Item1));
@@ -105,19 +111,16 @@ namespace Framework.Library
             if (reader.ReadBoolean())
             {
                 iniFile = new(Path.Combine(directory, "song.ini"));
-                reader.BaseStream.Position += 8;
+                reader.Position += 8;
             }
             IniSongEntry entry = new(directory, chartFile, iniFile, ref chartType, reader);
             SHA1Wrapper hash = new(reader);
             AddEntry(hash, entry);
         }
 
-        private void QuickReadUpgradeDirectory(byte[] buffer)
+        private void QuickReadUpgradeDirectory(BinaryFileReader reader)
         {
-            using MemoryStream ms = new(buffer);
-            using BinaryReader reader = new(ms, Encoding.UTF8, false);
-
-            string directory = reader.ReadString();
+            string directory = reader.ReadLEBString();
             DateTime dtaLastWrite = DateTime.FromBinary(reader.ReadInt64());
             int count = reader.ReadInt32();
 
@@ -128,7 +131,7 @@ namespace Framework.Library
 
             for (int i = 0; i < count; i++)
             {
-                string name = reader.ReadString();
+                string name = reader.ReadLEBString();
                 DateTime lastWrite = DateTime.FromBinary(reader.ReadInt64());
                 string filename = Path.Combine(directory, $"{name}_plus.mid");
                 SongProUpgrade upgrade = new(filename, lastWrite);
@@ -137,14 +140,11 @@ namespace Framework.Library
             }
         }
 
-        private void QuickReadUpgradeCON(byte[] buffer)
+        private void QuickReadUpgradeCON(BinaryFileReader reader)
         {
-            using MemoryStream ms = new(buffer);
-            using BinaryReader reader = new(ms, Encoding.UTF8, false);
-
-            string filename = reader.ReadString();
+            string filename = reader.ReadLEBString();
             DateTime conLastWrite = DateTime.FromBinary(reader.ReadInt64());
-            reader.BaseStream.Position += 4;
+            reader.Position += 4;
             int count = reader.ReadInt32();
 
             if (CreateCONGroup(filename, out PackedCONGroup? group))
@@ -154,7 +154,7 @@ namespace Framework.Library
 
                 for (int i = 0; i < count; i++)
                 {
-                    string name = reader.ReadString();
+                    string name = reader.ReadLEBString();
                     DateTime lastWrite = DateTime.FromBinary(reader.ReadInt64());
                     FileListing? listing = file[$"songs_upgrades/{name}_plus.mid"];
 
@@ -166,7 +166,7 @@ namespace Framework.Library
             {
                 for (int i = 0; i < count; i++)
                 {
-                    string name = reader.ReadString();
+                    string name = reader.ReadLEBString();
                     DateTime lastWrite = DateTime.FromBinary(reader.ReadInt64());
                     SongProUpgrade upgrade = new(null, null, lastWrite);
                     AddUpgrade(name, null, upgrade);
@@ -174,13 +174,10 @@ namespace Framework.Library
             }
         }
 
-        private void QuickReadCONGroup(byte[] buffer)
+        private void QuickReadCONGroup(BinaryFileReader reader)
         {
-            using MemoryStream ms = new(buffer);
-            using BinaryReader reader = new(ms, Encoding.UTF8, false);
-
-            string filename = reader.ReadString();
-            reader.BaseStream.Position += 4;
+            string filename = reader.ReadLEBString();
+            reader.Position += 4;
             if (!FindCONGroup(filename, out PackedCONGroup? group))
             {
                 if (!CreateCONGroup(filename, out group))
@@ -192,43 +189,40 @@ namespace Framework.Library
             List<Task> entryTasks = new();
             for (int i = 0; i < count; ++i)
             {
-                string name = reader.ReadString();
-                reader.BaseStream.Position += 4;
+                string name = reader.ReadLEBString();
+                reader.Position += 4;
                 int length = reader.ReadInt32();
 
-                byte[] entryData = reader.ReadBytes(length);
-                entryTasks.Add(Task.Run(() => QuickReadCONEntry(group!.file, name, entryData)));
+                BinaryFileReader entryReader = reader.CreateReaderFromCurrentPosition(length);
+                entryTasks.Add(Task.Run(() => QuickReadCONEntry(group!.file, name, entryReader)));
             }
 
             Task.WaitAll(entryTasks.ToArray());
         }
 
-        private void QuickReadCONEntry(CONFile file, string nodeName, byte[] buffer)
+        private void QuickReadCONEntry(CONFile file, string nodeName, BinaryFileReader reader)
         {
-            using MemoryStream ms = new(buffer);
-            using BinaryReader reader = new(ms, Encoding.UTF8, false);
-
-            FileListing? midiListing = file[reader.ReadString()];
-            reader.BaseStream.Position += 4;
+            FileListing? midiListing = file[reader.ReadLEBString()];
+            reader.Position += 4;
 
             FileListing? moggListing = null;
             FileInfo? moggInfo = null;
             if (reader.ReadBoolean())
             {
-                moggListing = file[reader.ReadString()];
-                reader.BaseStream.Position += 4;
+                moggListing = file[reader.ReadLEBString()];
+                reader.Position += 4;
             }
             else
             {
-                moggInfo = new FileInfo(reader.ReadString());
-                reader.BaseStream.Position += 8;
+                moggInfo = new FileInfo(reader.ReadLEBString());
+                reader.Position += 8;
             }
 
             FileInfo? updateInfo = null;
             if (reader.ReadBoolean())
             {
-                updateInfo = new FileInfo(reader.ReadString());
-                reader.BaseStream.Position += 8;
+                updateInfo = new FileInfo(reader.ReadLEBString());
+                reader.Position += 8;
             }
 
             ConSongEntry currentSong = new(file, nodeName, midiListing, moggListing, moggInfo, updateInfo, reader);
@@ -239,44 +233,38 @@ namespace Framework.Library
             AddEntry(hash, currentSong);
         }
 
-        private void QuickReadExtractedCONGroup(byte[] buffer)
+        private void QuickReadExtractedCONGroup(BinaryFileReader reader)
         {
-            using MemoryStream ms = new(buffer);
-            using BinaryReader reader = new(ms, Encoding.UTF8, false);
-
-            string directory = reader.ReadString();
-            reader.BaseStream.Position += 8;
+            string directory = reader.ReadLEBString();
+            reader.Position += 8;
             int count = reader.ReadInt32();
             List<Task> entryTasks = new();
             for (int i = 0; i < count; ++i)
             {
-                string name = reader.ReadString();
-                reader.BaseStream.Position += 4;
+                string name = reader.ReadLEBString();
+                reader.Position += 4;
                 int length = reader.ReadInt32();
 
-                byte[] entryData = reader.ReadBytes(length);
-                entryTasks.Add(Task.Run(() => QuickReadExtractedCONEntry(name, entryData)));
+                BinaryFileReader entryReader = reader.CreateReaderFromCurrentPosition(length);
+                entryTasks.Add(Task.Run(() => QuickReadExtractedCONEntry(name, entryReader)));
             }
 
             Task.WaitAll(entryTasks.ToArray());
         }
 
-        private void QuickReadExtractedCONEntry(string nodeName, byte[] buffer)
+        private void QuickReadExtractedCONEntry(string nodeName, BinaryFileReader reader)
         {
-            using MemoryStream ms = new(buffer);
-            using BinaryReader reader = new(ms, Encoding.UTF8, false);
+            FileInfo midiInfo = new(reader.ReadLEBString());
+            reader.Position += 8;
 
-            FileInfo midiInfo = new(reader.ReadString());
-            reader.BaseStream.Position += 8;
-
-            FileInfo moggInfo = new(reader.ReadString());
-            reader.BaseStream.Position += 8;
+            FileInfo moggInfo = new(reader.ReadLEBString());
+            reader.Position += 8;
 
             FileInfo? updateInfo = null;
             if (reader.ReadBoolean())
             {
-                updateInfo = new FileInfo(reader.ReadString());
-                reader.BaseStream.Position += 8;
+                updateInfo = new FileInfo(reader.ReadLEBString());
+                reader.Position += 8;
             }
 
             ConSongEntry currentSong = new(midiInfo, moggInfo, updateInfo, reader);

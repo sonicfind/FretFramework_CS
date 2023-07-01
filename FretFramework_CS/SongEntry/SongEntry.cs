@@ -99,24 +99,24 @@ namespace Framework.SongEntry
 
         protected SongEntry() { }
 
-        protected SongEntry(BinaryReader reader)
+        protected SongEntry(BinaryFileReader reader)
         {
             m_scans.ReadFromCache(reader);
-            m_name.Str = reader.ReadString();
-            m_artist.Str = reader.ReadString();
-            m_album.Str = reader.ReadString();
-            m_genre.Str = reader.ReadString();
-            m_year.Str = reader.ReadString();
-            m_charter.Str = reader.ReadString();
-            m_playlist.Str = reader.ReadString();
-            m_source.Str = reader.ReadString();
+            m_name.Str = reader.ReadLEBString();
+            m_artist.Str = reader.ReadLEBString();
+            m_album.Str = reader.ReadLEBString();
+            m_genre.Str = reader.ReadLEBString();
+            m_year.Str = reader.ReadLEBString();
+            m_charter.Str = reader.ReadLEBString();
+            m_playlist.Str = reader.ReadLEBString();
+            m_source.Str = reader.ReadLEBString();
 
-            m_previewStart   = reader.ReadSingle();
-            m_previewEnd     = reader.ReadSingle();
+            m_previewStart   = reader.ReadFloat();
+            m_previewEnd     = reader.ReadFloat();
             m_album_track    = reader.ReadUInt16();
             m_playlist_track = reader.ReadUInt16();
             m_song_length    = reader.ReadUInt64();
-            m_icon           = reader.ReadString();
+            m_icon           = reader.ReadLEBString();
             m_hopo_frequency = reader.ReadUInt64();
             VocalParts       = reader.ReadInt32();
             IsMaster         = reader.ReadBoolean();

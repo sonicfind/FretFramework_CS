@@ -235,15 +235,12 @@ namespace Framework.SongEntry
             }
         }
 
-        public void ReadFromCache(BinaryReader reader)
+        public void ReadFromCache(BinaryFileReader reader)
         {
             unsafe
             {
                 fixed (ScanValues* scans = &lead_5)
-                {
-                    byte* yay = (byte*)scans;
-                    reader.Read(new Span<byte>(yay, 17 * sizeof(ScanValues)));
-                }
+                    reader.CopyTo((byte*)scans, 17 * sizeof(ScanValues));
             }
         }
 

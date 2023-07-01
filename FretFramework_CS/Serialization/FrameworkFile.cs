@@ -10,17 +10,25 @@ using System.Threading.Tasks;
 
 namespace Framework.Serialization
 {
-    public unsafe abstract class FrameworkFile : IDisposable
+    public unsafe class FrameworkFile : IDisposable
     {
         public byte* ptr;
         protected bool disposedValue;
 
         public int Length { get; init; }
 
+        protected FrameworkFile() { }
+
+        public FrameworkFile(byte* ptr, int length)
+        {
+            this.ptr = ptr;
+            Length = length;
+        }
+
         public byte[] CalcMD5() { return MD5.HashData(new ReadOnlySpan<byte>(ptr, Length)); }
         public byte[] CalcSHA1() { return SHA1.HashData(new ReadOnlySpan<byte>(ptr, Length)); }
 
-        protected abstract void Dispose(bool disposing);
+        protected virtual void Dispose(bool disposing) { }
 
         public void Dispose()
         {

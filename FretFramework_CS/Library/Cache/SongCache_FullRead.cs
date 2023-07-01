@@ -21,7 +21,7 @@ namespace Framework.Library
                     return;
             }
 
-            using BinaryReader reader = new(new FileStream(cacheFile, FileMode.Open, FileAccess.Read));
+            using BinaryFileReader reader = new(cacheFile);
 
             if (reader.ReadInt32() != CACHE_VERSION)
                 return;
@@ -31,8 +31,12 @@ namespace Framework.Library
             for (int i = 0; i < count; ++i)
             {
                 int length = reader.ReadInt32();
-                byte[] buffer = reader.ReadBytes(length);
-                entryTasks.Add(Task.Run(() => ReadIniEntry(buffer, baseDirectories)));
+                BinaryFileReader sectionReader = reader.CreateReaderFromCurrentPosition(length);
+                entryTasks.Add(Task.Run(() =>
+                {
+                    ReadIniEntry(sectionReader, baseDirectories);
+                    sectionReader.Dispose();
+                }));
             }
 
             List<Task> conTasks = new();
@@ -40,24 +44,32 @@ namespace Framework.Library
             for (int i = 0; i < count; ++i)
             {
                 int length = reader.ReadInt32();
-                byte[] buffer = reader.ReadBytes(length);
-                conTasks.Add(Task.Run(() => ReadUpdateDirectory(buffer, baseDirectories)));
+                BinaryFileReader sectionReader = reader.CreateReaderFromCurrentPosition(length);
+                conTasks.Add(Task.Run(() =>
+                {
+                    ReadUpdateDirectory(sectionReader, baseDirectories);
+                    sectionReader.Dispose();
+                }));
             }
 
             count = reader.ReadInt32();
             for (int i = 0; i < count; ++i)
             {
                 int length = reader.ReadInt32();
-                byte[] buffer = reader.ReadBytes(length);
-                conTasks.Add(Task.Run(() => ReadUpgradeDirectory(buffer, baseDirectories)));
+                BinaryFileReader sectionReader = reader.CreateReaderFromCurrentPosition(length);
+                conTasks.Add(Task.Run(() => 
+                {
+                    ReadUpgradeDirectory(sectionReader, baseDirectories);
+                    sectionReader.Dispose();
+                }));
             }
 
             count = reader.ReadInt32();
             for (int i = 0; i < count; ++i)
             {
                 int length = reader.ReadInt32();
-                byte[] buffer = reader.ReadBytes(length);
-                conTasks.Add(Task.Run(() => ReadUpgradeCON(buffer, baseDirectories)));
+                BinaryFileReader sectionReader = reader.CreateReaderFromCurrentPosition(length);
+                conTasks.Add(Task.Run(() => { ReadUpgradeCON(sectionReader, baseDirectories); sectionReader.Dispose(); }));
             }
 
             Task.WaitAll(conTasks.ToArray());
@@ -66,16 +78,16 @@ namespace Framework.Library
             for (int i = 0; i < count; ++i)
             {
                 int length = reader.ReadInt32();
-                byte[] buffer = reader.ReadBytes(length);
-                entryTasks.Add(Task.Run(() => ReadCONGroup(buffer, baseDirectories)));
+                BinaryFileReader sectionReader = reader.CreateReaderFromCurrentPosition(length);
+                entryTasks.Add(Task.Run(() => { ReadCONGroup(sectionReader, baseDirectories); sectionReader.Dispose(); }));
             }
 
             count = reader.ReadInt32();
             for (int i = 0; i < count; ++i)
             {
                 int length = reader.ReadInt32();
-                byte[] buffer = reader.ReadBytes(length);
-                entryTasks.Add(Task.Run(() => ReadExtractedCONGroup(buffer, baseDirectories)));
+                BinaryFileReader sectionReader = reader.CreateReaderFromCurrentPosition(length);
+                entryTasks.Add(Task.Run(() => { ReadExtractedCONGroup(sectionReader, baseDirectories); sectionReader.Dispose(); }));
             }
 
             Task.WaitAll(entryTasks.ToArray());
@@ -89,12 +101,9 @@ namespace Framework.Library
             return false;
         }
 
-        private void ReadIniEntry(byte[] buffer, List<string> baseDirectories)
+        private void ReadIniEntry(BinaryFileReader reader, List<string> baseDirectories)
         {
-            using MemoryStream ms = new(buffer);
-            using BinaryReader reader = new(ms);
-
-            string directory = reader.ReadString();
+            string directory = reader.ReadLEBString();
             if (!StartsWithBaseDirectory(directory, baseDirectories))
                 return;
 
@@ -128,12 +137,9 @@ namespace Framework.Library
             AddIniEntry(hash, entry);
         }
 
-        private void ReadUpdateDirectory(byte[] buffer, List<string> baseDirectories)
+        private void ReadUpdateDirectory(BinaryFileReader reader, List<string> baseDirectories)
         {
-            using MemoryStream ms = new(buffer);
-            using BinaryReader reader = new(ms);
-
-            string directory = reader.ReadString();
+            string directory = reader.ReadLEBString();
             DateTime dtaLastWrite = DateTime.FromBinary(reader.ReadInt64());
             int count = reader.ReadInt32();
 
@@ -151,7 +157,7 @@ namespace Framework.Library
             }
 
             for (int i = 0; i < count; i++)
-                AddInvalidSong(reader.ReadString());
+                AddInvalidSong(reader.ReadLEBString());
         }
 
         private void AddInvalidSong(string name)
@@ -159,14 +165,11 @@ namespace Framework.Library
             lock (invalidLock) invalidSongsInCache.Add(name);
         }
 
-        private void ReadUpgradeDirectory(byte[] buffer, List<string> baseDirectories)
+        private void ReadUpgradeDirectory(BinaryFileReader reader, List<string> baseDirectories)
         {
-            using MemoryStream ms = new(buffer);
-            using BinaryReader cacheReader = new(ms);
-
-            string directory = cacheReader.ReadString();
-            DateTime dtaLastWrite = DateTime.FromBinary(cacheReader.ReadInt64());
-            int count = cacheReader.ReadInt32();
+            string directory = reader.ReadLEBString();
+            DateTime dtaLastWrite = DateTime.FromBinary(reader.ReadInt64());
+            int count = reader.ReadInt32();
 
             if (StartsWithBaseDirectory(directory, baseDirectories))
             {
@@ -180,8 +183,8 @@ namespace Framework.Library
                     {
                         for (int i = 0; i < count; i++)
                         {
-                            string name = cacheReader.ReadString();
-                            DateTime lastWrite = DateTime.FromBinary(cacheReader.ReadInt64());
+                            string name = reader.ReadLEBString();
+                            DateTime lastWrite = DateTime.FromBinary(reader.ReadInt64());
                             if (!group.upgrades.TryGetValue(name, out SongProUpgrade? upgrade) || upgrade!.UpgradeLastWrite != lastWrite)
                                 AddInvalidSong(name);
                         }
@@ -192,17 +195,14 @@ namespace Framework.Library
 
             for (int i = 0; i < count; i++)
             {
-                AddInvalidSong(cacheReader.ReadString());
-                cacheReader.BaseStream.Position += 4;
+                AddInvalidSong(reader.ReadLEBString());
+                reader.Position += 4;
             }
         }
 
-        private void ReadUpgradeCON(byte[] buffer, List<string> baseDirectories)
+        private void ReadUpgradeCON(BinaryFileReader cacheReader, List<string> baseDirectories)
         {
-            using MemoryStream ms = new(buffer);
-            using BinaryReader cacheReader = new(ms);
-
-            string filename = cacheReader.ReadString();
+            string filename = cacheReader.ReadLEBString();
             DateTime conLastWrite = DateTime.FromBinary(cacheReader.ReadInt64());
             int dtaLastWrite = cacheReader.ReadInt32();
             int count = cacheReader.ReadInt32();
@@ -223,7 +223,7 @@ namespace Framework.Library
                             {
                                 for (int i = 0; i < count; i++)
                                 {
-                                    string name = cacheReader.ReadString();
+                                    string name = cacheReader.ReadLEBString();
                                     if (group.upgrades[name].UpgradeLastWrite != DateTime.FromBinary(cacheReader.ReadInt64()))
                                         AddInvalidSong(name);
                                 }
@@ -236,17 +236,14 @@ namespace Framework.Library
 
             for (int i = 0; i < count; i++)
             {
-                AddInvalidSong(cacheReader.ReadString());
-                cacheReader.BaseStream.Position += 4;
+                AddInvalidSong(cacheReader.ReadLEBString());
+                cacheReader.Position += 4;
             }
         }
 
-        private void ReadCONGroup(byte[] buffer, List<string> baseDirectories)
+        private void ReadCONGroup(BinaryFileReader reader, List<string> baseDirectories)
         {
-            using MemoryStream ms = new(buffer);
-            using BinaryReader reader = new(ms);
-
-            string filename = reader.ReadString();
+            string filename = reader.ReadLEBString();
             if (!StartsWithBaseDirectory(filename, baseDirectories))
                 return;
 
@@ -274,28 +271,29 @@ namespace Framework.Library
             List<Task> entryTasks = new();
             for (int i = 0; i < count; ++i)
             {
-                string name = reader.ReadString();
+                string name = reader.ReadLEBString();
                 int index = reader.ReadInt32();
                 int length = reader.ReadInt32();
                 if (invalidSongsInCache.Contains(name))
                 {
-                    reader.BaseStream.Position += length;
+                    reader.Position += length;
                     continue;
                 }
 
-                byte[] entryData = reader.ReadBytes(length);
-                entryTasks.Add(Task.Run(() => ReadCONEntry(group, name, index, entryData)));
+                BinaryFileReader entryReader = reader.CreateReaderFromCurrentPosition(length);
+                entryTasks.Add(Task.Run(() =>
+                {
+                    ReadCONEntry(group, name, index, entryReader);
+                    entryReader.Dispose();
+                }));
             }
 
             Task.WaitAll(entryTasks.ToArray());
         }
 
-        private static void ReadCONEntry(PackedCONGroup group, string nodeName, int index, byte[] buffer)
+        private static void ReadCONEntry(PackedCONGroup group, string nodeName, int index, BinaryFileReader reader)
         {
-            using MemoryStream ms = new(buffer);
-            using BinaryReader reader = new(ms);
-
-            FileListing? midiListing = group.file[reader.ReadString()];
+            FileListing? midiListing = group.file[reader.ReadLEBString()];
             if (midiListing == null || midiListing.LastWrite != reader.ReadInt32())
                 return;
 
@@ -303,13 +301,13 @@ namespace Framework.Library
             FileInfo? moggInfo = null;
             if (reader.ReadBoolean())
             {
-                moggListing = group.file[reader.ReadString()];
+                moggListing = group.file[reader.ReadLEBString()];
                 if (moggListing == null || moggListing.LastWrite != reader.ReadInt32())
                     return;
             }
             else
             {
-                moggInfo = new FileInfo(reader.ReadString());
+                moggInfo = new FileInfo(reader.ReadLEBString());
                 if (!moggInfo.Exists || moggInfo.LastWriteTime != DateTime.FromBinary(reader.ReadInt64()))
                     return;
             }
@@ -317,7 +315,7 @@ namespace Framework.Library
             FileInfo? updateInfo = null;
             if (reader.ReadBoolean())
             {
-                updateInfo = new FileInfo(reader.ReadString());
+                updateInfo = new FileInfo(reader.ReadLEBString());
                 if (!updateInfo.Exists || updateInfo.LastWriteTime != DateTime.FromBinary(reader.ReadInt64()))
                     return;
             }
@@ -327,12 +325,9 @@ namespace Framework.Library
             group.AddEntry(nodeName, index, currentSong, hash);
         }
 
-        private void ReadExtractedCONGroup(byte[] buffer, List<string> baseDirectories)
+        private void ReadExtractedCONGroup(BinaryFileReader reader, List<string> baseDirectories)
         {
-            using MemoryStream ms = new(buffer);
-            using BinaryReader reader = new(ms);
-
-            string directory = reader.ReadString();
+            string directory = reader.ReadLEBString();
             if (!StartsWithBaseDirectory(directory, baseDirectories))
                 return;
 
@@ -351,40 +346,41 @@ namespace Framework.Library
             List<Task> entryTasks = new();
             for (int i = 0; i < count; ++i)
             {
-                string name = reader.ReadString();
+                string name = reader.ReadLEBString();
                 int index = reader.ReadInt32();
                 int length = reader.ReadInt32();
 
                 if (invalidSongsInCache.Contains(name))
                 {
-                    reader.BaseStream.Position += length;
+                    reader.Position += length;
                     continue;
                 }
 
-                byte[] entryData = reader.ReadBytes(length);
-                entryTasks.Add(Task.Run(() => ReadExtractedCONEntry(group, name, index, entryData)));
+                BinaryFileReader entryReader = reader.CreateReaderFromCurrentPosition(length);
+                entryTasks.Add(Task.Run(() =>
+                {
+                    ReadExtractedCONEntry(group, name, index, entryReader);
+                    entryReader.Dispose();
+                }));
             }
 
             Task.WaitAll(entryTasks.ToArray());
         }
 
-        private static void ReadExtractedCONEntry(ExtractedConGroup group, string nodeName, int index, byte[] buffer)
+        private static void ReadExtractedCONEntry(ExtractedConGroup group, string nodeName, int index, BinaryFileReader reader)
         {
-            using MemoryStream ms = new(buffer);
-            using BinaryReader reader = new(ms);
-
-            FileInfo midiInfo = new(reader.ReadString());
+            FileInfo midiInfo = new(reader.ReadLEBString());
             if (!midiInfo.Exists || midiInfo.LastWriteTime != DateTime.FromBinary(reader.ReadInt64()))
                 return;
 
-            FileInfo moggInfo = new(reader.ReadString());
+            FileInfo moggInfo = new(reader.ReadLEBString());
             if (!moggInfo.Exists || moggInfo.LastWriteTime != DateTime.FromBinary(reader.ReadInt64()))
                 return;
 
             FileInfo? updateInfo = null;
             if (reader.ReadBoolean())
             {
-                updateInfo = new FileInfo(reader.ReadString());
+                updateInfo = new FileInfo(reader.ReadLEBString());
                 if (!updateInfo.Exists || updateInfo.LastWriteTime != DateTime.FromBinary(reader.ReadInt64()))
                     return;
             }

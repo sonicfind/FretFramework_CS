@@ -1,4 +1,5 @@
 ﻿using Framework.FlatMaps;
+using Framework.Serialization;
 using Framework.Types;
 using Iced.Intel;
 using System;
@@ -32,7 +33,7 @@ namespace Framework.Hashes
                 hashCode ^= hash[i];
         }
 
-        protected HashWrapper(BinaryReader reader, int length) : this(length)
+        protected HashWrapper(BinaryFileReader reader, int length) : this(length)
         {
             for (int i = 0; i < hash.Length; i++)
                 hashCode ^= hash[i] = reader.ReadInt32();
@@ -97,13 +98,13 @@ namespace Framework.Hashes
     public class SHA1Wrapper : HashWrapper
     {
         public SHA1Wrapper(byte[] hash) : base(hash, 5) { }
-        public SHA1Wrapper(BinaryReader reader) : base(reader, 5) { }
+        public SHA1Wrapper(BinaryFileReader reader) : base(reader, 5) { }
     }
 
     public class MD5Wrapper : HashWrapper
     {
         public MD5Wrapper(byte[] hash) : base(hash, 4) { }
 
-        public MD5Wrapper(BinaryReader reader) : base(reader, 4) { }
+        public MD5Wrapper(BinaryFileReader reader) : base(reader, 4) { }
     }
 }

@@ -99,7 +99,7 @@ namespace Framework.SongEntry
         public float[] Volume { get; private set; } = Array.Empty<float>();
         public float[] Core { get; private set; } = Array.Empty<float>();
 
-        public ConSongEntry(CONFile file, string nodeName, FileListing? midi, FileListing? moggListing, FileInfo? moggInfo, FileInfo? updateInfo, BinaryReader reader) : base(reader)
+        public ConSongEntry(CONFile file, string nodeName, FileListing? midi, FileListing? moggListing, FileInfo? moggInfo, FileInfo? updateInfo, BinaryFileReader reader) : base(reader)
         {
             conFile = file;
             midiListing = midi;
@@ -119,7 +119,7 @@ namespace Framework.SongEntry
                 miloListing = conFile[genPAth + ".milo_xbox"];
             else
             {
-                string milopath = reader.ReadString();
+                string milopath = reader.ReadLEBString();
                 if (milopath != string.Empty)
                 {
                     FileInfo info = new(milopath);
@@ -132,7 +132,7 @@ namespace Framework.SongEntry
                 imgListing = conFile[genPAth + "_keep.png_xbox"];
             else
             {
-                string imgpath = reader.ReadString();
+                string imgpath = reader.ReadLEBString();
                 if (imgpath != string.Empty)
                 {
                     FileInfo info = new(imgpath);
@@ -144,7 +144,7 @@ namespace Framework.SongEntry
             FinishCacheRead(reader);
         }
 
-        public ConSongEntry(FileInfo midi, FileInfo mogg, FileInfo? updateInfo, BinaryReader reader) : base(reader)
+        public ConSongEntry(FileInfo midi, FileInfo mogg, FileInfo? updateInfo, BinaryFileReader reader) : base(reader)
         {
             MidiPath = midi.FullName;
             MidiLastWrite = midi.LastWriteTime;
@@ -154,16 +154,16 @@ namespace Framework.SongEntry
             if (updateInfo != null)
                 UpdateMidi = updateInfo;
 
-            Milo = new(reader.ReadString());
-            Image = new(reader.ReadString());
+            Milo = new(reader.ReadLEBString());
+            Image = new(reader.ReadLEBString());
             FinishCacheRead(reader);
         }
 
-        private void FinishCacheRead(BinaryReader reader)
+        private void FinishCacheRead(BinaryFileReader reader)
         {
             AnimTempo = reader.ReadUInt32();
-            SongID = reader.ReadString();
-            VocalPercussionBank = reader.ReadString();
+            SongID = reader.ReadLEBString();
+            VocalPercussionBank = reader.ReadLEBString();
             VocalSongScrollSpeed = reader.ReadUInt32();
             SongRating = reader.ReadUInt32();
             VocalGender = reader.ReadBoolean();
@@ -187,7 +187,7 @@ namespace Framework.SongEntry
             CrowdIndices = ReadUShortArray(reader);
         }
 
-        private static short[] ReadShortArray(BinaryReader reader)
+        private static short[] ReadShortArray(BinaryFileReader reader)
         {
             int length = reader.ReadInt32();
             if (length == 0)
@@ -199,7 +199,7 @@ namespace Framework.SongEntry
             return values;
         }
 
-        private static ushort[] ReadUShortArray(BinaryReader reader)
+        private static ushort[] ReadUShortArray(BinaryFileReader reader)
         {
             int length = reader.ReadInt32();
             if (length == 0)
@@ -211,7 +211,7 @@ namespace Framework.SongEntry
             return values;
         }
 
-        private static float[] ReadFloatArray(BinaryReader reader)
+        private static float[] ReadFloatArray(BinaryFileReader reader)
         {
             int length = reader.ReadInt32();
             if (length == 0)
@@ -219,7 +219,7 @@ namespace Framework.SongEntry
 
             float[] values = new float[length];
             for (int i = 0; i < length; ++i)
-                values[i] = reader.ReadSingle();
+                values[i] = reader.ReadFloat();
             return values;
         }
 
