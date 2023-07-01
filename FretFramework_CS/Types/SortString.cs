@@ -6,10 +6,11 @@ using System.Threading.Tasks;
 
 namespace Framework.Types
 {
-    public struct SortString
+    public struct SortString : IComparable<SortString>, IEquatable<SortString>
     {
         private string _str = string.Empty;
         private string _sortStr = string.Empty;
+        private int _hashCode;
 
         public string Str
         {
@@ -17,6 +18,7 @@ namespace Framework.Types
             set {
                 _str = value;
                 _sortStr = value.ToLower();
+                _hashCode = _sortStr.GetHashCode();
             }
         }
 
@@ -33,6 +35,16 @@ namespace Framework.Types
         public int CompareTo(SortString other)
         {
             return _sortStr.CompareTo(other._sortStr);
+        }
+
+        public override int GetHashCode()
+        {
+            return _hashCode;  
+        }
+
+        public bool Equals(SortString other)
+        {
+            return _hashCode == other._hashCode;
         }
 
         public static implicit operator SortString(string str) => new(str);
