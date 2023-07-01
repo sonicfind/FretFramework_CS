@@ -108,7 +108,9 @@ namespace Framework.SongEntry
 
         protected SongEntry(BinaryFileReader reader)
         {
+            m_bandIntensity = reader.ReadSByte();
             m_scans.ReadFromCache(reader);
+
             m_name.Str = reader.ReadLEBString();
             m_artist.Str = reader.ReadLEBString();
             m_album.Str = reader.ReadLEBString();
@@ -131,6 +133,7 @@ namespace Framework.SongEntry
 
         protected void FormatCacheData(BinaryWriter writer)
         {
+            writer.Write(m_bandIntensity);
             m_scans.WriteToCache(writer);
 
             writer.Write(m_name.Str);
