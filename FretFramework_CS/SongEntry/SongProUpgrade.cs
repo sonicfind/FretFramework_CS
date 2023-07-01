@@ -15,7 +15,7 @@ namespace Framework.SongEntry
         public FileListing? UpgradeMidiListing { get; private set; }
         public string UpgradeMidiPath { get; private set; } = string.Empty;
 
-        public SongProUpgrade(CONFile conFile, FileListing? listing, DateTime lastWrite)
+        public SongProUpgrade(CONFile? conFile, FileListing? listing, DateTime lastWrite)
         {
             this.conFile = conFile;
             UpgradeMidiListing = listing;
@@ -35,9 +35,9 @@ namespace Framework.SongEntry
 
         public FrameworkFile? GetUpgradeMidi()
         {
-            if (conFile != null)
+            if (UpgradeMidiPath == string.Empty)
             {
-                if (UpgradeMidiListing == null)
+                if (conFile == null || UpgradeMidiListing == null)
                     return null;
                 return new FrameworkFile_Pointer(conFile.LoadSubFile(UpgradeMidiListing)!, true);
             }

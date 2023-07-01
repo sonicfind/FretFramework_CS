@@ -159,7 +159,6 @@ namespace Framework.Library
                     FileListing? listing = file[$"songs_upgrades/{name}_plus.mid"];
 
                     SongProUpgrade upgrade = new(file, listing, lastWrite);
-                    group.AddUpgrade(name, upgrade);
                     AddUpgrade(name, null, upgrade);
                 }
             }
@@ -167,8 +166,10 @@ namespace Framework.Library
             {
                 for (int i = 0; i < count; i++)
                 {
-                    AddInvalidSong(reader.ReadString());
-                    reader.BaseStream.Position += 4;
+                    string name = reader.ReadString();
+                    DateTime lastWrite = DateTime.FromBinary(reader.ReadInt64());
+                    SongProUpgrade upgrade = new(null, null, lastWrite);
+                    AddUpgrade(name, null, upgrade);
                 }
             }
         }
@@ -194,12 +195,6 @@ namespace Framework.Library
                 string name = reader.ReadString();
                 reader.BaseStream.Position += 4;
                 int length = reader.ReadInt32();
-
-                if (invalidSongsInCache.Contains(name))
-                {
-                    reader.BaseStream.Position += length;
-                    continue;
-                }
 
                 byte[] entryData = reader.ReadBytes(length);
                 entryTasks.Add(Task.Run(() => QuickReadCONEntry(group!.file, name, entryData)));
@@ -258,12 +253,6 @@ namespace Framework.Library
                 string name = reader.ReadString();
                 reader.BaseStream.Position += 4;
                 int length = reader.ReadInt32();
-
-                if (invalidSongsInCache.Contains(name))
-                {
-                    reader.BaseStream.Position += length;
-                    continue;
-                }
 
                 byte[] entryData = reader.ReadBytes(length);
                 entryTasks.Add(Task.Run(() => QuickReadExtractedCONEntry(name, entryData)));
