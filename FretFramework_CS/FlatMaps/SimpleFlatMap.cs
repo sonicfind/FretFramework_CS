@@ -345,7 +345,7 @@ namespace Framework.FlatMaps
                 ++_count;
                 ref Node node = ref At_index(index);
                 node.key = key;
-                node.obj = BASE;
+                node.obj = ISVALUETYPE ? BASE : new();
                 ++_version;
             }
             return index;
