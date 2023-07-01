@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 
 namespace Framework.Types
 {
+    [DebuggerDisplay($"{{{nameof(GetDebuggerDisplay)}(),nq}}")]
     public struct SortString : IComparable<SortString>, IEquatable<SortString>
     {
         private string _str = string.Empty;
@@ -48,5 +51,10 @@ namespace Framework.Types
         }
 
         public static implicit operator SortString(string str) => new(str);
+
+        private string GetDebuggerDisplay()
+        {
+            return $"{_str} | {_sortStr}";
+        }
     }
 }
