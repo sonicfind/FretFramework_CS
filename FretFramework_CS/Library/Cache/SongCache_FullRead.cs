@@ -21,10 +21,12 @@ namespace Framework.Library
                     return;
             }
 
-            using BinaryFileReader reader = new(cacheFile);
-
-            if (reader.ReadInt32() != CACHE_VERSION)
+            using FileStream fs = new(cacheFile, FileMode.Open, FileAccess.Read);
+            if (fs.ReadInt32LE() != CACHE_VERSION)
                 return;
+
+            using BinaryFileReader reader = new(fs.ReadBytes((int)fs.Length - 4));
+            fs.Dispose();
 
             List<Task> entryTasks = new();
             int count = reader.ReadInt32();
