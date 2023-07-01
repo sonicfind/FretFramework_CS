@@ -56,7 +56,7 @@ namespace Framework.Serialization
         {
             if (!disposedValue)
             {
-                if (disposeFile)
+                if (disposing && disposeFile)
                     file.Dispose();
                 Marshal.FreeHGlobal((IntPtr)boundaries);
                 disposedValue = true;
@@ -225,6 +225,20 @@ namespace Framework.Serialization
             _position += 8;
             return true;
         }
+
+        public bool ReadFloat(ref float value, Endianness endianness = Endianness.LittleEndian)
+        {
+            if (_position + 4 > currentBoundary)
+                return false;
+
+            Span<byte> span = new(file.ptr + _position, 8);
+            if (endianness == Endianness.LittleEndian)
+                value = BinaryPrimitives.ReadSingleLittleEndian(span);
+            else
+                value = BinaryPrimitives.ReadSingleBigEndian(span);
+            _position += 4;
+            return true;
+        }
         public byte ReadByte()
         {
             if (_position >= currentBoundary)
@@ -246,6 +260,11 @@ namespace Framework.Serialization
                 throw new Exception("Failed to parse data");
 
             return (sbyte)file.ptr[_position++];
+        }
+
+        public bool ReadBoolean()
+        {
+            return ReadByte() > 0;
         }
         public short ReadInt16(Endianness endianness = Endianness.LittleEndian)
         {
@@ -289,13 +308,21 @@ namespace Framework.Serialization
                 throw new Exception("Failed to parse data");
             return value;
         }
+        public float ReadFloat(Endianness endianness = Endianness.LittleEndian)
+        {
+            float value = default;
+            if (!ReadFloat(ref value, endianness))
+                throw new Exception("Failed to parse data");
+            return value;
+        }
         public bool ReadBytes(byte[] bytes)
         {
-            if (_position + bytes.Length > currentBoundary)
+            int endPos = _position + bytes.Length;
+            if (endPos > currentBoundary)
                 return false;
 
             Marshal.Copy((IntPtr)(file.ptr + _position), bytes, 0, bytes.Length);
-            _position += bytes.Length;
+            _position = endPos;
             return true;
         }
 
@@ -305,6 +332,45 @@ namespace Framework.Serialization
             if (!ReadBytes(bytes))
                 throw new Exception("Failed to parse data");
             return bytes;
+        }
+
+        public string ReadLEBString()
+        {
+            int length = ReadLEB();
+            return length > 0 ? Encoding.UTF8.GetString(ReadSpan(length)) : string.Empty;
+        }
+
+        public int ReadLEB()
+        {
+            uint result = 0;
+            byte byteReadJustNow;
+
+            const int MaxBytesWithoutOverflow = 4;
+            for (int shift = 0; shift < MaxBytesWithoutOverflow * 7; shift += 7)
+            {
+                if (_position >= currentBoundary)
+                    throw new Exception("Failed to parse data");
+
+                byteReadJustNow = file.ptr[_position++];
+                result |= (byteReadJustNow & 0x7Fu) << shift;
+
+                if (byteReadJustNow <= 0x7Fu)
+                {
+                    return (int)result;
+                }
+            }
+
+            if (_position >= currentBoundary)
+                throw new Exception("Failed to parse data");
+
+            byteReadJustNow = file.ptr[_position++];
+            if (byteReadJustNow > 0b_1111u)
+            {
+                throw new Exception("Failed to parse data");
+            }
+
+            result |= (uint)byteReadJustNow << (MaxBytesWithoutOverflow * 7);
+            return (int)result;
         }
 
         public uint ReadVLQ()
@@ -329,12 +395,24 @@ namespace Framework.Serialization
             }     
         }
 
+        public void CopyTo(byte* data, int length)
+        {
+            int endPos = _position + length;
+            if (endPos > currentBoundary)
+                throw new Exception("Failed to copy data");
+
+            Copier.MemCpy(data, file.ptr + _position, (nuint)length);
+            _position = endPos;
+        }
+
         public ReadOnlySpan<byte> ReadSpan(int length)
         {
-            if (_position + length > currentBoundary)
+            int endPos = _position + length;
+            if (endPos > currentBoundary)
                 throw new Exception("Failed to parse data");
+
             ReadOnlySpan<byte> span = new(file.ptr + _position, length);
-            _position += length;
+            _position = endPos;
             return span;
         }
     }
