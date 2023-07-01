@@ -36,14 +36,21 @@ namespace Framework.SongEntry
     [DebuggerDisplay($"{{{nameof(GetDebuggerDisplay)}(),nq}}")]
     public abstract class SongEntry
     {
+        protected static readonly SortString s_DEFAULT_ARTIST = new("Unknown Artist");
+        protected static readonly SortString s_DEFAULT_ALBUM = new("Unknown Album");
+        protected static readonly SortString s_DEFAULT_GENRE = new("Unknown Genre");
+        protected static readonly SortString s_DEFAULT_YEAR = new("Unknown Year");
+        protected static readonly SortString s_DEFAULT_CHARTER = new("Unknown Charter");
+        protected static readonly SortString s_DEFAULT_SOURCE = new("Unknown Source");
+
         protected SortString m_name = new();
-        protected SortString m_artist = new();
-        protected SortString m_album = new();
-        protected SortString m_genre = new();
-        protected SortString m_year = new();
-        protected SortString m_charter = new();
+        protected SortString m_artist = s_DEFAULT_ARTIST;
+        protected SortString m_album = s_DEFAULT_ALBUM;
+        protected SortString m_genre = s_DEFAULT_GENRE;
+        protected SortString m_year = s_DEFAULT_YEAR;
+        protected SortString m_charter = s_DEFAULT_CHARTER;
         protected SortString m_playlist = new();
-        protected SortString m_source = new();
+        protected SortString m_source = s_DEFAULT_SOURCE;
 
         protected ulong m_song_length = 0;
         protected float m_previewStart = 0.0f;

@@ -588,6 +588,12 @@ namespace Framework.SongEntry
         {
             hash = null;
 
+            if (m_name.Length== 0)
+            {
+                Debug.WriteLine($"{nodeName} - Name of song not defined");
+                return false;
+            }
+
             if (Mogg == null && moggListing == null)
             {
                 Debug.WriteLine($"{nodeName} - Mogg not defined");

@@ -10,11 +10,7 @@ namespace Framework.SongEntry
     public class IniSongEntry : SongEntry
     {
         private const string s_DEFAULT_NAME = "Unknown Title";
-        private static readonly SortString s_DEFAULT_ARTIST = new("Unknown Artist");
-        private static readonly SortString s_DEFAULT_ALBUM = new("Unknown Album");
-        private static readonly SortString s_DEFAULT_GENRE = new("Unknown Genre");
-        private static readonly SortString s_DEFAULT_YEAR = new("Unknown Year");
-        private static readonly SortString s_DEFAULT_CHARTER = new("Unknown Charter");
+        
 
         private static readonly Dictionary<string, ModifierNode> MODIFIER_LIST = new()
         {
@@ -229,6 +225,18 @@ namespace Framework.SongEntry
             else
                 m_playlist = m_directory_playlist;
 
+            if (m_modifiers.TryGetValue("source", out List<Modifier>? sources))
+            {
+                for (int i = 0; i < sources.Count; ++i)
+                {
+                    m_source = sources[i].SORTSTR;
+                    if (m_source.Str != s_DEFAULT_SOURCE.Str)
+                        break;
+                }
+            }
+            else
+                m_source = s_DEFAULT_SOURCE;
+
             if (m_modifiers.TryGetValue("song_length", out List<Modifier>? songLengths))
                 m_song_length = songLengths[0].UINT64;
 
@@ -246,9 +254,6 @@ namespace Framework.SongEntry
 
             if (m_modifiers.TryGetValue("icon", out List<Modifier>? icon))
                 m_icon = icon[0].STR;
-
-            if (m_modifiers.TryGetValue("source", out List<Modifier>? source))
-                m_source = source[0].STR;
 
             if (m_modifiers.TryGetValue("hopo_frequency", out List<Modifier>? hopo_freq))
                 m_hopo_frequency = hopo_freq[0].UINT64;

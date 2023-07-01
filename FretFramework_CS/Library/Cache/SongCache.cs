@@ -9,7 +9,7 @@ namespace Framework.Library
 {
     public partial class SongCache : IDisposable
     {
-        private const int CACHE_VERSION = 23_06_30_03;
+        private const int CACHE_VERSION = 23_06_30_04;
         private static readonly object dirLock = new();
         private static readonly object fileLock = new();
         private static readonly object iniLock = new();
