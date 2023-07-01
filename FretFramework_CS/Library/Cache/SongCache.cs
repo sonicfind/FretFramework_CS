@@ -24,7 +24,7 @@ namespace Framework.Library
             return cache.library;
         }
 
-        private const int CACHE_VERSION = 23_06_30_02;
+        private const int CACHE_VERSION = 23_06_30_03;
         private static readonly object dirLock = new();
         private static readonly object fileLock = new();
         private static readonly object iniLock = new();

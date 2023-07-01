@@ -43,6 +43,7 @@ namespace Framework.SongEntry
         protected SortString m_year = new();
         protected SortString m_charter = new();
         protected SortString m_playlist = new();
+        protected SortString m_source = new();
 
         protected ulong m_song_length = 0;
         protected float m_previewStart = 0.0f;
@@ -50,7 +51,7 @@ namespace Framework.SongEntry
         protected ushort m_album_track = ushort.MaxValue;
         protected ushort m_playlist_track = ushort.MaxValue;
         protected string m_icon = string.Empty;
-        protected string m_source = string.Empty;
+        
 
         protected ulong m_hopo_frequency = 0;
 
@@ -64,6 +65,7 @@ namespace Framework.SongEntry
         public SortString Year => m_year;
         public SortString Charter => m_charter;
         public SortString Playlist => m_playlist;
+        public SortString Source => m_source;
         public ulong SongLength => m_song_length;
         public ulong HopoFrequency => m_hopo_frequency;
         public bool IsMaster { get; protected set; }
@@ -107,14 +109,14 @@ namespace Framework.SongEntry
             m_year.Str = reader.ReadString();
             m_charter.Str = reader.ReadString();
             m_playlist.Str = reader.ReadString();
-            
+            m_source.Str = reader.ReadString();
+
             m_previewStart   = reader.ReadSingle();
             m_previewEnd     = reader.ReadSingle();
             m_album_track    = reader.ReadUInt16();
             m_playlist_track = reader.ReadUInt16();
             m_song_length    = reader.ReadUInt64();
             m_icon           = reader.ReadString();
-            m_source         = reader.ReadString();
             m_hopo_frequency = reader.ReadUInt64();
             VocalParts       = reader.ReadInt32();
             IsMaster         = reader.ReadBoolean();
@@ -131,6 +133,7 @@ namespace Framework.SongEntry
             writer.Write(m_year.Str);
             writer.Write(m_charter.Str);
             writer.Write(m_playlist.Str);
+            writer.Write(m_source.Str);
 
             writer.Write(m_previewStart);
             writer.Write(m_previewEnd);
@@ -138,7 +141,6 @@ namespace Framework.SongEntry
             writer.Write(m_playlist_track);
             writer.Write(m_song_length);
             writer.Write(m_icon);
-            writer.Write(m_source);
             writer.Write(m_hopo_frequency);
             writer.Write(VocalParts);
             writer.Write(IsMaster);

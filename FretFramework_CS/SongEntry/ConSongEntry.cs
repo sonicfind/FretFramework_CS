@@ -327,19 +327,21 @@ namespace Framework.SongEntry
                     case "downloaded": /*Downloaded = reader.ExtractText();*/ break;
                     case "game_origin":
                         {
-                            m_source = reader.ExtractText();
-                            if ((m_source == "ugc" || m_source == "ugc_plus"))
+                            string str = reader.ExtractText();
+                            if ((str == "ugc" || str == "ugc_plus"))
                             {
                                 if (!nodeName.StartsWith("UGC_"))
                                     m_source = "customs";
                             }
-                            else if (m_source == "rb1" || m_source == "rb1_dlc" || m_source == "rb1dlc" ||
-                                m_source == "gdrb" || m_source == "greenday" || m_source == "beatles" ||
-                                m_source == "tbrb" || m_source == "lego" || m_source == "lrb" ||
-                                m_source == "rb2" || m_source == "rb3" || m_source == "rb3_dlc" || m_source == "rb3dlc")
+                            else if (str == "rb1" || str == "rb1_dlc" || str == "rb1dlc" ||
+                                str == "gdrb" || str == "greenday" || str == "beatles" ||
+                                str == "tbrb" || str == "lego" || str == "lrb" ||
+                                str == "rb2" || str == "rb3" || str == "rb3_dlc" || str == "rb3dlc")
                             {
                                 m_source = "Harmonix";
                             }
+                            else
+                                m_source = str;
                             break;
                         }
                     case "song_id": SongID = reader.ExtractText(); break;
