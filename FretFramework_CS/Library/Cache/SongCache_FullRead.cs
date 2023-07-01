@@ -26,7 +26,6 @@ namespace Framework.Library
                 return;
 
             using BinaryFileReader reader = new(fs.ReadBytes((int)fs.Length - 4));
-            fs.Dispose();
 
             List<Task> entryTasks = new();
             int count = reader.ReadInt32();
@@ -71,7 +70,11 @@ namespace Framework.Library
             {
                 int length = reader.ReadInt32();
                 BinaryFileReader sectionReader = reader.CreateReaderFromCurrentPosition(length);
-                conTasks.Add(Task.Run(() => { ReadUpgradeCON(sectionReader, baseDirectories); sectionReader.Dispose(); }));
+                conTasks.Add(Task.Run(() =>
+                {
+                    ReadUpgradeCON(sectionReader, baseDirectories);
+                    sectionReader.Dispose();
+                }));
             }
 
             Task.WaitAll(conTasks.ToArray());
@@ -81,7 +84,11 @@ namespace Framework.Library
             {
                 int length = reader.ReadInt32();
                 BinaryFileReader sectionReader = reader.CreateReaderFromCurrentPosition(length);
-                entryTasks.Add(Task.Run(() => { ReadCONGroup(sectionReader, baseDirectories); sectionReader.Dispose(); }));
+                entryTasks.Add(Task.Run(() =>
+                {
+                    ReadCONGroup(sectionReader, baseDirectories);
+                    sectionReader.Dispose();
+                }));
             }
 
             count = reader.ReadInt32();
@@ -89,7 +96,11 @@ namespace Framework.Library
             {
                 int length = reader.ReadInt32();
                 BinaryFileReader sectionReader = reader.CreateReaderFromCurrentPosition(length);
-                entryTasks.Add(Task.Run(() => { ReadExtractedCONGroup(sectionReader, baseDirectories); sectionReader.Dispose(); }));
+                entryTasks.Add(Task.Run(() =>
+                {
+                    ReadExtractedCONGroup(sectionReader, baseDirectories);
+                    sectionReader.Dispose();
+                }));
             }
 
             Task.WaitAll(entryTasks.ToArray());
