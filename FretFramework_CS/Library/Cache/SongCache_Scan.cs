@@ -260,13 +260,6 @@ namespace Framework.Library
             });
         }
 
-        private void FinalizeIniEntries()
-        {
-            foreach (var entryList in iniEntries)
-                foreach (var entry in entryList.Value)
-                    entry.FinishScan();
-        }
-
         private bool FindOrMarkDirectory(string directory)
         {
             lock (dirLock)

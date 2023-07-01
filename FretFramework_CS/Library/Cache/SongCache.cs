@@ -17,6 +17,7 @@ namespace Framework.Library
             Parallel.For(0, baseDirectories.Count, i => cache!.ScanDirectory(new(baseDirectories[i])));
             Task.WaitAll(Task.Run(cache.LoadCONSongs), Task.Run(cache.LoadExtractedCONSongs));
             cache.FinalizeIniEntries();
+            cache.MapCategories();
 
             if (writeCache)
                 cache.SaveToFile(cacheFile);
@@ -106,6 +107,32 @@ namespace Framework.Library
         {
             Dispose(disposing: true);
             GC.SuppressFinalize(this);
+        }
+
+        private void FinalizeIniEntries()
+        {
+            foreach (var entryList in iniEntries)
+                foreach (var entry in entryList.Value)
+                    entry.FinishScan();
+        }
+
+        private void MapCategories()
+        {
+            Parallel.ForEach(library.entries, entryList =>
+            {
+                foreach (var entry in entryList.Value)
+                {
+                    library.titles.Add(entry);
+                    library.artists.Add(entry);
+                    library.albums.Add(entry);
+                    library.genres.Add(entry);
+                    library.years.Add(entry);
+                    library.charters.Add(entry);
+                    library.playlists.Add(entry);
+                    library.sources.Add(entry);
+                    library.artistAlbums.Add(entry);
+                }
+            });
         }
 
         private bool CreateCONGroup(string filename, out PackedCONGroup? group)

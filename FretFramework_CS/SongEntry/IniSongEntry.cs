@@ -46,8 +46,8 @@ namespace Framework.SongEntry
         private Dictionary<string, List<Modifier>> m_modifiers = new();
 
         private (string, ChartType) m_chartType;
-        private FileInfo? m_chartFile;
-        private FileInfo? m_iniFile;
+        private readonly FileInfo? m_chartFile;
+        private readonly FileInfo? m_iniFile;
 
         public IniSongEntry(FrameworkFile file, FileInfo chartFile, FileInfo? iniFile, ref (string, ChartType) type)
         {

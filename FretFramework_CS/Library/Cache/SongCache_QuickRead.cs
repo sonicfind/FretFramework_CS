@@ -16,6 +16,8 @@ namespace Framework.Library
         {
             using SongCache cache = new();
             cache.LoadCacheFile_Quick(Path.Combine(cacheFileDirectory, "songcache_CS.bin"));
+            cache.MapCategories();
+
             return cache.library;
         }
 
