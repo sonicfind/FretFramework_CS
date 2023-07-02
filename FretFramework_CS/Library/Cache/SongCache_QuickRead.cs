@@ -1,4 +1,5 @@
 ﻿using Framework.Hashes;
+using Framework.Library.CacheNodes;
 using Framework.Serialization;
 using Framework.SongEntry;
 using System;
@@ -43,6 +44,7 @@ namespace Framework.Library
                 return;
 
             using BinaryFileReader reader = new(fs.ReadBytes((int)fs.Length - 4));
+            CategoryCacheStrings strings = new(reader, true);
 
             List<Task> entryTasks = new();
             int count = reader.ReadInt32();
@@ -52,7 +54,7 @@ namespace Framework.Library
                 BinaryFileReader sectionReader = reader.CreateReaderFromCurrentPosition(length);
                 entryTasks.Add(Task.Run(() =>
                 {
-                    QuickReadIniEntry(sectionReader);
+                    QuickReadIniEntry(sectionReader, strings);
                     sectionReader.Dispose();
                 }));
             }
@@ -98,7 +100,7 @@ namespace Framework.Library
                 BinaryFileReader sectionReader = reader.CreateReaderFromCurrentPosition(length);
                 entryTasks.Add(Task.Run(() =>
                 {
-                    QuickReadCONGroup(sectionReader);
+                    QuickReadCONGroup(sectionReader, strings);
                     sectionReader.Dispose();
                 }));
             }
@@ -110,7 +112,7 @@ namespace Framework.Library
                 BinaryFileReader sectionReader = reader.CreateReaderFromCurrentPosition(length);
                 entryTasks.Add(Task.Run(() =>
                 {
-                    QuickReadExtractedCONGroup(sectionReader);
+                    QuickReadExtractedCONGroup(sectionReader, strings);
                     sectionReader.Dispose();
                 }));
             }
@@ -131,13 +133,14 @@ namespace Framework.Library
                 return;
 
             using BinaryFileReader reader = new(fs.ReadBytes((int)fs.Length - 4));
+            CategoryCacheStrings strings = new(reader, false);
 
             int count = reader.ReadInt32();
             for (int i = 0; i < count; ++i)
             {
                 int length = reader.ReadInt32();
                 using BinaryFileReader sectionReader = reader.CreateReaderFromCurrentPosition(length);
-                QuickReadIniEntry(sectionReader);
+                QuickReadIniEntry(sectionReader, strings);
             }
 
             count = reader.ReadInt32();
@@ -168,7 +171,7 @@ namespace Framework.Library
             {
                 int length = reader.ReadInt32();
                 using BinaryFileReader sectionReader = reader.CreateReaderFromCurrentPosition(length);
-                QuickReadCONGroup_Serial(sectionReader);
+                QuickReadCONGroup_Serial(sectionReader, strings);
             }
 
             count = reader.ReadInt32();
@@ -176,11 +179,11 @@ namespace Framework.Library
             {
                 int length = reader.ReadInt32();
                 using BinaryFileReader sectionReader = reader.CreateReaderFromCurrentPosition(length);
-                QuickReadExtractedCONGroup_Serial(sectionReader);
+                QuickReadExtractedCONGroup_Serial(sectionReader, strings);
             }
         }
 
-        private void QuickReadIniEntry(BinaryFileReader reader)
+        private void QuickReadIniEntry(BinaryFileReader reader, CategoryCacheStrings strings)
         {
             string directory = reader.ReadLEBString();
             byte chartTypeIndex = reader.ReadByte();
@@ -196,7 +199,7 @@ namespace Framework.Library
                 iniFile = new(Path.Combine(directory, "song.ini"));
                 reader.Position += 8;
             }
-            IniSongEntry entry = new(directory, chartFile, iniFile, ref chartType, reader);
+            IniSongEntry entry = new(directory, chartFile, iniFile, ref chartType, reader, strings);
             SHA1Wrapper hash = new(reader);
             AddEntry(hash, entry);
         }
@@ -259,7 +262,7 @@ namespace Framework.Library
             }
         }
 
-        private void QuickReadCONGroup(BinaryFileReader reader)
+        private void QuickReadCONGroup(BinaryFileReader reader, CategoryCacheStrings strings)
         {
             string filename = reader.ReadLEBString();
             reader.Position += 4;
@@ -281,7 +284,7 @@ namespace Framework.Library
                 BinaryFileReader entryReader = reader.CreateReaderFromCurrentPosition(length);
                 entryTasks.Add(Task.Run(() =>
                 {
-                    QuickReadCONEntry(group!.file, name, entryReader);
+                    QuickReadCONEntry(group!.file, name, entryReader, strings);
                     entryReader.Dispose();
                 }));
             }
@@ -289,7 +292,7 @@ namespace Framework.Library
             Task.WaitAll(entryTasks.ToArray());
         }
 
-        private void QuickReadCONGroup_Serial(BinaryFileReader reader)
+        private void QuickReadCONGroup_Serial(BinaryFileReader reader, CategoryCacheStrings strings)
         {
             string filename = reader.ReadLEBString();
             reader.Position += 4;
@@ -308,11 +311,11 @@ namespace Framework.Library
                 int length = reader.ReadInt32();
 
                 using BinaryFileReader entryReader = reader.CreateReaderFromCurrentPosition(length);
-                QuickReadCONEntry(group!.file, name, entryReader);
+                QuickReadCONEntry(group!.file, name, entryReader, strings);
             }
         }
 
-        private void QuickReadCONEntry(CONFile file, string nodeName, BinaryFileReader reader)
+        private void QuickReadCONEntry(CONFile file, string nodeName, BinaryFileReader reader, CategoryCacheStrings strings)
         {
             FileListing? midiListing = file[reader.ReadLEBString()];
             reader.Position += 4;
@@ -337,7 +340,7 @@ namespace Framework.Library
                 reader.Position += 8;
             }
 
-            ConSongEntry currentSong = new(file, nodeName, midiListing, moggListing, moggInfo, updateInfo, reader);
+            ConSongEntry currentSong = new(file, nodeName, midiListing, moggListing, moggInfo, updateInfo, reader, strings);
             if (upgrades.TryGetValue(nodeName, out var upgrade))
                 currentSong.Upgrade = upgrade.Item2;
 
@@ -345,7 +348,7 @@ namespace Framework.Library
             AddEntry(hash, currentSong);
         }
 
-        private void QuickReadExtractedCONGroup(BinaryFileReader reader)
+        private void QuickReadExtractedCONGroup(BinaryFileReader reader, CategoryCacheStrings strings)
         {
             string directory = reader.ReadLEBString();
             reader.Position += 8;
@@ -360,7 +363,7 @@ namespace Framework.Library
                 BinaryFileReader entryReader = reader.CreateReaderFromCurrentPosition(length);
                 entryTasks.Add(Task.Run(() =>
                 {
-                    QuickReadExtractedCONEntry(name, entryReader);
+                    QuickReadExtractedCONEntry(name, entryReader, strings);
                     entryReader.Dispose();
                 }));
             }
@@ -368,7 +371,7 @@ namespace Framework.Library
             Task.WaitAll(entryTasks.ToArray());
         }
 
-        private void QuickReadExtractedCONGroup_Serial(BinaryFileReader reader)
+        private void QuickReadExtractedCONGroup_Serial(BinaryFileReader reader, CategoryCacheStrings strings)
         {
             string directory = reader.ReadLEBString();
             reader.Position += 8;
@@ -380,11 +383,11 @@ namespace Framework.Library
                 int length = reader.ReadInt32();
 
                 using BinaryFileReader entryReader = reader.CreateReaderFromCurrentPosition(length);
-                QuickReadExtractedCONEntry(name, entryReader);
+                QuickReadExtractedCONEntry(name, entryReader, strings);
             }
         }
 
-        private void QuickReadExtractedCONEntry(string nodeName, BinaryFileReader reader)
+        private void QuickReadExtractedCONEntry(string nodeName, BinaryFileReader reader, CategoryCacheStrings strings)
         {
             FileInfo midiInfo = new(reader.ReadLEBString());
             reader.Position += 8;
@@ -399,7 +402,7 @@ namespace Framework.Library
                 reader.Position += 8;
             }
 
-            ConSongEntry currentSong = new(midiInfo, moggInfo, updateInfo, reader);
+            ConSongEntry currentSong = new(midiInfo, moggInfo, updateInfo, reader, strings);
             if (upgrades.TryGetValue(nodeName, out var upgrade))
                 currentSong.Upgrade = upgrade.Item2;
 

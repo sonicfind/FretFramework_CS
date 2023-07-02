@@ -16,6 +16,7 @@ using Framework.SongEntry.TrackScan;
 using System.IO;
 using System.Xml.Linq;
 using System.Diagnostics;
+using Framework.Library.CacheNodes;
 
 namespace Framework.SongEntry
 {
@@ -32,6 +33,8 @@ namespace Framework.SongEntry
         SONG_LENGTH,
         SOURCE,
     };
+
+    
 
     [DebuggerDisplay($"{{{nameof(GetDebuggerDisplay)}(),nq}}")]
     public abstract class SongEntry
@@ -106,19 +109,19 @@ namespace Framework.SongEntry
 
         protected SongEntry() { }
 
-        protected SongEntry(BinaryFileReader reader)
+        protected SongEntry(BinaryFileReader reader, CategoryCacheStrings strings)
         {
             m_bandIntensity = reader.ReadSByte();
             m_scans.ReadFromCache(reader);
 
-            m_name.Str = reader.ReadLEBString();
-            m_artist.Str = reader.ReadLEBString();
-            m_album.Str = reader.ReadLEBString();
-            m_genre.Str = reader.ReadLEBString();
-            m_year.Str = reader.ReadLEBString();
-            m_charter.Str = reader.ReadLEBString();
-            m_playlist.Str = reader.ReadLEBString();
-            m_source.Str = reader.ReadLEBString();
+            m_name.Str = strings.titles[reader.ReadInt32()];
+            m_artist.Str = strings.artists[reader.ReadInt32()];
+            m_album.Str = strings.albums[reader.ReadInt32()];
+            m_genre.Str = strings.genres[reader.ReadInt32()];
+            m_year.Str = strings.years[reader.ReadInt32()];
+            m_charter.Str = strings.charters[reader.ReadInt32()];
+            m_playlist.Str = strings.playlists[reader.ReadInt32()];
+            m_source.Str = strings.sources[reader.ReadInt32()];
 
             m_previewStart   = reader.ReadFloat();
             m_previewEnd     = reader.ReadFloat();
@@ -131,19 +134,19 @@ namespace Framework.SongEntry
             IsMaster         = reader.ReadBoolean();
         }
 
-        protected void FormatCacheData(BinaryWriter writer)
+        protected void FormatCacheData(BinaryWriter writer, CategoryCacheWriteNode node)
         {
             writer.Write(m_bandIntensity);
             m_scans.WriteToCache(writer);
 
-            writer.Write(m_name.Str);
-            writer.Write(m_artist.Str);
-            writer.Write(m_album.Str);
-            writer.Write(m_genre.Str);
-            writer.Write(m_year.Str);
-            writer.Write(m_charter.Str);
-            writer.Write(m_playlist.Str);
-            writer.Write(m_source.Str);
+            writer.Write(node.title);
+            writer.Write(node.artist);
+            writer.Write(node.album);
+            writer.Write(node.genre);
+            writer.Write(node.year);
+            writer.Write(node.charter);
+            writer.Write(node.playlist);
+            writer.Write(node.source);
 
             writer.Write(m_previewStart);
             writer.Write(m_previewEnd);

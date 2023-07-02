@@ -1,6 +1,7 @@
 ﻿using BenchmarkDotNet.Columns;
 using BenchmarkDotNet.Disassemblers;
 using Framework.Hashes;
+using Framework.Library.CacheNodes;
 using Framework.Serialization;
 using Framework.SongEntry.TrackScan;
 using Framework.Types;
@@ -99,7 +100,7 @@ namespace Framework.SongEntry
         public float[] Volume { get; private set; } = Array.Empty<float>();
         public float[] Core { get; private set; } = Array.Empty<float>();
 
-        public ConSongEntry(CONFile file, string nodeName, FileListing? midi, FileListing? moggListing, FileInfo? moggInfo, FileInfo? updateInfo, BinaryFileReader reader) : base(reader)
+        public ConSongEntry(CONFile file, string nodeName, FileListing? midi, FileListing? moggListing, FileInfo? moggInfo, FileInfo? updateInfo, BinaryFileReader reader, CategoryCacheStrings strings) : base(reader, strings)
         {
             conFile = file;
             midiListing = midi;
@@ -140,11 +141,10 @@ namespace Framework.SongEntry
                         Image = info;
                 }
             }
-
             FinishCacheRead(reader);
         }
 
-        public ConSongEntry(FileInfo midi, FileInfo mogg, FileInfo? updateInfo, BinaryFileReader reader) : base(reader)
+        public ConSongEntry(FileInfo midi, FileInfo mogg, FileInfo? updateInfo, BinaryFileReader reader, CategoryCacheStrings strings) : base(reader, strings)
         {
             MidiPath = midi.FullName;
             MidiLastWrite = midi.LastWriteTime;
@@ -689,7 +689,7 @@ namespace Framework.SongEntry
             }
         }
 
-        public byte[] FormatCacheData()
+        public byte[] FormatCacheData(CategoryCacheWriteNode node)
         {
             using MemoryStream ms = new();
             using BinaryWriter writer = new(ms);
@@ -729,7 +729,7 @@ namespace Framework.SongEntry
             else
                 writer.Write(false);
 
-            FormatCacheData(writer);
+            FormatCacheData(writer, node);
 
             if (conFile != null)
             {

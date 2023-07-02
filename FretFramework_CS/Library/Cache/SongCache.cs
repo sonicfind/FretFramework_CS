@@ -1,4 +1,5 @@
 ﻿using Framework.Hashes;
+using Framework.Library.CacheNodes;
 using Framework.Serialization;
 using Framework.SongEntry;
 using Framework.Types;
@@ -9,7 +10,7 @@ namespace Framework.Library
 {
     public partial class SongCache : IDisposable
     {
-        private const int CACHE_VERSION = 23_06_30_05;
+        private const int CACHE_VERSION = 23_07_02_01;
         private static readonly object dirLock = new();
         private static readonly object fileLock = new();
         private static readonly object iniLock = new();
@@ -433,7 +434,7 @@ namespace Framework.Library
             return entries.TryGetValue(name, out SortedDictionary<int, EntryNode>? dict) && dict.TryGetValue(index, out entry);
         }
 
-        protected void WriteEntriesToCache(BinaryWriter writer)
+        protected void WriteEntriesToCache(BinaryWriter writer, ref Dictionary<SongEntry.SongEntry, CategoryCacheWriteNode> nodes)
         {
             writer.Write(EntryCount);
             foreach (var entryList in entries)
@@ -443,7 +444,7 @@ namespace Framework.Library
                     writer.Write(entryList.Key);
                     writer.Write(entry.Key);
 
-                    byte[] data = entry.Value.entry.FormatCacheData();
+                    byte[] data = entry.Value.entry.FormatCacheData(nodes[entry.Value.entry]);
                     writer.Write(data.Length + 20);
                     writer.Write(data);
 
@@ -543,14 +544,14 @@ namespace Framework.Library
             return ms.ToArray();
         }
 
-        public byte[] FormatEntriesForCache(string filepath)
+        public byte[] FormatEntriesForCache(string filepath, ref Dictionary<SongEntry.SongEntry, CategoryCacheWriteNode> nodes)
         {
             using MemoryStream ms = new();
             using BinaryWriter writer = new(ms);
 
             writer.Write(filepath);
             writer.Write(songDTA!.LastWrite);
-            WriteEntriesToCache(writer);
+            WriteEntriesToCache(writer, ref nodes);
             return ms.ToArray();
         }
     }
@@ -578,14 +579,14 @@ namespace Framework.Library
             }
         }
 
-        public byte[] FormatEntriesForCache(string directory)
+        public byte[] FormatEntriesForCache(string directory, ref Dictionary<SongEntry.SongEntry, CategoryCacheWriteNode> nodes)
         {
             using MemoryStream ms = new();
             using BinaryWriter writer = new(ms);
 
             writer.Write(directory);
             writer.Write(lastWrite.ToBinary());
-            WriteEntriesToCache(writer);
+            WriteEntriesToCache(writer, ref nodes);
             return ms.ToArray();
         }
     }

@@ -1,4 +1,5 @@
 ﻿using Framework.FlatMaps;
+using Framework.Library.CacheNodes;
 using Framework.SongEntry;
 using Framework.Types;
 using System;
@@ -98,6 +99,36 @@ namespace Framework.Library
     public class TitleCategory : SongCategory<char, TitleNode>
     {
         public override void Add(SongEntry.SongEntry entry) { Add(entry.Name.SortStr[0], entry); }
+
+        public void WriteToCache(BinaryWriter fileWriter, ref Dictionary<SongEntry.SongEntry, CategoryCacheWriteNode> nodes)
+        {
+            List<string> titles = new();
+            int index = -1;
+            foreach (var element in elements)
+            {
+                foreach (var entry in element.obj)
+                {
+                    string title = entry.Name.Str;
+                    if (index == -1 || titles[index] != title)
+                    {
+                        titles.Add(title);
+                        index++;
+                    }
+
+                    CategoryCacheWriteNode node = nodes[entry] = new();
+                    node.title = index;
+                }
+            }
+
+            using MemoryStream ms = new();
+            using BinaryWriter writer = new(ms);
+            writer.Write(index + 1);
+            foreach (string title in titles)
+                writer.Write(title);
+
+            fileWriter.Write((int)ms.Length);
+            ms.WriteTo(fileWriter.BaseStream);
+        }
     }
 
     public class ArtistCategory : SongCategory<SortString, ArtistNode>
@@ -106,6 +137,34 @@ namespace Framework.Library
         {
             lock (elementLock) elements[entry.Artist].Add(entry);
         }
+
+        public void WriteToCache(BinaryWriter fileWriter, ref Dictionary<SongEntry.SongEntry, CategoryCacheWriteNode> nodes)
+        {
+            List<string> artists = new();
+            int index = -1;
+            foreach (var element in elements)
+            {
+                foreach (var entry in element.obj)
+                {
+                    string artist = entry.Artist.Str;
+                    if (index == -1 || artists[index] != artist)
+                    {
+                        artists.Add(artist);
+                        index++;
+                    }
+                    nodes[entry].artist = index;
+                }
+            }
+
+            using MemoryStream ms = new();
+            using BinaryWriter writer = new(ms);
+            writer.Write(index + 1);
+            foreach (string artist in artists)
+                writer.Write(artist);
+
+            fileWriter.Write((int)ms.Length);
+            ms.WriteTo(fileWriter.BaseStream);
+        }
     }
 
     public class AlbumCategory : SongCategory<SortString, AlbumNode>
@@ -113,6 +172,34 @@ namespace Framework.Library
         public override void Add(SongEntry.SongEntry entry)
         {
             lock (elementLock) elements[entry.Album].Add(entry);
+        }
+
+        public void WriteToCache(BinaryWriter fileWriter, ref Dictionary<SongEntry.SongEntry, CategoryCacheWriteNode> nodes)
+        {
+            List<string> albums = new();
+            int index = -1;
+            foreach (var element in elements)
+            {
+                foreach (var entry in element.obj)
+                {
+                    string album = entry.Album.Str;
+                    if (index == -1 || albums[index] != album)
+                    {
+                        albums.Add(album);
+                        index++;
+                    }
+                    nodes[entry].album = index;
+                }
+            }
+
+            using MemoryStream ms = new();
+            using BinaryWriter writer = new(ms);
+            writer.Write(index + 1);
+            foreach (string album in albums)
+                writer.Write(album);
+
+            fileWriter.Write((int)ms.Length);
+            ms.WriteTo(fileWriter.BaseStream);
         }
     }
 
@@ -123,6 +210,34 @@ namespace Framework.Library
             lock (elementLock)
                 elements[entry.Genre].Add(entry);
         }
+
+        public void WriteToCache(BinaryWriter fileWriter, ref Dictionary<SongEntry.SongEntry, CategoryCacheWriteNode> nodes)
+        {
+            List<string> genres = new();
+            int index = -1;
+            foreach (var element in elements)
+            {
+                foreach (var entry in element.obj)
+                {
+                    string genre = entry.Genre.Str;
+                    if (index == -1 || genres[index] != genre)
+                    {
+                        genres.Add(genre);
+                        index++;
+                    }
+                    nodes[entry].genre = index;
+                }
+            }
+
+            using MemoryStream ms = new();
+            using BinaryWriter writer = new(ms);
+            writer.Write(index + 1);
+            foreach (string genre in genres)
+                writer.Write(genre);
+
+            fileWriter.Write((int)ms.Length);
+            ms.WriteTo(fileWriter.BaseStream);
+        }
     }
 
     public class YearCategory : SongCategory<SortString, YearNode>
@@ -131,6 +246,34 @@ namespace Framework.Library
         {
             lock (elementLock)
                 elements[entry.Year].Add(entry);
+        }
+
+        public void WriteToCache(BinaryWriter fileWriter, ref Dictionary<SongEntry.SongEntry, CategoryCacheWriteNode> nodes)
+        {
+            List<string> years = new();
+            int index = -1;
+            foreach (var element in elements)
+            {
+                foreach (var entry in element.obj)
+                {
+                    string year = entry.Year.Str;
+                    if (index == -1 || years[index] != year)
+                    {
+                        years.Add(year);
+                        index++;
+                    }
+                    nodes[entry].year = index;
+                }
+            }
+
+            using MemoryStream ms = new();
+            using BinaryWriter writer = new(ms);
+            writer.Write(index + 1);
+            foreach (string year in years)
+                writer.Write(year);
+
+            fileWriter.Write((int)ms.Length);
+            ms.WriteTo(fileWriter.BaseStream);
         }
     }
 
@@ -141,6 +284,34 @@ namespace Framework.Library
             lock (elementLock)
                 elements[entry.Charter].Add(entry);
         }
+
+        public void WriteToCache(BinaryWriter fileWriter, ref Dictionary<SongEntry.SongEntry, CategoryCacheWriteNode> nodes)
+        {
+            List<string> charters = new();
+            int index = -1;
+            foreach (var element in elements)
+            {
+                foreach (var entry in element.obj)
+                {
+                    string charter = entry.Charter.Str;
+                    if (index == -1 || charters[index] != charter)
+                    {
+                        charters.Add(charter);
+                        index++;
+                    }
+                    nodes[entry].charter = index;
+                }
+            }
+
+            using MemoryStream ms = new();
+            using BinaryWriter writer = new(ms);
+            writer.Write(index + 1);
+            foreach (string charter in charters)
+                writer.Write(charter);
+
+            fileWriter.Write((int)ms.Length);
+            ms.WriteTo(fileWriter.BaseStream);
+        }
     }
 
     public class PlaylistCategory : SongCategory<SortString, PlaylistNode>
@@ -150,6 +321,34 @@ namespace Framework.Library
             lock (elementLock)
                 elements[entry.Playlist].Add(entry);
         }
+
+        public void WriteToCache(BinaryWriter fileWriter, ref Dictionary<SongEntry.SongEntry, CategoryCacheWriteNode> nodes)
+        {
+            List<string> playlists = new();
+            int index = -1;
+            foreach (var element in elements)
+            {
+                foreach (var entry in element.obj)
+                {
+                    string playlist = entry.Playlist.Str;
+                    if (index == -1 || playlists[index] != playlist)
+                    {
+                        playlists.Add(playlist);
+                        index++;
+                    }
+                    nodes[entry].playlist = index;
+                }
+            }
+
+            using MemoryStream ms = new();
+            using BinaryWriter writer = new(ms);
+            writer.Write(index + 1);
+            foreach (string playlist in playlists)
+                writer.Write(playlist);
+
+            fileWriter.Write((int)ms.Length);
+            ms.WriteTo(fileWriter.BaseStream);
+        }
     }
 
     public class SourceCategory : SongCategory<SortString, SourceNode>
@@ -158,6 +357,34 @@ namespace Framework.Library
         {
             lock (elementLock)
                 elements[entry.Source].Add(entry);
+        }
+
+        public void WriteToCache(BinaryWriter fileWriter, ref Dictionary<SongEntry.SongEntry, CategoryCacheWriteNode> nodes)
+        {
+            List<string> sources = new();
+            int index = -1;
+            foreach (var element in elements)
+            {
+                foreach (var entry in element.obj)
+                {
+                    string source = entry.Source.Str;
+                    if (index == -1 || sources[index] != source)
+                    {
+                        sources.Add(source);
+                        index++;
+                    }
+                    nodes[entry].source = index;
+                }
+            }
+
+            using MemoryStream ms = new();
+            using BinaryWriter writer = new(ms);
+            writer.Write(index + 1);
+            foreach (string source in sources)
+                writer.Write(source);
+            
+            fileWriter.Write((int)ms.Length);
+            ms.WriteTo(fileWriter.BaseStream);
         }
     }
 

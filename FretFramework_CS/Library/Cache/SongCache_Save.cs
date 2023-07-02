@@ -1,4 +1,4 @@
-﻿using System;
+﻿using Framework.Library.CacheNodes;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,14 +11,25 @@ namespace Framework.Library
         private void SaveToFile(string fileName)
         {
             using var writer = new BinaryWriter(new FileStream(fileName, FileMode.Create, FileAccess.Write));
+            Dictionary<SongEntry.SongEntry, CategoryCacheWriteNode> nodes = new();
 
             writer.Write(CACHE_VERSION);
+            
+            library.titles.WriteToCache(writer, ref nodes);
+            library.artists.WriteToCache(writer, ref nodes);
+            library.albums.WriteToCache(writer, ref nodes);
+            library.genres.WriteToCache(writer, ref nodes);
+            library.years.WriteToCache(writer, ref nodes);
+            library.charters.WriteToCache(writer, ref nodes);
+            library.playlists.WriteToCache(writer, ref nodes);
+            library.sources.WriteToCache(writer, ref nodes);
+
             writer.Write(IniCount);
             foreach (var entryList in iniEntries)
             {
                 foreach (var entry in entryList.Value)
                 {
-                    byte[] buffer = entry.FormatCacheData();
+                    byte[] buffer = entry.FormatCacheData(nodes[entry]);
                     writer.Write(buffer.Length + 20);
                     writer.Write(buffer);
                     entryList.Key.Write(writer);
@@ -63,7 +74,7 @@ namespace Framework.Library
             writer.Write(entryCons.Count);
             foreach (var group in entryCons)
             {
-                byte[] buffer = group.Value.FormatEntriesForCache(group.Key);
+                byte[] buffer = group.Value.FormatEntriesForCache(group.Key, ref nodes);
                 writer.Write(buffer.Length);
                 writer.Write(buffer);
             }
@@ -71,7 +82,7 @@ namespace Framework.Library
             writer.Write(extractedConGroups.Count);
             foreach (var group in extractedConGroups)
             {
-                byte[] buffer = group.Value.FormatEntriesForCache(group.Key);
+                byte[] buffer = group.Value.FormatEntriesForCache(group.Key, ref nodes);
                 writer.Write(buffer.Length);
                 writer.Write(buffer);
             }

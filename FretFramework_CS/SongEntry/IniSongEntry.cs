@@ -1,4 +1,5 @@
 ﻿using Framework.Ini;
+using Framework.Library.CacheNodes;
 using Framework.Modifiers;
 using Framework.Serialization;
 using Framework.SongEntry.TrackScan.Instrument.Drums;
@@ -71,7 +72,7 @@ namespace Framework.SongEntry
             m_directory_playlist.Str = Path.GetDirectoryName(Directory)!;
         }
 
-        public IniSongEntry(string directory, FileInfo chartFile, FileInfo? iniFile, ref (string, ChartType) type, BinaryFileReader reader) : base(reader)
+        public IniSongEntry(string directory, FileInfo chartFile, FileInfo? iniFile, ref (string, ChartType) type, BinaryFileReader reader, CategoryCacheStrings strings) : base(reader, strings)
         {
             Directory = directory;
             m_chartType = type;
@@ -370,7 +371,7 @@ namespace Framework.SongEntry
                 VocalParts = 1;
         }
 
-        public byte[] FormatCacheData()
+        public byte[] FormatCacheData(CategoryCacheWriteNode node)
         {
             using MemoryStream ms = new();
             using BinaryWriter writer = new(ms);
@@ -382,7 +383,7 @@ namespace Framework.SongEntry
             if (m_iniFile != null)
                 writer.Write(m_iniFile.LastWriteTime.ToBinary());
 
-            FormatCacheData(writer);
+            FormatCacheData(writer, node);
 
             writer.Write(m_sustain_cutoff_threshold);
             writer.Write(m_hopofreq_Old);
