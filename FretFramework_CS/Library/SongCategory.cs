@@ -82,27 +82,25 @@ namespace Framework.Library
         public SourceNode() : base(SourceComparer) { }
     }
 
-    public abstract class SongCategory<Element> : IEntryAddable
+    public abstract class SongCategory<Key, Element> : IEntryAddable
         where Element : IEntryAddable, new()
+        where Key : IComparable<Key>, IEquatable<Key>
     {
         protected readonly object elementLock = new();
-        protected readonly SimpleFlatMap<SortString, Element> elements = new();
+        protected readonly SimpleFlatMap<Key, Element> elements = new();
+
         public abstract void Add(SongEntry.SongEntry entry);
+        protected void Add(Key key, SongEntry.SongEntry entry) { lock (elementLock) elements[key].Add(entry); }
 
-        public SimpleFlatMap<SortString, Element>.Enumerator GetEnumerator() { return elements.GetEnumerator(); }
+        public SimpleFlatMap<Key, Element>.Enumerator GetEnumerator() { return elements.GetEnumerator(); }
     }
 
-    public class TitleCategory : IEntryAddable
+    public class TitleCategory : SongCategory<char, TitleNode>
     {
-        private readonly object elementLock = new();
-        private readonly SimpleFlatMap<char, TitleNode> elements = new();
-        public void Add(SongEntry.SongEntry entry)
-        {
-            lock (elementLock) elements[entry.Name.SortStr[0]].Add(entry);
-        }
+        public override void Add(SongEntry.SongEntry entry) { Add(entry.Name.SortStr[0], entry); }
     }
 
-    public class ArtistCategory : SongCategory<ArtistNode>
+    public class ArtistCategory : SongCategory<SortString, ArtistNode>
     {
         public override void Add(SongEntry.SongEntry entry)
         {
@@ -110,7 +108,7 @@ namespace Framework.Library
         }
     }
 
-    public class AlbumCategory : SongCategory<AlbumNode>
+    public class AlbumCategory : SongCategory<SortString, AlbumNode>
     {
         public override void Add(SongEntry.SongEntry entry)
         {
@@ -118,7 +116,7 @@ namespace Framework.Library
         }
     }
 
-    public class GenreCategory : SongCategory<GenreNode>
+    public class GenreCategory : SongCategory<SortString, GenreNode>
     {
         public override void Add(SongEntry.SongEntry entry)
         {
@@ -127,7 +125,7 @@ namespace Framework.Library
         }
     }
 
-    public class YearCategory : SongCategory<YearNode>
+    public class YearCategory : SongCategory<SortString, YearNode>
     {
         public override void Add(SongEntry.SongEntry entry)
         {
@@ -136,7 +134,7 @@ namespace Framework.Library
         }
     }
 
-    public class CharterCategory : SongCategory<CharterNode>
+    public class CharterCategory : SongCategory<SortString, CharterNode>
     {
         public override void Add(SongEntry.SongEntry entry)
         {
@@ -145,7 +143,7 @@ namespace Framework.Library
         }
     }
 
-    public class PlaylistCategory : SongCategory<PlaylistNode>
+    public class PlaylistCategory : SongCategory<SortString, PlaylistNode>
     {
         public override void Add(SongEntry.SongEntry entry)
         {
@@ -154,7 +152,7 @@ namespace Framework.Library
         }
     }
 
-    public class SourceCategory : SongCategory<SourceNode>
+    public class SourceCategory : SongCategory<SortString, SourceNode>
     {
         public override void Add(SongEntry.SongEntry entry)
         {
@@ -163,7 +161,7 @@ namespace Framework.Library
         }
     }
 
-    public class ArtistAlbumCategory : SongCategory<AlbumCategory>
+    public class ArtistAlbumCategory : SongCategory<SortString, AlbumCategory>
     {
         public override void Add(SongEntry.SongEntry entry)
         {
