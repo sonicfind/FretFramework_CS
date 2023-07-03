@@ -98,7 +98,7 @@ namespace Framework.Song.Tracks.Notes.Drums
             }
         }
 
-        public bool Set_From_Chart(nuint lane, ulong length)
+        public bool Set_From_Chart(uint lane, ulong length)
         {
             fixed (DrumPad* pads = &snare)
             {

@@ -88,7 +88,7 @@ namespace Framework.Song.Tracks.Notes.Drums
                     pads[i] = drum[i];
         }
 
-        public bool Set_From_Chart(nuint lane, ulong length)
+        public bool Set_From_Chart(uint lane, ulong length)
         {
             fixed (DrumPad_Pro* pads = &snare)
             {

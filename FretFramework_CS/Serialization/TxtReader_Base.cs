@@ -453,50 +453,6 @@ namespace Framework.Serialization
             return true;
         }
 
-        public bool ReadNUint(ref nuint value)
-        {
-            if (_position >= _next)
-                return false;
-
-            nuint b = file.ptr[_position];
-            if (b == '+')
-            {
-                ++_position;
-                if (_position == _next)
-                    return false;
-                b = file.ptr[_position];
-            }
-
-            if (b < '0' || b > '9')
-                return false;
-
-            while (true)
-            {
-                _position++;
-                nuint val = value + b - '0';
-                if (val >= value)
-                {
-                    value = val;
-                    if (_position == _next)
-                        break;
-
-                    b = file.ptr[_position];
-                    if (b < '0' || b > '9')
-                        break;
-
-                    val *= 10;
-                    if (val >= value)
-                        value = val;
-                    else
-                        value = nuint.MaxValue;
-                }
-                else
-                    value = nuint.MaxValue;
-            }
-            SkipWhiteSpace();
-            return true;
-        }
-
         public bool ReadFloat(ref float value)
         {
             if (_position >= _next)
@@ -738,14 +694,6 @@ namespace Framework.Serialization
         {
             ulong value = default;
             if (!ReadUInt64(ref value))
-                throw new Exception("Failed to parse data");
-            return value;
-        }
-
-        public nuint ReadNUint()
-        {
-            nuint value = default;
-            if (!ReadNUint(ref value))
                 throw new Exception("Failed to parse data");
             return value;
         }

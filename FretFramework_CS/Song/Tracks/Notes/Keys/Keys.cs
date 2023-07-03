@@ -35,7 +35,7 @@ namespace Framework.Song.Tracks.Notes.Keys
             return false;
         }
 
-        public bool Set_From_Chart(nuint lane, ulong length)
+        public bool Set_From_Chart(uint lane, ulong length)
         {
             if (lane >= 5)
                 return false;

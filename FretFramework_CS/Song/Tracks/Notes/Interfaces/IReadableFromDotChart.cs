@@ -8,6 +8,6 @@ namespace Framework.Song.Tracks.Notes.Interfaces
 {
     public interface IReadableFromDotChart
     {
-        public bool Set_From_Chart(nuint lane, ulong length);
+        public bool Set_From_Chart(uint lane, ulong length);
     }
 }

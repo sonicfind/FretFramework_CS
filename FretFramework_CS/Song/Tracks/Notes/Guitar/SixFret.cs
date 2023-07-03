@@ -108,7 +108,7 @@ namespace Framework.Song.Tracks.Notes.Guitar
         public SixFret() { }
 
         internal static readonly uint[] SIXFRETLANES = new uint[5] { 4, 5, 6, 1, 2 };
-        public bool Set_From_Chart(nuint lane, ulong length)
+        public bool Set_From_Chart(uint lane, ulong length)
         {
             fixed (TruncatableSustain* lanes = &open)
             {

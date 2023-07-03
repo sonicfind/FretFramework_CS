@@ -254,16 +254,16 @@ namespace Framework.Serialization
             return reader.ExtractTextSpan();
         }
 
-        public (nuint, ulong) ExtractLaneAndSustain()
+        public (uint, ulong) ExtractLaneAndSustain()
         {
-            nuint lane = reader.ReadNUint();
+            uint lane = reader.ReadUInt32();
             ulong sustain = reader.ReadUInt64();
             return new(lane, sustain);
         }
 
         public SpecialPhrase ExtractSpecialPhrase()
         {
-            nuint type = reader.ReadNUint();
+            uint type = reader.ReadUInt32();
             ulong duration = reader.ReadUInt64();
             return new((SpecialPhraseType)type, duration);
         }
