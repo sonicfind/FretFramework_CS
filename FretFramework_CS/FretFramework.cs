@@ -40,18 +40,32 @@ namespace Framework
             while (cacheFileDirectory == null);
             cacheFileDirectory = cacheFileDirectory.Replace("\"", "");
 
+            List<string> directories = new() { directory };
+
             Stopwatch stopwatch = Stopwatch.StartNew();
-            SongLibrary library = SongCache.ScanDirectories(new() { directory }, cacheFileDirectory, true, false);
+            SongLibrary library = SongCache.ScanDirectories(directories, cacheFileDirectory, true, false, false);
             stopwatch.Stop();
+            Console.WriteLine($"--Full Directory Scan + Cache Write--");
             Console.WriteLine($"Time Spent: {stopwatch.ElapsedMilliseconds}ms");
             Console.WriteLine($"Song Count: {library.Count}");
             Console.WriteLine();
 
             stopwatch.Restart();
-            SongLibrary library2 = SongCache.QuickScan(cacheFileDirectory, false);
+            SongLibrary library2 = SongCache.ScanDirectories(directories, cacheFileDirectory, false, false);
             stopwatch.Stop();
+
+            Console.WriteLine($"--Cache Read + Full Directory Scan--");
             Console.WriteLine($"Time Spent: {stopwatch.ElapsedMilliseconds}ms");
             Console.WriteLine($"Song Count: {library2.Count}");
+            Console.WriteLine();
+
+            stopwatch.Restart();
+            SongLibrary library3 = SongCache.QuickScan(cacheFileDirectory, false);
+            stopwatch.Stop();
+
+            Console.WriteLine($"--Cache Read--");
+            Console.WriteLine($"Time Spent: {stopwatch.ElapsedMilliseconds}ms");
+            Console.WriteLine($"Song Count: {library3.Count}");
 
             //BenchmarkRunner.Run<SongBenchmarks>(); // Song directory MUST be hardcoded to run properly
         }
