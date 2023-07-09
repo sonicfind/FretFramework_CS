@@ -509,8 +509,9 @@ namespace Framework.Serialization
                 if (_position < _next)
                 {
                     b = file.ptr[_position];
-                    if ('0' <= b && '9' <= b)
+                    if ('0' <= b && b <= '9')
                     {
+                        ++count;
                         while (true)
                         {
                             dec += b - '0';
@@ -594,8 +595,9 @@ namespace Framework.Serialization
                 if (_position < _next)
                 {
                     b = file.ptr[_position];
-                    if ('0' <= b && '9' <= b)
+                    if ('0' <= b && b <= '9')
                     {
+                        ++count;
                         while (true)
                         {
                             dec += b - '0';
