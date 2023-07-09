@@ -48,3 +48,5 @@ FretFramework_CS/obj/*
 *.cache
 .vs/FretFramework_CS/v17/.suo
 FretFramework_CS/.vs/Framework/v17/.suo
+*.user
+*.pubxml
