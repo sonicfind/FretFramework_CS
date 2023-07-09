@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 namespace Framework.Song.Tracks.Instrument.DrumTrack
 {
     public abstract class Midi_Drum_Loader_Base<T> : Midi_Instrument_Loader<T>
-        where T : struct, IDrumNote, INote
+        where T : unmanaged, IDrumNote, INote
     {
         internal static readonly uint[] LANEVALUES = new uint[] {
             0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,

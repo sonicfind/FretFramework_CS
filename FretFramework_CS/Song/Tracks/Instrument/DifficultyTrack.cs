@@ -12,7 +12,7 @@ namespace Framework.Song.Tracks.Instrument
 {
     [DebuggerDisplay($"{{{nameof(GetDebuggerDisplay)}(),nq}}")]
     public class DifficultyTrack<T> : Track
-        where T : struct, INote 
+        where T : unmanaged, INote 
     {
         public readonly TimedFlatMap<T> notes = new();
 

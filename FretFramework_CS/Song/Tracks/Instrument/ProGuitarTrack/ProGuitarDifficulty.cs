@@ -12,7 +12,7 @@ namespace Framework.Song.Tracks.Instrument.ProGuitarTrack
 {
     [DebuggerDisplay($"{{{nameof(GetDebuggerDisplay)}(),nq}}")]
     public class ProGuitarDifficulty<FretType> : DifficultyTrack<Guitar_Pro<FretType>>
-        where FretType : struct, IFretted
+        where FretType : unmanaged, IFretted
     {
         public readonly TimedFlatMap<Arpeggio<FretType>> arpeggios = new();
 

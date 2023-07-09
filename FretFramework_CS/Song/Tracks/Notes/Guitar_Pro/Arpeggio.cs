@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace Framework.Song.Tracks.Notes.Guitar_Pro
 {
     public unsafe struct Arpeggio<FretType>
-        where FretType : struct, IFretted
+        where FretType : unmanaged, IFretted
     {
         private FretType string_1 = new();
         private FretType string_2 = new();

@@ -52,7 +52,7 @@ namespace Framework.Song.Tracks.Instrument
 
     [DebuggerDisplay($"{{{nameof(GetDebuggerDisplay)}(),nq}}")]
     public class InstrumentTrack<T> : InstrumentTrack_Base<DifficultyTrack<T>>
-        where T : struct, INote
+        where T : unmanaged, INote
     {
         protected new string GetDebuggerDisplay()
         {

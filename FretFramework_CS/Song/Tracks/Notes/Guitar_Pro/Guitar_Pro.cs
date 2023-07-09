@@ -103,7 +103,7 @@ namespace Framework.Song.Tracks.Notes.Guitar_Pro
     };
 
     public unsafe struct Guitar_Pro<FretType> : INote
-         where FretType : struct, IFretted
+         where FretType : unmanaged, IFretted
     {
         private ProString<FretType> string_1;
         private ProString<FretType> string_2;

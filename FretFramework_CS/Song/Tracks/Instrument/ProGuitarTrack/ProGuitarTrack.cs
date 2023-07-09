@@ -25,7 +25,7 @@ namespace Framework.Song.Tracks.Instrument.ProGuitarTrack
 
     [DebuggerDisplay($"{{{nameof(GetDebuggerDisplay)}(),nq}}")]
     public class ProGuitarTrack<FretType> : InstrumentTrack_Base<ProGuitarDifficulty<FretType>>
-        where FretType : struct, IFretted
+        where FretType : unmanaged, IFretted
     {
         public readonly TimedFlatMap<PitchName> roots = new();
         public readonly TimedFlatMap<FretType> handPositions = new();
@@ -58,7 +58,7 @@ namespace Framework.Song.Tracks.Instrument.ProGuitarTrack
     }
 
     public class Midi_ProGuitar_Loader<FretType> : Midi_Loader_Base<ProGuitarTrack<FretType>>
-        where FretType : struct, IFretted
+        where FretType : unmanaged, IFretted
     {
         internal static readonly int[] DIFFVALUES = {
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,

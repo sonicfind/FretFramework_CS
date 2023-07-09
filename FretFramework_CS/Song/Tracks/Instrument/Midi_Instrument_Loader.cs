@@ -150,7 +150,7 @@ namespace Framework.Song.Tracks.Instrument
     }
 
     public abstract class Midi_Instrument_Loader<T> : Midi_Loader_Base<InstrumentTrack<T>>
-        where T : struct, INote
+        where T : unmanaged, INote
     {
         internal static readonly byte[] SOLO = { 103 };
         internal static readonly byte[] TREMOLO = { 126 };
