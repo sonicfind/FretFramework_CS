@@ -3,6 +3,7 @@ using Framework.Library.CacheNodes;
 using Framework.Serialization;
 using Framework.SongEntry;
 using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -40,10 +41,14 @@ namespace Framework.Library
             }
 
             using FileStream fs = new(cacheFile, FileMode.Open, FileAccess.Read);
-            if (fs.ReadInt32LE() != CACHE_VERSION)
-                return;
+            {
+                byte[] version = new byte[4];
+                fs.Read(version, 0, 4);
+                if (BinaryPrimitives.ReadInt32LittleEndian(version) != CACHE_VERSION)
+                    return;
+            }
 
-            using BinaryFileReader reader = new(fs.ReadBytes((int)fs.Length - 4));
+            using BinaryFileReader reader = new(fs);
             CategoryCacheStrings strings = new(reader, true);
 
             List<Task> entryTasks = new();
@@ -129,10 +134,14 @@ namespace Framework.Library
             }
 
             using FileStream fs = new(cacheFile, FileMode.Open, FileAccess.Read);
-            if (fs.ReadInt32LE() != CACHE_VERSION)
-                return;
+            {
+                byte[] version = new byte[4];
+                fs.Read(version, 0, 4);
+                if (BinaryPrimitives.ReadInt32LittleEndian(version) != CACHE_VERSION)
+                    return;
+            }
 
-            using BinaryFileReader reader = new(fs.ReadBytes((int)fs.Length - 4));
+            using BinaryFileReader reader = new(fs);
             CategoryCacheStrings strings = new(reader, false);
 
             int count = reader.ReadInt32();

@@ -50,6 +50,8 @@ namespace Framework.Serialization
 
         public BinaryFileReader(string path) : this(new FrameworkFile_Alloc(path), true) { }
 
+        public BinaryFileReader(FileStream fs) : this(new FrameworkFile_Alloc(fs), true) { }
+
         public BinaryFileReader(PointerHandler handler, bool dispose = false) : this(new FrameworkFile_Pointer(handler, dispose), true) { }
 
         protected void Dispose(bool disposing)

@@ -6,6 +6,7 @@ using Framework.Serialization;
 using Framework.SongEntry.TrackScan;
 using Framework.Types;
 using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
@@ -932,7 +933,9 @@ namespace Framework.SongEntry
             if (Mogg != null && File.Exists(Mogg.FullName))
             {
                 using var fs = new FileStream(Mogg.FullName, FileMode.Open, FileAccess.Read);
-                return fs.ReadInt32LE() == 0xA;
+                byte[] version = new byte[4];
+                fs.Read(version, 0, 4);
+                return BinaryPrimitives.ReadInt32LittleEndian(version) == 0xA;
             }
             else if (conFile != null)
                 return conFile.GetMoggVersion(moggListing!) == 0xA;

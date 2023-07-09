@@ -1,5 +1,6 @@
 ﻿using Framework.Types;
 using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -149,7 +150,10 @@ namespace Framework.Serialization
             {
                 if (stream.Seek(blockLocation, SeekOrigin.Begin) != blockLocation)
                     throw new Exception("Seek error in CON-like subfile for Mogg");
-                return stream.ReadInt32LE();
+
+                byte[] bytes = new byte[4];
+                stream.Read(bytes, 0, 4);
+                return BinaryPrimitives.ReadInt32LittleEndian(bytes);
             }
         }
 

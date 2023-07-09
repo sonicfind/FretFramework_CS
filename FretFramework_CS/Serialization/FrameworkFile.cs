@@ -64,13 +64,15 @@ namespace Framework.Serialization
 
     public unsafe class FrameworkFile_Alloc : FrameworkFile
     {
-        public FrameworkFile_Alloc(string path)
+        public FrameworkFile_Alloc(string path) : this(File.OpenRead(path)) { }
+
+        public FrameworkFile_Alloc(FileStream fs)
         {
-            using FileStream fs = File.OpenRead(path);
-            int length = (int)fs.Length;
+            int length = (int)fs.Length - (int)fs.Position;
             Length = length;
             ptr = (byte*)Marshal.AllocHGlobal(length);
             fs.Read(new Span<byte>(ptr, length));
+            fs.Dispose();
         }
 
         ~FrameworkFile_Alloc() { Dispose(false); }
