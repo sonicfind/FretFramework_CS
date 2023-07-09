@@ -477,7 +477,7 @@ namespace Framework.SongEntry
 
             if (pan != null && volume != null)
             {
-                HashSet<int> pending = new();
+                List<int> pending = new();
                 for (int i = 0; i < pan.Length; i++)
                     pending.Add(i);
 
@@ -502,7 +502,7 @@ namespace Framework.SongEntry
                 _trackIndices = pending.ToArray();
                 _trackStemValues = CalculateStemValues(_trackIndices, pan, volume, pending);
 
-                static float[] CalculateStemValues(int[] indices, float[] pan, float[] volume, HashSet<int> pending)
+                static float[] CalculateStemValues(int[] indices, float[] pan, float[] volume, List<int> pending)
                 {
                     float[] values = new float[2 * indices.Length];
                     for (int i = 0; i < indices.Length; i++)
