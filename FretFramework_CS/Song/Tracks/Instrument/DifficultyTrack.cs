@@ -14,7 +14,7 @@ namespace Framework.Song.Tracks.Instrument
     public class DifficultyTrack<T> : Track
         where T : unmanaged, INote 
     {
-        public readonly TimedFlatMap<T> notes = new();
+        public readonly TimedNativeFlatMap<T> notes = new();
 
         public override bool IsOccupied() { return !notes.IsEmpty() || base.IsOccupied(); }
 

@@ -27,8 +27,8 @@ namespace Framework.Song.Tracks.Instrument.ProGuitarTrack
     public class ProGuitarTrack<FretType> : InstrumentTrack_Base<ProGuitarDifficulty<FretType>>
         where FretType : unmanaged, IFretted
     {
-        public readonly TimedFlatMap<PitchName> roots = new();
-        public readonly TimedFlatMap<FretType> handPositions = new();
+        public readonly TimedNativeFlatMap<PitchName> roots = new();
+        public readonly TimedNativeFlatMap<FretType> handPositions = new();
         public readonly TimedFlatMap<List<ChordPhrase>> chordPhrases = new();
 
         public override bool IsOccupied()

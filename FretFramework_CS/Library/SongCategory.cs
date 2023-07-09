@@ -88,12 +88,12 @@ namespace Framework.Library
         where Key : IComparable<Key>, IEquatable<Key>
     {
         protected readonly object elementLock = new();
-        protected readonly SimpleFlatMap<Key, Element> elements = new();
+        protected readonly FlatMap<Key, Element> elements = new();
 
         public abstract void Add(SongEntry.SongEntry entry);
         protected void Add(Key key, SongEntry.SongEntry entry) { lock (elementLock) elements[key].Add(entry); }
 
-        public SimpleFlatMap<Key, Element>.Enumerator GetEnumerator() { return elements.GetEnumerator(); }
+        public FlatMap<Key, Element>.Enumerator GetEnumerator() { return elements.GetEnumerator(); }
     }
 
     public class TitleCategory : SongCategory<char, TitleNode>

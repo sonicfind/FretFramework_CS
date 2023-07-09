@@ -11,8 +11,8 @@ namespace Framework.Song
 {
     public readonly struct SyncTrack
     {
-        public readonly TimedFlatMap<Tempo> tempoMarkers = new();
-        public readonly TimedFlatMap<TimeSig> timeSigs = new();
+        public readonly TimedNativeFlatMap<Tempo> tempoMarkers = new();
+        public readonly TimedNativeFlatMap<TimeSig> timeSigs = new();
         public SyncTrack() {}
 
         public void AddFromMidi(MidiFileReader reader)

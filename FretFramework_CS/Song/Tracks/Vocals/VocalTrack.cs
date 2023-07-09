@@ -10,7 +10,7 @@ namespace Framework.Song.Tracks.Vocals
 {
     public abstract class VocalTrack : Track
     {
-        public readonly TimedFlatMap<VocalPercussion> percussion = new();
+        public readonly TimedNativeFlatMap<VocalPercussion> percussion = new();
 
         public abstract TimedFlatMap<Vocal> this[int trackIndex]
         {

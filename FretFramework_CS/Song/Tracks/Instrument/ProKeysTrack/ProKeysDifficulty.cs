@@ -22,7 +22,7 @@ namespace Framework.Song.Tracks.Instrument.ProKeysTrack
 
     public class ProKeysDifficulty : DifficultyTrack<Keys_Pro>
     {
-        public readonly TimedFlatMap<ProKey_Ranges> ranges = new();
+        public readonly TimedNativeFlatMap<ProKey_Ranges> ranges = new();
 
         public override bool IsOccupied() { return !ranges.IsEmpty() || base.IsOccupied(); }
         public override void Clear()

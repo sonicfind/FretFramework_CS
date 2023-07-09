@@ -14,7 +14,7 @@ namespace Framework.Song.Tracks.Instrument.ProGuitarTrack
     public class ProGuitarDifficulty<FretType> : DifficultyTrack<Guitar_Pro<FretType>>
         where FretType : unmanaged, IFretted
     {
-        public readonly TimedFlatMap<Arpeggio<FretType>> arpeggios = new();
+        public readonly TimedNativeFlatMap<Arpeggio<FretType>> arpeggios = new();
 
         public override bool IsOccupied() { return !arpeggios.IsEmpty() || base.IsOccupied(); }
 
