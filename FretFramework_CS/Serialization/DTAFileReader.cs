@@ -150,19 +150,11 @@ namespace Framework.Serialization
             return Encoding.UTF8.GetString(new ReadOnlySpan<byte>(file.ptr + start, end - start));
         }
 
-        public List<short> ExtractList_Int16()
+        public List<int> ExtractList_Int()
         {
-            List<short> values = new();
+            List<int> values = new();
             while (*CurrentPtr != ')')
-                values.Add(ReadInt16());
-            return values;
-        }
-
-        public List<ushort> ExtractList_UInt16()
-        {
-            List<ushort> values = new();
-            while (*CurrentPtr != ')')
-                values.Add(ReadUInt16());
+                values.Add(ReadInt32());
             return values;
         }
 

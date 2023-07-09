@@ -42,11 +42,11 @@ namespace Framework.SongEntry
         internal static readonly float[,] emptyRatios = new float[0, 0];
         static ConSongEntry() { }
 
-        private CONFile? conFile;
+        private readonly CONFile? conFile;
         private readonly FileListing? midiListing;
-        private FileListing? moggListing;
-        private FileListing? miloListing;
-        private FileListing? imgListing;
+        private readonly FileListing? moggListing;
+        private readonly FileListing? miloListing;
+        private readonly FileListing? imgListing;
         public string SongID { get; private set; } = string.Empty;
         public uint AnimTempo { get; private set; }
         public string DrumBank { get; private set; } = string.Empty;
@@ -83,22 +83,49 @@ namespace Framework.SongEntry
 
         public SongProUpgrade? Upgrade { get; set; }
 
-        public string[] Soloes { get; private set; } = Array.Empty<string>();
-        public string[] VideoVenues { get; private set; } = Array.Empty<string>();
+        private string[] _soloes = Array.Empty<string>();
+        private string[] _videoVenues = Array.Empty<string>();
 
-        public short[] RealGuitarTuning { get; private set; } = Array.Empty<short>();
-        public short[] RealBassTuning { get; private set; } = Array.Empty<short>();
+        public ReadOnlySpan<string> Soloes => _soloes;
+        public ReadOnlySpan<string> VideoVenues => _videoVenues;
 
-        public ushort[] DrumIndices { get; private set; } = Array.Empty<ushort>();
-        public ushort[] BassIndices { get; private set; } = Array.Empty<ushort>();
-        public ushort[] GuitarIndices { get; private set; } = Array.Empty<ushort>();
-        public ushort[] KeysIndices { get; private set; } = Array.Empty<ushort>();
-        public ushort[] VocalsIndices { get; private set; } = Array.Empty<ushort>();
-        public ushort[] CrowdIndices { get; private set; } = Array.Empty<ushort>();
+        private int[] _realGuitarTuning = Array.Empty<int>();
+        private int[] _realBassTuning = Array.Empty<int>();
 
-        public float[] Pan { get; private set; } = Array.Empty<float>();
-        public float[] Volume { get; private set; } = Array.Empty<float>();
-        public float[] Core { get; private set; } = Array.Empty<float>();
+        public ReadOnlySpan<int> RealGuitarTuning => _realGuitarTuning;
+        public ReadOnlySpan<int> RealBassTuning => _realBassTuning;
+
+        private int[] _drumIndices = Array.Empty<int>();
+        private int[] _bassIndices = Array.Empty<int>();
+        private int[] _guitarIndices = Array.Empty<int>();
+        private int[] _keysIndices = Array.Empty<int>();
+        private int[] _vocalsIndices = Array.Empty<int>();
+        private int[] _crowdIndices = Array.Empty<int>();
+        private int[] _trackIndices = Array.Empty<int>();
+
+        private float[] _drumStemValues = Array.Empty<float>();
+        private float[] _bassStemValues = Array.Empty<float>();
+        private float[] _guitarStemValues = Array.Empty<float>();
+        private float[] _keysStemValues = Array.Empty<float>();
+        private float[] _vocalsStemValues = Array.Empty<float>();
+        private float[] _crowdStemValues = Array.Empty<float>();
+        private float[] _trackStemValues = Array.Empty<float>();
+
+        public ReadOnlySpan<int> DrumIndices => _drumIndices;
+        public ReadOnlySpan<int> BassIndices => _bassIndices;
+        public ReadOnlySpan<int> GuitarIndices => _guitarIndices;
+        public ReadOnlySpan<int> KeysIndices => _keysIndices;
+        public ReadOnlySpan<int> VocalsIndices => _vocalsIndices;
+        public ReadOnlySpan<int> CrowdIndices => _crowdIndices;
+        public ReadOnlySpan<int> TrackIndices => _trackIndices;
+        
+        public ReadOnlySpan<float> DrumStemValues => _drumStemValues;
+        public ReadOnlySpan<float> BassStemValues => _bassStemValues;
+        public ReadOnlySpan<float> GuitarStemValues => _guitarStemValues;
+        public ReadOnlySpan<float> KeysStemValues => _keysStemValues;
+        public ReadOnlySpan<float> VocalsStemValues => _vocalsStemValues;
+        public ReadOnlySpan<float> CrowdStemValues => _crowdStemValues;
+        public ReadOnlySpan<float> TrackStemValues => _trackStemValues;
 
         public ConSongEntry(CONFile file, string nodeName, FileListing? midi, FileListing? moggListing, FileInfo? moggInfo, FileInfo? updateInfo, BinaryFileReader reader, CategoryCacheStrings strings) : base(reader, strings)
         {
@@ -172,42 +199,35 @@ namespace Framework.SongEntry
             TuningOffsetCents = reader.ReadInt32();
             VenueVersion = reader.ReadUInt32();
 
-            RealGuitarTuning =  ReadShortArray(reader);
-            RealBassTuning = ReadShortArray(reader);
+            _realGuitarTuning =  ReadIntArray(reader);
+            _realBassTuning = ReadIntArray(reader);
 
-            Pan = ReadFloatArray(reader);
-            Volume = ReadFloatArray(reader);
-            Core = ReadFloatArray(reader);
+            _drumIndices = ReadIntArray(reader);
+            _bassIndices = ReadIntArray(reader);
+            _guitarIndices = ReadIntArray(reader);
+            _keysIndices = ReadIntArray(reader);
+            _vocalsIndices = ReadIntArray(reader);
+            _crowdIndices = ReadIntArray(reader);
+            _trackIndices = ReadIntArray(reader);
 
-            DrumIndices = ReadUShortArray(reader);
-            BassIndices = ReadUShortArray(reader);
-            GuitarIndices = ReadUShortArray(reader);
-            KeysIndices = ReadUShortArray(reader);
-            VocalsIndices = ReadUShortArray(reader);
-            CrowdIndices = ReadUShortArray(reader);
+            _drumStemValues = ReadFloatArray(reader);
+            _bassStemValues = ReadFloatArray(reader);
+            _guitarStemValues = ReadFloatArray(reader);
+            _keysStemValues = ReadFloatArray(reader);
+            _vocalsStemValues = ReadFloatArray(reader);
+            _crowdStemValues = ReadFloatArray(reader);
+            _trackStemValues = ReadFloatArray(reader);
         }
 
-        private static short[] ReadShortArray(BinaryFileReader reader)
+        private static int[] ReadIntArray(BinaryFileReader reader)
         {
             int length = reader.ReadInt32();
             if (length == 0)
-                return Array.Empty<short>();
+                return Array.Empty<int>();
 
-            short[] values = new short[length];
+            int[] values = new int[length];
             for (int i = 0; i < length; ++i)
-                values[i] = reader.ReadInt16();
-            return values;
-        }
-
-        private static ushort[] ReadUShortArray(BinaryFileReader reader)
-        {
-            int length = reader.ReadInt32();
-            if (length == 0)
-                return Array.Empty<ushort>();
-
-            ushort[] values = new ushort[length];
-            for (int i = 0; i < length; ++i)
-                values[i] = reader.ReadUInt16();
+                values[i] = reader.ReadInt32();
             return values;
         }
 
@@ -317,7 +337,7 @@ namespace Framework.SongEntry
                         m_previewEnd = reader.ReadUInt32();
                         break;
                     case "rank": RankLoop(ref reader); break;
-                    case "solo": Soloes = reader.ExtractList_String().ToArray(); break;
+                    case "solo": _soloes = reader.ExtractList_String().ToArray(); break;
                     case "genre": m_genre = reader.ExtractText(); break;
                     case "decade": /*Decade = reader.ExtractText();*/ break;
                     case "vocal_gender": VocalGender = reader.ExtractText() == "male"; break;
@@ -375,7 +395,7 @@ namespace Framework.SongEntry
                         {
                             if (reader.StartNode())
                             {
-                                RealGuitarTuning = reader.ExtractList_Int16().ToArray();
+                                _realGuitarTuning = reader.ExtractList_Int().ToArray();
                                 reader.EndNode();
                             }
                             break;
@@ -384,7 +404,7 @@ namespace Framework.SongEntry
                         {
                             if (reader.StartNode())
                             {
-                                RealBassTuning = reader.ExtractList_Int16().ToArray();
+                                _realBassTuning = reader.ExtractList_Int().ToArray();
                                 reader.EndNode();
                             }
                             break;
@@ -393,7 +413,7 @@ namespace Framework.SongEntry
                         {
                             if (reader.StartNode())
                             {
-                                VideoVenues = reader.ExtractList_String().ToArray();
+                                _videoVenues = reader.ExtractList_String().ToArray();
                                 reader.EndNode();
                             }
                             break;
@@ -417,6 +437,7 @@ namespace Framework.SongEntry
 
         private void SongLoop(ref DTAFileReader reader)
         {
+            float[]? pan = null, volume = null, core = null;
             while (reader.StartNode())
             {
                 string descriptor = reader.GetNameOfNode();
@@ -424,26 +445,26 @@ namespace Framework.SongEntry
                 {
                     case "name": location = reader.ExtractText(); break;
                     case "tracks": TracksLoop(ref reader); break;
-                    case "crowd_channels": CrowdIndices = reader.ExtractList_UInt16().ToArray(); break;
+                    case "crowd_channels": _crowdIndices = reader.ExtractList_Int().ToArray(); break;
                     case "vocal_parts": VocalParts = reader.ReadUInt16(); break;
                     case "pans":
                         if (reader.StartNode())
                         {
-                            Pan = reader.ExtractList_Float().ToArray();
+                            pan = reader.ExtractList_Float().ToArray();
                             reader.EndNode();
                         }
                         break;
                     case "vols":
                         if (reader.StartNode())
                         {
-                            Volume = reader.ExtractList_Float().ToArray();
+                            volume = reader.ExtractList_Float().ToArray();
                             reader.EndNode();
                         }
                         break;
                     case "cores":
                         if (reader.StartNode())
                         {
-                            Core = reader.ExtractList_Float().ToArray();
+                            core = reader.ExtractList_Float().ToArray();
                             reader.EndNode();
                         }
                         break;
@@ -451,6 +472,49 @@ namespace Framework.SongEntry
                     case "midi_file": MidiPath = reader.ExtractText(); break;
                 }
                 reader.EndNode();
+            }
+
+            if (pan != null && volume != null)
+            {
+                HashSet<int> pending = new();
+                for (int i = 0; i < pan.Length; i++)
+                    pending.Add(i);
+
+                if (_drumIndices != Array.Empty<int>())
+                    _drumStemValues = CalculateStemValues(_drumIndices, pan, volume, pending);
+
+                if (_bassIndices != Array.Empty<int>())
+                    _bassStemValues = CalculateStemValues(_bassIndices, pan, volume, pending);
+
+                if (_guitarIndices != Array.Empty<int>())
+                    _guitarStemValues = CalculateStemValues(_guitarIndices, pan, volume, pending);
+
+                if (_keysIndices != Array.Empty<int>())
+                    _keysStemValues = CalculateStemValues(_keysIndices, pan, volume, pending);
+
+                if (_vocalsIndices != Array.Empty<int>())
+                    _vocalsStemValues = CalculateStemValues(_vocalsIndices, pan, volume, pending);
+
+                if (_crowdIndices != Array.Empty<int>())
+                    _crowdStemValues = CalculateStemValues(_crowdIndices, pan, volume, pending);
+
+                _trackIndices = pending.ToArray();
+                _trackStemValues = CalculateStemValues(_trackIndices, pan, volume, pending);
+
+                static float[] CalculateStemValues(int[] indices, float[] pan, float[] volume, HashSet<int> pending)
+                {
+                    float[] values = new float[2 * indices.Length];
+                    for (int i = 0; i < indices.Length; i++)
+                    {
+                        int index = indices[i];
+                        float theta = (pan[index] + 1) * ((float)Math.PI / 4);
+                        float volRatio = (float)Math.Pow(10, volume[index] / 20);
+                        values[2 * i] = volRatio * (float)Math.Cos(theta);
+                        values[2 * i + 1] = volRatio * (float)Math.Sin(theta);
+                        pending.Remove(index);
+                    }
+                    return values;
+                }
             }
         }
 
@@ -466,7 +530,7 @@ namespace Framework.SongEntry
                             {
                                 if (reader.StartNode())
                                 {
-                                    DrumIndices = reader.ExtractList_UInt16().ToArray();
+                                    _drumIndices = reader.ExtractList_Int().ToArray();
                                     reader.EndNode();
                                 }
                                 break;
@@ -475,7 +539,7 @@ namespace Framework.SongEntry
                             {
                                 if (reader.StartNode())
                                 {
-                                    BassIndices = reader.ExtractList_UInt16().ToArray();
+                                    _bassIndices = reader.ExtractList_Int().ToArray();
                                     reader.EndNode();
                                 }
                                 break;
@@ -484,7 +548,7 @@ namespace Framework.SongEntry
                             {
                                 if (reader.StartNode())
                                 {
-                                    GuitarIndices = reader.ExtractList_UInt16().ToArray();
+                                    _guitarIndices = reader.ExtractList_Int().ToArray();
                                     reader.EndNode();
                                 }
                                 break;
@@ -493,7 +557,7 @@ namespace Framework.SongEntry
                             {
                                 if (reader.StartNode())
                                 {
-                                    KeysIndices = reader.ExtractList_UInt16().ToArray();
+                                    _keysIndices = reader.ExtractList_Int().ToArray();
                                     reader.EndNode();
                                 }
                                 break;
@@ -502,7 +566,7 @@ namespace Framework.SongEntry
                             {
                                 if (reader.StartNode())
                                 {
-                                    VocalsIndices = reader.ExtractList_UInt16().ToArray();
+                                    _vocalsIndices = reader.ExtractList_Int().ToArray();
                                     reader.EndNode();
                                 }
                                 break;
@@ -758,17 +822,24 @@ namespace Framework.SongEntry
             writer.Write(TuningOffsetCents);
             writer.Write(VenueVersion);
 
-            WriteArray(RealGuitarTuning, writer);
-            WriteArray(RealBassTuning, writer);
-            WriteArray(Pan, writer);
-            WriteArray(Volume, writer);
-            WriteArray(Core, writer);
-            WriteArray(DrumIndices, writer);
-            WriteArray(BassIndices, writer);
-            WriteArray(GuitarIndices, writer);
-            WriteArray(KeysIndices, writer);
-            WriteArray(VocalsIndices, writer);
-            WriteArray(CrowdIndices, writer);
+            WriteArray(_realGuitarTuning, writer);
+            WriteArray(_realBassTuning, writer);
+
+            WriteArray(_drumIndices, writer);
+            WriteArray(_bassIndices, writer);
+            WriteArray(_guitarIndices, writer);
+            WriteArray(_keysIndices, writer);
+            WriteArray(_vocalsIndices, writer);
+            WriteArray(_crowdIndices, writer);
+            WriteArray(_trackIndices, writer);
+
+            WriteArray(_drumStemValues, writer);
+            WriteArray(_bassStemValues, writer);
+            WriteArray(_guitarStemValues, writer);
+            WriteArray(_keysStemValues, writer);
+            WriteArray(_vocalsStemValues, writer);
+            WriteArray(_crowdStemValues, writer);
+            WriteArray(_trackStemValues, writer);
 
             return ms.ToArray();
         }
@@ -781,15 +852,7 @@ namespace Framework.SongEntry
                 writer.Write(string.Empty);
         }
 
-        private static void WriteArray(short[] values, BinaryWriter writer)
-        {
-            int length = values.Length;
-            writer.Write(length);
-            for (int i = 0; i < length; ++i)
-                writer.Write(values[i]);
-        }
-
-        private static void WriteArray(ushort[] values, BinaryWriter writer)
+        private static void WriteArray(int[] values, BinaryWriter writer)
         {
             int length = values.Length;
             writer.Write(length);
@@ -877,7 +940,7 @@ namespace Framework.SongEntry
             throw new Exception("Mogg file not present");
         }
 
-        private TrackScans Scan_Midi(FrameworkFile? file)
+        private static TrackScans Scan_Midi(FrameworkFile? file)
         {
             if (file == null)
                 throw new Exception("A midi file was changed mid-scan");
