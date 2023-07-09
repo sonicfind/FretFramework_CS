@@ -136,48 +136,54 @@ namespace Framework.Library
             for (int i = 0; i < count; ++i)
             {
                 int length = reader.ReadInt32();
-                using BinaryFileReader sectionReader = reader.CreateReaderFromCurrentPosition(length);
-                ReadIniEntry(sectionReader, baseDirectories, strings);
+                reader.EnterSection(length);
+                ReadIniEntry(reader, baseDirectories, strings);
+                reader.ExitSection();
             }
 
             count = reader.ReadInt32();
             for (int i = 0; i < count; ++i)
             {
                 int length = reader.ReadInt32();
-                using BinaryFileReader sectionReader = reader.CreateReaderFromCurrentPosition(length);
-                ReadUpdateDirectory(sectionReader, baseDirectories);
+                reader.EnterSection(length);
+                ReadUpdateDirectory(reader, baseDirectories);
+                reader.ExitSection();
             }
 
             count = reader.ReadInt32();
             for (int i = 0; i < count; ++i)
             {
                 int length = reader.ReadInt32();
-                using BinaryFileReader sectionReader = reader.CreateReaderFromCurrentPosition(length);
-                ReadUpgradeDirectory(sectionReader, baseDirectories);
+                reader.EnterSection(length);
+                ReadUpgradeDirectory(reader, baseDirectories);
+                reader.ExitSection();
             }
 
             count = reader.ReadInt32();
             for (int i = 0; i < count; ++i)
             {
                 int length = reader.ReadInt32();
-                using BinaryFileReader sectionReader = reader.CreateReaderFromCurrentPosition(length);
-                ReadUpgradeCON(sectionReader, baseDirectories);
+                reader.EnterSection(length);
+                ReadUpgradeCON(reader, baseDirectories);
+                reader.ExitSection();
             }
 
             count = reader.ReadInt32();
             for (int i = 0; i < count; ++i)
             {
                 int length = reader.ReadInt32();
-                using BinaryFileReader sectionReader = reader.CreateReaderFromCurrentPosition(length);
-                ReadCONGroup_Serial(sectionReader, baseDirectories, strings);
+                reader.EnterSection(length);
+                ReadCONGroup_Serial(reader, baseDirectories, strings);
+                reader.ExitSection();
             }
 
             count = reader.ReadInt32();
             for (int i = 0; i < count; ++i)
             {
                 int length = reader.ReadInt32();
-                using BinaryFileReader sectionReader = reader.CreateReaderFromCurrentPosition(length);
-                ReadExtractedCONGroup_Serial(sectionReader, baseDirectories, strings);
+                reader.EnterSection(length);
+                ReadExtractedCONGroup_Serial(reader, baseDirectories, strings);
+                reader.ExitSection();
             }
         }
 
@@ -417,8 +423,9 @@ namespace Framework.Library
                     continue;
                 }
 
-                using BinaryFileReader entryReader = reader.CreateReaderFromCurrentPosition(length);
-                ReadCONEntry(group, name, index, entryReader, strings);
+                reader.EnterSection(length);
+                ReadCONEntry(group, name, index, reader, strings);
+                reader.ExitSection();
             }
         }
 
@@ -529,8 +536,9 @@ namespace Framework.Library
                     continue;
                 }
 
-                using BinaryFileReader entryReader = reader.CreateReaderFromCurrentPosition(length);
-                ReadExtractedCONEntry(group, name, index, entryReader, strings);
+                reader.EnterSection(length);
+                ReadExtractedCONEntry(group, name, index, reader, strings);
+                reader.ExitSection();
             }
 
             Task.WaitAll(entryTasks.ToArray());

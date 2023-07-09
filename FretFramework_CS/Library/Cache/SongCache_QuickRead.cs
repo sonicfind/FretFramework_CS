@@ -148,8 +148,9 @@ namespace Framework.Library
             for (int i = 0; i < count; ++i)
             {
                 int length = reader.ReadInt32();
-                using BinaryFileReader sectionReader = reader.CreateReaderFromCurrentPosition(length);
-                QuickReadIniEntry(sectionReader, strings);
+                reader.EnterSection(length);
+                QuickReadIniEntry(reader, strings);
+                reader.ExitSection();
             }
 
             count = reader.ReadInt32();
@@ -163,32 +164,36 @@ namespace Framework.Library
             for (int i = 0; i < count; ++i)
             {
                 int length = reader.ReadInt32();
-                using BinaryFileReader sectionReader = reader.CreateReaderFromCurrentPosition(length);
-                QuickReadUpgradeDirectory(sectionReader);
+                reader.EnterSection(length);
+                QuickReadUpgradeDirectory(reader);
+                reader.ExitSection();
             }
 
             count = reader.ReadInt32();
             for (int i = 0; i < count; ++i)
             {
                 int length = reader.ReadInt32();
-                using BinaryFileReader sectionReader = reader.CreateReaderFromCurrentPosition(length);
-                QuickReadUpgradeCON(sectionReader);
+                reader.EnterSection(length);
+                QuickReadUpgradeCON(reader);
+                reader.ExitSection();
             }
 
             count = reader.ReadInt32();
             for (int i = 0; i < count; ++i)
             {
                 int length = reader.ReadInt32();
-                using BinaryFileReader sectionReader = reader.CreateReaderFromCurrentPosition(length);
-                QuickReadCONGroup_Serial(sectionReader, strings);
+                reader.EnterSection(length);
+                QuickReadCONGroup_Serial(reader, strings);
+                reader.ExitSection();
             }
 
             count = reader.ReadInt32();
             for (int i = 0; i < count; ++i)
             {
                 int length = reader.ReadInt32();
-                using BinaryFileReader sectionReader = reader.CreateReaderFromCurrentPosition(length);
-                QuickReadExtractedCONGroup_Serial(sectionReader, strings);
+                reader.EnterSection(length);
+                QuickReadExtractedCONGroup_Serial(reader, strings);
+                reader.ExitSection();
             }
         }
 
@@ -219,7 +224,6 @@ namespace Framework.Library
             DateTime dtaLastWrite = DateTime.FromBinary(reader.ReadInt64());
             int count = reader.ReadInt32();
 
-            FileInfo dta = new(Path.Combine(directory, "upgrades.dta"));
             UpgradeGroup group = new(directory, dtaLastWrite);
             lock (upgradeGroupLock)
                 upgradeGroups.Add(group);
@@ -239,8 +243,7 @@ namespace Framework.Library
         private void QuickReadUpgradeCON(BinaryFileReader reader)
         {
             string filename = reader.ReadLEBString();
-            DateTime conLastWrite = DateTime.FromBinary(reader.ReadInt64());
-            reader.Position += 4;
+            reader.Position += 12;
             int count = reader.ReadInt32();
 
             if (CreateCONGroup(filename, out PackedCONGroup? group))
@@ -319,8 +322,9 @@ namespace Framework.Library
                 reader.Position += 4;
                 int length = reader.ReadInt32();
 
-                using BinaryFileReader entryReader = reader.CreateReaderFromCurrentPosition(length);
-                QuickReadCONEntry(group!.file, name, entryReader, strings);
+                reader.EnterSection(length);
+                QuickReadCONEntry(group!.file, name, reader, strings);
+                reader.ExitSection();
             }
         }
 
@@ -391,8 +395,9 @@ namespace Framework.Library
                 reader.Position += 4;
                 int length = reader.ReadInt32();
 
-                using BinaryFileReader entryReader = reader.CreateReaderFromCurrentPosition(length);
-                QuickReadExtractedCONEntry(name, entryReader, strings);
+                reader.EnterSection(length);
+                QuickReadExtractedCONEntry(name, reader, strings);
+                reader.ExitSection();
             }
         }
 

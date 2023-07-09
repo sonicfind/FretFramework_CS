@@ -87,34 +87,42 @@ namespace Framework.Library.CacheNodes
                 int bytes = reader.ReadInt32();
                 reader.EnterSection(bytes);
                 titles = ReadStrings(reader, false);
+                reader.ExitSection();
 
                 bytes = reader.ReadInt32();
                 reader.EnterSection(bytes);
                 artists = ReadStrings(reader, false);
+                reader.ExitSection();
 
                 bytes = reader.ReadInt32();
                 reader.EnterSection(bytes);
                 albums = ReadStrings(reader, false);
+                reader.ExitSection();
 
                 bytes = reader.ReadInt32();
                 reader.EnterSection(bytes);
                 genres = ReadStrings(reader, false);
+                reader.ExitSection();
 
                 bytes = reader.ReadInt32();
                 reader.EnterSection(bytes);
                 years = ReadStrings(reader, false);
+                reader.ExitSection();
 
                 bytes = reader.ReadInt32();
                 reader.EnterSection(bytes);
                 charters = ReadStrings(reader, false);
+                reader.ExitSection();
 
                 bytes = reader.ReadInt32();
                 reader.EnterSection(bytes);
                 playlists = ReadStrings(reader, false);
+                reader.ExitSection();
 
                 bytes = reader.ReadInt32();
                 reader.EnterSection(bytes);
                 sources = ReadStrings(reader, false);
+                reader.ExitSection();
             }
         }
     }
