@@ -563,10 +563,10 @@ namespace Framework.Library
         private readonly string dtaPath;
         private readonly DateTime lastWrite;
 
-        public ExtractedConGroup(string dtaPath, DateTime lastWrite)
+        public ExtractedConGroup(FileInfo dta)
         {
-            this.dtaPath = dtaPath;
-            this.lastWrite = lastWrite;
+            dtaPath = dta.FullName;
+            lastWrite = dta.LastWriteTime;
         }
 
         public DTAFileReader? LoadDTA()

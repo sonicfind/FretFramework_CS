@@ -473,7 +473,7 @@ namespace Framework.Library
             if (!dtaInfo.Exists)
                 return;
 
-            ExtractedConGroup group = new(dtaInfo.FullName, dtaInfo.LastWriteTime);
+            ExtractedConGroup group = new(dtaInfo);
             MarkDirectory(directory);
             AddExtractedCONGroup(directory, group);
 
@@ -515,7 +515,7 @@ namespace Framework.Library
             if (!dtaInfo.Exists)
                 return;
 
-            ExtractedConGroup group = new(dtaInfo.FullName, dtaInfo.LastWriteTime);
+            ExtractedConGroup group = new(dtaInfo);
             MarkDirectory(directory);
             AddExtractedCONGroup(directory, group);
 

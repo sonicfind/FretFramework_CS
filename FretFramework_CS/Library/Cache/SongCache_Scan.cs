@@ -57,7 +57,7 @@ namespace Framework.Library
             if (!FindOrMarkDirectory(dirName))
                 return;
 
-            if (TryAddUpdateDirectory(directory) || TryAddUpgradeDirectory(directory))
+            if (TryAddUpdateDirectory(directory) || TryAddUpgradeDirectory(directory) || TryAddExtractedCONDirectory(directory))
                 return;
 
             FileInfo?[] charts = new FileInfo?[3];
@@ -105,9 +105,6 @@ namespace Framework.Library
             }
 
             if (ScanIniEntry(charts, ini))
-                return;
-
-            if (AddExtractedCONDirectory(dirName))
                 return;
 
             Parallel.For(0, files.Count, i => AddPossibleCON(files[i]));
@@ -174,16 +171,19 @@ namespace Framework.Library
             return false;
         }
 
-        private bool AddExtractedCONDirectory(string directory)
+        private bool TryAddExtractedCONDirectory(DirectoryInfo directory)
         {
-            string songPath = Path.Combine(directory, "songs");
-            FileInfo dta = new(Path.Combine(songPath, "songs.dta"));
-            if (!dta.Exists)
-                return false;
-
-            MarkDirectory(songPath);
-            AddExtractedCONGroup(directory, new(dta.FullName, dta.LastWriteTime));
-            return true;
+            if (directory.Name == "songs")
+            {
+                string dirName = directory.FullName;
+                FileInfo dta = new(Path.Combine(dirName, "songs.dta"));
+                if (dta.Exists)
+                {
+                    AddExtractedCONGroup(dirName, new(dta));
+                    return true;
+                }
+            }
+            return false;
         }
 
         private void AddPossibleCON(FileInfo info)
