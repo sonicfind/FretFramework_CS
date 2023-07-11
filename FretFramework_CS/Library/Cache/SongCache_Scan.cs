@@ -149,7 +149,7 @@ namespace Framework.Library
                 FileInfo dta = new(Path.Combine(dirName, "songs_updates.dta"));
                 if (dta.Exists)
                 {
-                    UpdateGroupAdd(dirName, dta);
+                    AddUpdateGroup(dirName, dta);
                     return true;
                 }
             }
@@ -164,7 +164,7 @@ namespace Framework.Library
                 FileInfo dta = new(Path.Combine(dirName, "upgrades.dta"));
                 if (dta.Exists)
                 {
-                    UpgradeGroupAdd(dirName, dta);
+                    AddUpgradeGroup(dirName, dta);
                     return true;
                 }
             }

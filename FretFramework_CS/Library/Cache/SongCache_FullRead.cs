@@ -243,7 +243,7 @@ namespace Framework.Library
                 if (dta.Exists)
                 {
                     MarkDirectory(directory);
-                    UpdateGroupAdd(directory, dta);
+                    AddUpdateGroup(directory, dta);
 
                     if (dta.LastWriteTime == dtaLastWrite)
                         return;
@@ -271,7 +271,7 @@ namespace Framework.Library
                 if (dta.Exists)
                 {
                     MarkDirectory(directory);
-                    UpgradeGroup? group = UpgradeGroupAdd(directory, dta);
+                    UpgradeGroup? group = AddUpgradeGroup(directory, dta);
 
                     if (group != null && dta.LastWriteTime == dtaLastWrite)
                     {

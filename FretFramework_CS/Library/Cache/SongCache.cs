@@ -182,7 +182,7 @@ namespace Framework.Library
             }
         }
 
-        private void UpdateGroupAdd(string directory, FileInfo dta, bool removeEntries = false)
+        private void AddUpdateGroup(string directory, FileInfo dta, bool removeEntries = false)
         {
             DTAFileReader reader = new(dta.FullName);
             UpdateGroup group = new(directory, dta.LastWriteTime);
@@ -210,7 +210,7 @@ namespace Framework.Library
                     updateGroups.Add(group);
         }
 
-        private UpgradeGroup? UpgradeGroupAdd(string directory, FileInfo dta, bool removeEntries = false)
+        private UpgradeGroup? AddUpgradeGroup(string directory, FileInfo dta, bool removeEntries = false)
         {
             DTAFileReader reader = new(dta.FullName);
             UpgradeGroup group = new(directory, dta.LastWriteTime);
