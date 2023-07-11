@@ -37,6 +37,17 @@ namespace Framework.Library
             if (writeCache)
                 cache.SaveToFile(cacheFile);
 
+            if (readCache)
+            {
+                if (cache.badSongs.Count > 0)
+                {
+                    using StreamWriter writer = new("badsongs.txt");
+                    foreach (var str in cache.badSongs)
+                        writer.WriteLine(str);
+                }
+                else
+                    File.Delete("badsongs.txt");
+            }
             return cache.library;
         }
 
@@ -89,8 +100,7 @@ namespace Framework.Library
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.Message);
-                Console.WriteLine(directory.FullName);
+                lock (badsongsLock) badSongs.Add($"Error traversing Directory {directory.FullName}: {e.Message}");
                 return;
             }
 
@@ -121,11 +131,12 @@ namespace Framework.Library
                             if (AddEntry(hash, entry))
                                 AddIniEntry(hash, entry);
                         }
+                        else
+                            lock (badsongsLock) badSongs.Add($"{chart.FullName}: No notes found");
                     }
                     catch (Exception e)
                     {
-                        Console.WriteLine(e.Message);
-                        Console.WriteLine(chart.FullName);
+                        lock (badsongsLock) badSongs.Add($"Error reading Ini entry {chart.FullName}: {e.Message}");
                     }
                     return true;
                 }
@@ -226,7 +237,7 @@ namespace Framework.Library
                             }
                             catch (Exception e)
                             {
-                                Debug.WriteLine($"CON: DTA Failed to parse song '{name}'. Skipping all further songs in file...");
+                                lock (badsongsLock) badSongs.Add($"CON: DTA Failed to parse song '{name}'. Skipping all further songs in file {node.Key}...");
                                 Debug.WriteLine(e.Message);
                                 break;
                             }
@@ -277,7 +288,7 @@ namespace Framework.Library
                         }
                         catch (Exception e)
                         {
-                            Debug.WriteLine($"CON: DTA Failed to parse song '{name}'. Skipping all further songs in file...");
+                            lock (badsongsLock) badSongs.Add($"CON: DTA Failed to parse song '{name}'. Skipping all further songs in file {node.Key}...");
                             Debug.WriteLine(e.Message);
                             break;
                         }

@@ -21,6 +21,7 @@ namespace Framework.Library
         private static readonly object updateGroupLock = new();
         private static readonly object upgradeGroupLock = new();
         private static readonly object entryLock = new();
+        private static readonly object badsongsLock = new();
 
         static SongCache() { }
 
@@ -47,6 +48,7 @@ namespace Framework.Library
         private readonly SongLibrary library = new();
         private readonly HashSet<string> preScannedDirectories = new();
         private readonly HashSet<string> preScannedFiles = new();
+        private readonly List<string> badSongs = new();
 
         internal readonly (string, ChartType)[] CHARTTYPES =
         {
